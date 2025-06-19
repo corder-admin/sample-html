@@ -171,50 +171,85 @@
                   <tr>
                     <th
                       scope="col"
-                      class="w-12 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      No.
-                    </th>
-                    <th
-                      scope="col"
-                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      分類
-                    </th>
-                    <th
-                      scope="col"
-                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      工事種別
-                    </th>
-                    <th
-                      scope="col"
-                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      チェック内容
-                    </th>
-                    <th
-                      scope="col"
-                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      指摘箇所
-                    </th>
-                    <th
-                      scope="col"
-                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      修正提案
-                    </th>
-                    <th
-                      scope="col"
-                      id="sort-severity-header"
-                      class="sortable px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      class="sortable w-12 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      data-sort-key="id"
                     >
                       <div class="flex items-center">
-                        <span>重要度</span>
-                        <i
-                          id="sort-icon"
-                          class="fas fa-sort ml-2 text-gray-400"
+                        <span>No.</span
+                        ><i
+                          class="sort-icon fas fa-sort ml-2 text-gray-400"
+                        ></i>
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      class="sortable px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      data-sort-key="category"
+                    >
+                      <div class="flex items-center">
+                        <span>分類</span
+                        ><i
+                          class="sort-icon fas fa-sort ml-2 text-gray-400"
+                        ></i>
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      class="sortable px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      data-sort-key="type"
+                    >
+                      <div class="flex items-center">
+                        <span>工事種別</span
+                        ><i
+                          class="sort-icon fas fa-sort ml-2 text-gray-400"
+                        ></i>
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      class="sortable px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      data-sort-key="content"
+                    >
+                      <div class="flex items-center">
+                        <span>チェック内容</span
+                        ><i
+                          class="sort-icon fas fa-sort ml-2 text-gray-400"
+                        ></i>
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      class="sortable px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      data-sort-key="location"
+                    >
+                      <div class="flex items-center">
+                        <span>指摘箇所</span
+                        ><i
+                          class="sort-icon fas fa-sort ml-2 text-gray-400"
+                        ></i>
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      class="sortable px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      data-sort-key="suggestion"
+                    >
+                      <div class="flex items-center">
+                        <span>修正提案</span
+                        ><i
+                          class="sort-icon fas fa-sort ml-2 text-gray-400"
+                        ></i>
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      class="sortable px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      data-sort-key="severity"
+                    >
+                      <div class="flex items-center">
+                        <span>重要度</span
+                        ><i
+                          class="sort-icon fas fa-sort ml-2 text-gray-400"
                         ></i>
                       </div>
                     </th>
@@ -327,35 +362,28 @@
         ];
 
         // --- 状態管理 ---
-        let currentSortDirection = "none"; // 'none', 'desc', 'asc'
+        let currentSortKey = "id";
+        let currentSortDirection = "asc"; // 'asc', 'desc'
         const severityMap = { 高: 3, 中: 2, 低: 1 };
 
         // --- DOM要素 ---
         const tableBody = document.getElementById("results-tbody");
         const filterSelect = document.getElementById("severity-filter");
         const resultsCountSpan = document.getElementById("results-count");
-        const sortHeader = document.getElementById("sort-severity-header");
-        const sortIcon = document.getElementById("sort-icon");
+        const sortableHeaders = document.querySelectorAll(".sortable");
 
         // --- 関数 ---
-
-        /**
-         * 指定されたデータでテーブルを描画する
-         * @param {Array} data - 表示する結果データの配列
-         */
         function renderTable(data) {
           tableBody.innerHTML = "";
           resultsCountSpan.textContent = data.length;
 
           if (data.length === 0) {
-            const noResultRow = document.createElement("tr");
-            noResultRow.innerHTML = `<td colspan="7" class="text-center py-10 text-gray-500">該当する指摘事項はありません。</td>`;
-            tableBody.appendChild(noResultRow);
+            tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-500">該当する指摘事項はありません。</td></tr>`;
             return;
           }
 
           data.forEach((result) => {
-            const row = document.createElement("tr");
+            const row = tableBody.insertRow();
             row.className = "hover:bg-gray-50";
 
             let severityClass = "";
@@ -379,86 +407,89 @@
                         <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${result.location}</td>
                         <td class="px-4 py-4 whitespace-nowrap text-sm text-blue-600">${result.suggestion}</td>
                         <td class="px-4 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${severityClass}">
-                                ${result.severity}
-                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${severityClass}">${result.severity}</span>
                         </td>
                     `;
-            tableBody.appendChild(row);
           });
         }
 
-        /**
-         * ソートアイコンの表示を更新する
-         */
-        function updateSortIcon() {
-          sortIcon.classList.remove(
-            "fa-sort",
-            "fa-sort-up",
-            "fa-sort-down",
-            "text-gray-400",
-            "text-blue-600"
-          );
-          if (currentSortDirection === "none") {
-            sortIcon.classList.add("fa-sort", "text-gray-400");
-          } else if (currentSortDirection === "desc") {
-            sortIcon.classList.add("fa-sort-down", "text-blue-600");
-          } else {
-            // asc
-            sortIcon.classList.add("fa-sort-up", "text-blue-600");
-          }
+        function updateSortIcons() {
+          sortableHeaders.forEach((header) => {
+            const icon = header.querySelector(".sort-icon");
+            const key = header.dataset.sortKey;
+            icon.classList.remove(
+              "fa-sort",
+              "fa-sort-up",
+              "fa-sort-down",
+              "text-gray-400",
+              "text-blue-600"
+            );
+
+            if (key === currentSortKey) {
+              icon.classList.add(
+                currentSortDirection === "asc" ? "fa-sort-up" : "fa-sort-down",
+                "text-blue-600"
+              );
+            } else {
+              icon.classList.add("fa-sort", "text-gray-400");
+            }
+          });
         }
 
-        /**
-         * フィルタとソートを適用してテーブルを再描画する
-         */
         function updateDisplay() {
           const selectedSeverity = filterSelect.value;
-
-          // 1. フィルタリング
           let displayData =
             selectedSeverity === "all"
-              ? [...allResults] // ソートするためにコピーを作成
+              ? [...allResults]
               : allResults.filter(
                   (result) => result.severity === selectedSeverity
                 );
 
-          // 2. ソート
-          if (currentSortDirection !== "none") {
+          if (currentSortKey) {
             displayData.sort((a, b) => {
-              const valA = severityMap[a.severity] || 0;
-              const valB = severityMap[b.severity] || 0;
-              return currentSortDirection === "desc"
-                ? valB - valA
-                : valA - valB;
+              const valA =
+                currentSortKey === "severity"
+                  ? severityMap[a.severity] || 0
+                  : a[currentSortKey];
+              const valB =
+                currentSortKey === "severity"
+                  ? severityMap[b.severity] || 0
+                  : b[currentSortKey];
+
+              let comparison = 0;
+              if (typeof valA === "number" && typeof valB === "number") {
+                comparison = valA - valB;
+              } else {
+                comparison = String(valA).localeCompare(String(valB), "ja");
+              }
+
+              return currentSortDirection === "asc" ? comparison : -comparison;
             });
-          } else {
-            // デフォルトのソート順 (ID順)
-            displayData.sort((a, b) => a.id - b.id);
           }
 
-          // 3. 描画
           renderTable(displayData);
-          updateSortIcon();
+          updateSortIcons();
         }
 
         // --- イベントリスナー ---
         filterSelect.addEventListener("change", updateDisplay);
 
-        sortHeader.addEventListener("click", () => {
-          // none -> desc -> asc -> none の順で切り替え
-          if (currentSortDirection === "none") {
-            currentSortDirection = "desc";
-          } else if (currentSortDirection === "desc") {
-            currentSortDirection = "asc";
-          } else {
-            currentSortDirection = "none";
-          }
-          updateDisplay();
+        sortableHeaders.forEach((header) => {
+          header.addEventListener("click", () => {
+            const newSortKey = header.dataset.sortKey;
+            if (currentSortKey === newSortKey) {
+              currentSortDirection =
+                currentSortDirection === "asc" ? "desc" : "asc";
+            } else {
+              currentSortKey = newSortKey;
+              currentSortDirection = "asc";
+            }
+            updateDisplay();
+          });
         });
 
         // --- 初期化 ---
-        updateDisplay(); // ページの初回読み込み時にテーブルを描画
+        updateDisplay();
       });
     </script>
   </body>
