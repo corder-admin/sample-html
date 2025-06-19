@@ -17,6 +17,10 @@
       body {
         font-family: "Inter", sans-serif;
       }
+      .sortable:hover {
+        cursor: pointer;
+        background-color: #f9fafb;
+      }
     </style>
   </head>
   <body class="bg-gray-50">
@@ -203,9 +207,16 @@
                     </th>
                     <th
                       scope="col"
-                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      id="sort-severity-header"
+                      class="sortable px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
-                      重要度
+                      <div class="flex items-center">
+                        <span>重要度</span>
+                        <i
+                          id="sort-icon"
+                          class="fas fa-sort ml-2 text-gray-400"
+                        ></i>
+                      </div>
                     </th>
                   </tr>
                 </thead>
@@ -315,10 +326,16 @@
           },
         ];
 
+        // --- 状態管理 ---
+        let currentSortDirection = "none"; // 'none', 'desc', 'asc'
+        const severityMap = { 高: 3, 中: 2, 低: 1 };
+
         // --- DOM要素 ---
         const tableBody = document.getElementById("results-tbody");
         const filterSelect = document.getElementById("severity-filter");
         const resultsCountSpan = document.getElementById("results-count");
+        const sortHeader = document.getElementById("sort-severity-header");
+        const sortIcon = document.getElementById("sort-icon");
 
         // --- 関数 ---
 
@@ -327,13 +344,9 @@
          * @param {Array} data - 表示する結果データの配列
          */
         function renderTable(data) {
-          // tbodyの内容を一旦クリア
           tableBody.innerHTML = "";
-
-          // 指摘事項数の更新
           resultsCountSpan.textContent = data.length;
 
-          // データがない場合はメッセージを表示
           if (data.length === 0) {
             const noResultRow = document.createElement("tr");
             noResultRow.innerHTML = `<td colspan="7" class="text-center py-10 text-gray-500">該当する指摘事項はありません。</td>`;
@@ -341,12 +354,10 @@
             return;
           }
 
-          // データを行としてテーブルに追加
           data.forEach((result) => {
             const row = document.createElement("tr");
             row.className = "hover:bg-gray-50";
 
-            // 重要度に応じたスタイルクラスを決定
             let severityClass = "";
             switch (result.severity) {
               case "高":
@@ -360,7 +371,6 @@
                 break;
             }
 
-            // HTML文字列でセルの内容を構築
             row.innerHTML = `
                         <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${result.id}</td>
                         <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${result.category}</td>
@@ -379,26 +389,76 @@
         }
 
         /**
-         * フィルタを適用してテーブルを再描画する
+         * ソートアイコンの表示を更新する
          */
-        function applyFilter() {
+        function updateSortIcon() {
+          sortIcon.classList.remove(
+            "fa-sort",
+            "fa-sort-up",
+            "fa-sort-down",
+            "text-gray-400",
+            "text-blue-600"
+          );
+          if (currentSortDirection === "none") {
+            sortIcon.classList.add("fa-sort", "text-gray-400");
+          } else if (currentSortDirection === "desc") {
+            sortIcon.classList.add("fa-sort-down", "text-blue-600");
+          } else {
+            // asc
+            sortIcon.classList.add("fa-sort-up", "text-blue-600");
+          }
+        }
+
+        /**
+         * フィルタとソートを適用してテーブルを再描画する
+         */
+        function updateDisplay() {
           const selectedSeverity = filterSelect.value;
 
-          const filteredData =
+          // 1. フィルタリング
+          let displayData =
             selectedSeverity === "all"
-              ? allResults
+              ? [...allResults] // ソートするためにコピーを作成
               : allResults.filter(
                   (result) => result.severity === selectedSeverity
                 );
 
-          renderTable(filteredData);
+          // 2. ソート
+          if (currentSortDirection !== "none") {
+            displayData.sort((a, b) => {
+              const valA = severityMap[a.severity] || 0;
+              const valB = severityMap[b.severity] || 0;
+              return currentSortDirection === "desc"
+                ? valB - valA
+                : valA - valB;
+            });
+          } else {
+            // デフォルトのソート順 (ID順)
+            displayData.sort((a, b) => a.id - b.id);
+          }
+
+          // 3. 描画
+          renderTable(displayData);
+          updateSortIcon();
         }
 
         // --- イベントリスナー ---
-        filterSelect.addEventListener("change", applyFilter);
+        filterSelect.addEventListener("change", updateDisplay);
+
+        sortHeader.addEventListener("click", () => {
+          // none -> desc -> asc -> none の順で切り替え
+          if (currentSortDirection === "none") {
+            currentSortDirection = "desc";
+          } else if (currentSortDirection === "desc") {
+            currentSortDirection = "asc";
+          } else {
+            currentSortDirection = "none";
+          }
+          updateDisplay();
+        });
 
         // --- 初期化 ---
-        applyFilter(); // ページの初回読み込み時にテーブルを描画
+        updateDisplay(); // ページの初回読み込み時にテーブルを描画
       });
     </script>
   </body>
