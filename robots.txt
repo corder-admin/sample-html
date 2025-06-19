@@ -1,0 +1,3 @@
+# Disallow all search engine bots from crawling the site.
+User-agent: *
+Disallow: /
