@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>内訳書アップロード - 内訳書チェックサービス</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .file-drop-area {
+        transition: background-color 0.2s ease-in-out,
+          border-color 0.2s ease-in-out;
+      }
+      .file-drop-area.dragover {
+        background-color: #eef2ff;
+        border-color: #4f46e5;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <div class="min-h-screen flex flex-col">
+      <!-- Header -->
+      <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center h-16">
+            <div class="flex-shrink-0">
+              <a href="index.html" class="flex items-center space-x-2">
+                <i class="fas fa-check-double text-2xl text-blue-600"></i>
+                <span class="text-xl font-bold text-gray-800"
+                  >内訳書チェックサービス</span
+                >
+              </a>
+            </div>
+            <nav class="hidden md:flex space-x-8">
+              <a
+                href="index.html"
+                class="text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent px-3 py-2 text-sm font-medium"
+                >内訳書一覧</a
+              >
+              <a
+                href="check-result-list.html"
+                class="text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent px-3 py-2 text-sm font-medium"
+                >チェック結果</a
+              >
+            </nav>
+            <div class="flex items-center">
+              <a
+                href="breakdown-upload.html"
+                class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <i class="fa-solid fa-upload mr-2"></i>
+                新規アップロード
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="flex-grow">
+        <div class="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          <div class="bg-white p-8 rounded-lg shadow">
+            <div class="text-center mb-8">
+              <h1 class="text-2xl font-bold text-gray-900">
+                新規内訳書アップロード
+              </h1>
+              <p class="mt-2 text-sm text-gray-600">
+                Excel形式の内訳書ファイルをアップロードしてください。
+              </p>
+            </div>
+
+            <form id="upload-form" action="check-result-list.html" method="GET">
+              <div class="space-y-6">
+                <div class="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+                  <div>
+                    <label
+                      for="project-name"
+                      class="block text-sm font-medium text-gray-700"
+                      >案件名</label
+                    >
+                    <div class="mt-1">
+                      <input
+                        type="text"
+                        name="project-name"
+                        id="project-name"
+                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                        placeholder="例：ファミリー向けマンション"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      for="housing-units"
+                      class="block text-sm font-medium text-gray-700"
+                      >住宅の戸数</label
+                    >
+                    <div class="mt-1">
+                      <input
+                        type="number"
+                        name="housing-units"
+                        id="housing-units"
+                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                        placeholder="例: 96"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700"
+                    >内訳書ファイル</label
+                  >
+                  <div
+                    id="file-drop-area"
+                    class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md"
+                  >
+                    <div class="space-y-1 text-center">
+                      <i
+                        class="fas fa-file-excel mx-auto h-12 w-12 text-gray-400"
+                      ></i>
+                      <div class="flex text-sm text-gray-600">
+                        <label
+                          for="file-upload"
+                          class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                        >
+                          <span>ファイルをアップロード</span>
+                          <input
+                            id="file-upload"
+                            name="file-upload"
+                            type="file"
+                            class="sr-only"
+                            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                          />
+                        </label>
+                        <p class="pl-1">またはドラッグ＆ドロップ</p>
+                      </div>
+                      <p class="text-xs text-gray-500">XLSX (最大10MB)</p>
+                    </div>
+                  </div>
+                  <div
+                    id="file-name-display"
+                    class="mt-2 text-sm text-gray-600"
+                    style="display: none"
+                  ></div>
+                  <div
+                    id="error-message"
+                    class="mt-2 text-sm text-red-600"
+                    style="display: none"
+                  ></div>
+                </div>
+
+                <div class="pt-5">
+                  <div class="flex justify-end">
+                    <a
+                      href="index.html"
+                      class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      キャンセル
+                    </a>
+                    <button
+                      type="submit"
+                      class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <i class="fas fa-rocket mr-2"></i>
+                      チェック実行
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="bg-white">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+          <p class="text-center text-sm text-gray-500">
+            &copy; 2023 内訳書チェックサービス. All rights reserved.
+          </p>
+        </div>
+      </footer>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const uploadForm = document.getElementById("upload-form");
+        const dropArea = document.getElementById("file-drop-area");
+        const fileInput = document.getElementById("file-upload");
+        const fileNameDisplay = document.getElementById("file-name-display");
+        const errorMessage = document.getElementById("error-message");
+        let uploadedFile = null;
+
+        // ファイル検証関数
+        function validateAndSetFile(file) {
+          // メッセージをリセット
+          errorMessage.textContent = "";
+          errorMessage.style.display = "none";
+          fileNameDisplay.textContent = "";
+          fileNameDisplay.style.display = "none";
+          uploadedFile = null;
+          fileInput.value = ""; // 選択をリセット
+
+          if (!file) return;
+
+          const allowedTypes = [
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          ];
+          if (!allowedTypes.includes(file.type)) {
+            errorMessage.textContent = "XLSX形式のファイルを選択してください。";
+            errorMessage.style.display = "block";
+            return;
+          }
+          if (file.size > 10 * 1024 * 1024) {
+            // 10MB
+            errorMessage.textContent =
+              "ファイルサイズは10MB以下にしてください。";
+            errorMessage.style.display = "block";
+            return;
+          }
+
+          uploadedFile = file;
+          fileNameDisplay.textContent = `選択されたファイル: ${file.name}`;
+          fileNameDisplay.style.display = "block";
+        }
+
+        // ドラッグオーバーイベント
+        dropArea.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dropArea.classList.add("dragover");
+        });
+
+        // ドラッグリーブイベント
+        dropArea.addEventListener("dragleave", (e) => {
+          e.preventDefault();
+          dropArea.classList.remove("dragover");
+        });
+
+        // ドロップイベント
+        dropArea.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropArea.classList.remove("dragover");
+          const files = e.dataTransfer.files;
+          if (files.length > 0) {
+            validateAndSetFile(files[0]);
+          }
+        });
+
+        // ファイル選択イベント
+        fileInput.addEventListener("change", (e) => {
+          const files = e.target.files;
+          if (files.length > 0) {
+            validateAndSetFile(files[0]);
+          }
+        });
+
+        // フォーム送信イベント
+        uploadForm.addEventListener("submit", (e) => {
+          e.preventDefault(); // GAS環境ではsubmitのデフォルト動作は使わないため
+
+          const projectName = document.getElementById("project-name").value;
+          const housingUnits = document.getElementById("housing-units").value;
+
+          // バリデーション
+          if (!projectName || !housingUnits) {
+            errorMessage.textContent = "案件名と住宅の戸数を入力してください。";
+            errorMessage.style.display = "block";
+            return;
+          }
+          if (!uploadedFile) {
+            errorMessage.textContent = "ファイルを選択してください。";
+            errorMessage.style.display = "block";
+            return;
+          }
+
+          // ここでGASのサーバーサイド関数を呼び出す処理を実装します。
+          // google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onFailure).uploadFile(this);
+          // 今回は静的プロトタイプなので、成功したと仮定してページ遷移します。
+          console.log("アップロード情報:", {
+            projectName: projectName,
+            housingUnits: housingUnits,
+            fileName: uploadedFile.name,
+          });
+
+          // GASでの実装を想定し、成功時のページ遷移をシミュレート
+          window.location.href = "check-result-list.html";
+        });
+      });
+    </script>
+  </body>
+</html>

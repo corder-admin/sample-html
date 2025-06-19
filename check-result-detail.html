@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>チェック結果詳細 - 内訳書チェックサービス</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <div class="min-h-screen flex flex-col">
+      <!-- Header -->
+      <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center h-16">
+            <div class="flex-shrink-0">
+              <a href="index.html" class="flex items-center space-x-2">
+                <i class="fas fa-check-double text-2xl text-blue-600"></i>
+                <span class="text-xl font-bold text-gray-800"
+                  >内訳書チェックサービス</span
+                >
+              </a>
+            </div>
+            <nav class="hidden md:flex space-x-8">
+              <a
+                href="index.html"
+                class="text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent px-3 py-2 text-sm font-medium"
+                >内訳書一覧</a
+              >
+              <a
+                href="check-result-list.html"
+                class="text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent px-3 py-2 text-sm font-medium"
+                >チェック結果</a
+              >
+            </nav>
+            <div class="flex items-center">
+              <a
+                href="breakdown-upload.html"
+                class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <i class="fa-solid fa-upload mr-2"></i>
+                新規アップロード
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="flex-grow">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          <!-- Page Header -->
+          <div class="md:flex md:items-center md:justify-between mb-6">
+            <div class="flex-1 min-w-0">
+              <h1
+                class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate"
+              >
+                チェック結果詳細
+              </h1>
+            </div>
+            <div class="mt-4 flex md:mt-0 md:ml-4">
+              <button
+                type="button"
+                onclick="window.print()"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <i class="fas fa-print mr-2"></i>
+                印刷
+              </button>
+              <button
+                type="button"
+                id="export-btn"
+                class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <i class="fas fa-file-export mr-2"></i>
+                エクスポート
+              </button>
+            </div>
+          </div>
+
+          <!-- Breakdown Info -->
+          <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+            <div class="px-4 py-5 sm:px-6">
+              <h3 class="text-lg leading-6 font-medium text-gray-900">
+                対象内訳書
+              </h3>
+              <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                ファミリー向けマンション（建築＊設備）
+              </p>
+            </div>
+            <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+              <dl class="sm:divide-y sm:divide-gray-200">
+                <div
+                  class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                >
+                  <dt class="text-sm font-medium text-gray-500">ファイル名</dt>
+                  <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    ファミリー向けマンション内訳書.xlsx
+                  </dd>
+                </div>
+                <div
+                  class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                >
+                  <dt class="text-sm font-medium text-gray-500">入力戸数</dt>
+                  <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    96戸
+                  </dd>
+                </div>
+                <div
+                  class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                >
+                  <dt class="text-sm font-medium text-gray-500">
+                    チェック日時
+                  </dt>
+                  <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    2023-10-27 10:32
+                  </dd>
+                </div>
+                <div
+                  class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                >
+                  <dt class="text-sm font-medium text-gray-500">
+                    総指摘事項数
+                  </dt>
+                  <dd
+                    class="mt-1 text-sm text-red-600 font-bold sm:mt-0 sm:col-span-2"
+                  >
+                    <span id="results-count"></span>件
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Filter -->
+          <div class="mb-4 flex justify-end">
+            <div class="relative">
+              <select
+                id="severity-filter"
+                class="pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+              >
+                <option value="all">すべての重要度</option>
+                <option value="高">高</option>
+                <option value="中">中</option>
+                <option value="低">低</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Check Results Table -->
+          <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      class="w-12 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      No.
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      分類
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      工事種別
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      チェック内容
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      指摘箇所
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      修正提案
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      重要度
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="results-tbody"
+                  class="bg-white divide-y divide-gray-200"
+                >
+                  <!-- JavaScriptによって動的に生成されます -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="bg-white">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+          <p class="text-center text-sm text-gray-500">
+            &copy; 2023 内訳書チェックサービス. All rights reserved.
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- データ ---
+        const allResults = [
+          {
+            id: 1,
+            category: "単位･数量",
+            type: "型枠工事",
+            content: "数量が少数で記載されています（「ヶ所」は整数が適切です）",
+            location: "シート「躯体」、セルC15",
+            suggestion: "数量を整数に修正してください。例： 2",
+            severity: "高",
+          },
+          {
+            id: 2,
+            category: "単位･数量",
+            type: "コンクリート工事",
+            content: "数量が記載されているのに単位が抜けています",
+            location: "シート「躯体」、セルD11",
+            suggestion: "単位「m3」を追記してください。",
+            severity: "高",
+          },
+          {
+            id: 4,
+            category: "数量精査",
+            type: "地業工事",
+            content: "項目名が重複して記載されています",
+            location: "シート「地業」、セルB9, B11",
+            suggestion: "内容を確認し、項目を統合または削除してください。",
+            severity: "中",
+          },
+          {
+            id: 12,
+            category: "数量精査",
+            type: "ユニット工事",
+            content:
+              "入力された戸数(96戸)と「ユニットバス」の合計数量(96ヶ所)が一致していません。",
+            location: "シート「仕上」、セルD88",
+            suggestion:
+              "ユニットバスの数量が戸数と一致しているか確認してください。",
+            severity: "高",
+          },
+          {
+            id: 18,
+            category: "数量精査",
+            type: "金属工事",
+            content:
+              "入力された戸数(96戸)と「物干金物」の数量(96組)が一致していません。",
+            location: "シート「金属工事」、セルD15",
+            suggestion:
+              "物干金物の数量が戸数と一致しているか確認してください。",
+            severity: "高",
+          },
+          {
+            id: 25,
+            category: "数量精査",
+            type: "木工事",
+            content:
+              "「UB枠」が計上されています。数量が正しいか確認してください。",
+            location: "シート「木工事」、セルD25",
+            suggestion: "計上内容と数量が正しいか確認してください。",
+            severity: "低",
+          },
+          {
+            id: 32,
+            category: "数量精査",
+            type: "ガラス工事",
+            content:
+              "ガラスの面積と「ガラスクリーニング」の数量が一致していません。",
+            location: "シート「ガラス」、セルC10, C12",
+            suggestion: "ガラス面積とクリーニング数量を合わせてください。",
+            severity: "中",
+          },
+          {
+            id: 36,
+            category: "記載整合性",
+            type: "左官工事",
+            content: "用語の表記が統一されていません。(例: 金鏝 vs 金ゴテ)",
+            location: "シート「左官」、セルC25",
+            suggestion: "「金鏝押え」を指定用語に統一してください。",
+            severity: "低",
+          },
+        ];
+
+        // --- DOM要素 ---
+        const tableBody = document.getElementById("results-tbody");
+        const filterSelect = document.getElementById("severity-filter");
+        const resultsCountSpan = document.getElementById("results-count");
+
+        // --- 関数 ---
+
+        /**
+         * 指定されたデータでテーブルを描画する
+         * @param {Array} data - 表示する結果データの配列
+         */
+        function renderTable(data) {
+          // tbodyの内容を一旦クリア
+          tableBody.innerHTML = "";
+
+          // 指摘事項数の更新
+          resultsCountSpan.textContent = data.length;
+
+          // データがない場合はメッセージを表示
+          if (data.length === 0) {
+            const noResultRow = document.createElement("tr");
+            noResultRow.innerHTML = `<td colspan="7" class="text-center py-10 text-gray-500">該当する指摘事項はありません。</td>`;
+            tableBody.appendChild(noResultRow);
+            return;
+          }
+
+          // データを行としてテーブルに追加
+          data.forEach((result) => {
+            const row = document.createElement("tr");
+            row.className = "hover:bg-gray-50";
+
+            // 重要度に応じたスタイルクラスを決定
+            let severityClass = "";
+            switch (result.severity) {
+              case "高":
+                severityClass = "bg-red-100 text-red-800";
+                break;
+              case "中":
+                severityClass = "bg-yellow-100 text-yellow-800";
+                break;
+              case "低":
+                severityClass = "bg-green-100 text-green-800";
+                break;
+            }
+
+            // HTML文字列でセルの内容を構築
+            row.innerHTML = `
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${result.id}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${result.category}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${result.type}</td>
+                        <td class="px-4 py-4 text-sm text-gray-800">${result.content}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${result.location}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-blue-600">${result.suggestion}</td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${severityClass}">
+                                ${result.severity}
+                            </span>
+                        </td>
+                    `;
+            tableBody.appendChild(row);
+          });
+        }
+
+        /**
+         * フィルタを適用してテーブルを再描画する
+         */
+        function applyFilter() {
+          const selectedSeverity = filterSelect.value;
+
+          const filteredData =
+            selectedSeverity === "all"
+              ? allResults
+              : allResults.filter(
+                  (result) => result.severity === selectedSeverity
+                );
+
+          renderTable(filteredData);
+        }
+
+        // --- イベントリスナー ---
+        filterSelect.addEventListener("change", applyFilter);
+
+        // --- 初期化 ---
+        applyFilter(); // ページの初回読み込み時にテーブルを描画
+      });
+    </script>
+  </body>
+</html>

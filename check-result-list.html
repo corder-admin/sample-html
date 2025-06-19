@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>チェック結果一覧 - 内訳書チェックサービス</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <div class="min-h-screen flex flex-col">
+      <!-- Header -->
+      <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center h-16">
+            <div class="flex-shrink-0">
+              <a href="index.html" class="flex items-center space-x-2">
+                <i class="fas fa-check-double text-2xl text-blue-600"></i>
+                <span class="text-xl font-bold text-gray-800"
+                  >内訳書チェックサービス</span
+                >
+              </a>
+            </div>
+            <nav class="hidden md:flex space-x-8">
+              <a
+                href="index.html"
+                class="text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent px-3 py-2 text-sm font-medium"
+                >内訳書一覧</a
+              >
+              <a
+                href="check-result-list.html"
+                class="text-blue-600 border-b-2 border-blue-600 px-3 py-2 text-sm font-medium"
+                >チェック結果</a
+              >
+            </nav>
+            <div class="flex items-center">
+              <a
+                href="breakdown-upload.html"
+                class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <i class="fa-solid fa-upload mr-2"></i>
+                新規アップロード
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="flex-grow">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-900">チェック結果一覧</h1>
+          </div>
+
+          <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      チェックID
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      案件名
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      チェック日時
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      指摘事項数
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      ステータス
+                    </th>
+                    <th scope="col" class="relative px-6 py-3">
+                      <span class="sr-only">操作</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <!-- Sample Data Row 1 -->
+                  <tr class="hover:bg-gray-50">
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      #C001
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      ファミリー向けマンション（建築＊設備）
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      2023-10-27 10:32
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-bold"
+                    >
+                      8
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span
+                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
+                      >
+                        完了
+                      </span>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                    >
+                      <a
+                        href="check-result-detail.html"
+                        class="text-blue-600 hover:text-blue-900"
+                        >詳細表示</a
+                      >
+                    </td>
+                  </tr>
+                  <!-- Sample Data Row 2 -->
+                  <tr class="hover:bg-gray-50">
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      #C002
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      公共施設改修工事
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      2023-10-26 18:20
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-bold"
+                    >
+                      12
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span
+                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
+                      >
+                        完了
+                      </span>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                    >
+                      <a
+                        href="check-result-detail.html"
+                        class="text-blue-600 hover:text-blue-900"
+                        >詳細表示</a
+                      >
+                    </td>
+                  </tr>
+                  <!-- Add more rows as needed -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="bg-white">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+          <p class="text-center text-sm text-gray-500">
+            &copy; 2023 内訳書チェックサービス. All rights reserved.
+          </p>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
