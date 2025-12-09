@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>業者見積データベース</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --sidebar-width: 280px;
+        --header-height: 56px;
+      }
+      body {
+        background: #f8f9fa;
+      }
+      .icon {
+        width: 16px;
+        height: 16px;
+        vertical-align: -2px;
+      }
+      .icon-sm {
+        width: 14px;
+        height: 14px;
+      }
+      .icon-lg {
+        width: 20px;
+        height: 20px;
+      }
+      .sidebar {
+        width: var(--sidebar-width);
+        height: calc(100vh - var(--header-height));
+        overflow-y: auto;
+        border-right: 1px solid #dee2e6;
+      }
+      @media (max-width: 991.98px) {
+        .sidebar {
+          width: 100%;
+          height: auto;
+          max-height: none;
+          border-right: none;
+          border-bottom: 1px solid #dee2e6;
+        }
+        .sidebar .flex-grow-1 {
+          max-height: 60vh;
+          overflow-y: auto;
+        }
+      }
+      .main-content {
+        height: calc(100vh - var(--header-height));
+        overflow-y: auto;
+        flex: 1;
+      }
+      @media (max-width: 991.98px) {
+        .main-content {
+          height: auto;
+          min-height: calc(100vh - var(--header-height));
+        }
+      }
+      .results-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        align-items: start;
+      }
+      @media (min-width: 1200px) {
+        .results-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (min-width: 1800px) {
+        .results-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      .tabular-nums {
+        font-variant-numeric: tabular-nums;
+      }
+      .form-label-sm {
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      /* カードデザイン */
+      .item-group-card {
+        transition: all 0.2s;
+        cursor: pointer;
+        border-left: 4px solid #0d6efd;
+        border-radius: 8px;
+      }
+      .item-group-card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+      }
+      .item-group-card.expanded {
+        background: #fafbfc;
+        border-left-color: #198754;
+      }
+
+      /* フィルターバッジ */
+      .filter-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+      }
+      .tag-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+      }
+      .tag-cloud .badge {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.6rem;
+      }
+
+      /* 統計サマリー */
+      .summary-stats {
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        overflow: hidden;
+      }
+      .summary-section {
+        padding: 1rem;
+      }
+      .summary-section:not(:last-child) {
+        border-bottom: 1px solid #e9ecef;
+      }
+      .summary-section-title {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.625rem;
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+      }
+      .company-summary-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .company-summary-item {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+        padding: 0.5rem 0.75rem;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+      }
+      .company-name {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #212529;
+        min-width: 60px;
+      }
+      .company-count {
+        font-size: 0.7rem;
+        color: #6c757d;
+        background: #e9ecef;
+        padding: 0.125rem 0.5rem;
+        border-radius: 10px;
+      }
+      .company-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .company-prices {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-left: auto;
+      }
+      .company-price-item {
+        display: flex;
+        align-items: baseline;
+        gap: 0.25rem;
+      }
+      .company-price-label {
+        font-size: 0.65rem;
+        color: #6c757d;
+      }
+      .company-price-value {
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .company-price-value.min {
+        color: #198754;
+      }
+      .company-price-value.avg {
+        color: #212529;
+      }
+      .company-price-value.max {
+        color: #dc3545;
+      }
+
+      @media (max-width: 576px) {
+        .company-summary-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.5rem;
+        }
+        .company-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          width: 100%;
+        }
+        .company-prices {
+          margin-left: 0;
+          width: 100%;
+          justify-content: space-between;
+          padding-top: 0.25rem;
+          border-top: 1px dashed #dee2e6;
+        }
+      }
+
+      /* タイムライン表示 */
+      .timeline-container {
+        position: relative;
+        padding-left: 90px;
+      }
+      .timeline-container::before {
+        content: "";
+        position: absolute;
+        left: 70px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, #0d6efd, #6c757d);
+        border-radius: 1px;
+      }
+      .timeline-item {
+        position: relative;
+        margin-bottom: 1rem;
+      }
+      .timeline-item:last-child {
+        margin-bottom: 0;
+      }
+      .timeline-date {
+        position: absolute;
+        left: -90px;
+        top: 12px;
+        width: 65px;
+        text-align: right;
+        padding-right: 15px;
+      }
+      .timeline-date .year {
+        display: block;
+        font-size: 0.7rem;
+        color: #6c757d;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+      .timeline-date .month {
+        display: block;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0d6efd;
+        line-height: 1.3;
+      }
+      .timeline-dot {
+        position: absolute;
+        left: -24px;
+        top: 16px;
+        width: 12px;
+        height: 12px;
+        background: #0d6efd;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        box-shadow: 0 0 0 2px #0d6efd;
+      }
+      .timeline-content {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        transition: all 0.15s;
+      }
+      .timeline-content:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.1);
+      }
+
+      /* 実績詳細グリッド */
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 0.5rem 0.75rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e9ecef;
+      }
+      .detail-item {
+        text-align: left;
+        min-width: 0;
+      }
+      .detail-label {
+        font-size: 0.65rem;
+        color: #6c757d;
+        margin-bottom: 0.125rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+      }
+      .detail-value {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #212529;
+        word-break: break-word;
+        overflow-wrap: break-word;
+      }
+      .detail-value.highlight {
+        color: #0d6efd;
+        font-size: 0.9rem;
+      }
+      /* 2列表示時の調整 */
+      @media (min-width: 1200px) and (max-width: 1799px) {
+        .detail-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      /* 価格表示 */
+      .price-display {
+        text-align: right;
+      }
+      .price-main {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0d6efd;
+        line-height: 1.2;
+      }
+      .price-sub {
+        font-size: 0.75rem;
+        color: #6c757d;
+      }
+
+      /* プロジェクトヘッダー */
+      .project-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .project-badges {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+      }
+      .project-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #212529;
+        line-height: 1.4;
+      }
+
+      @media (max-width: 768px) {
+        .detail-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .timeline-container {
+          padding-left: 70px;
+        }
+        .timeline-container::before {
+          left: 50px;
+        }
+        .timeline-date {
+          left: -70px;
+          width: 45px;
+        }
+        .timeline-dot {
+          left: -24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-dark bg-dark px-3"
+      style="height: var(--header-height)"
+    >
+      <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+        <svg
+          class="icon-lg"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+          />
+          <polyline points="7.5 4.21 12 6.81 16.5 4.21" />
+          <polyline points="7.5 19.79 7.5 14.6 3 12" />
+          <polyline points="21 12 16.5 14.6 16.5 19.79" />
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+          <line x1="12" y1="22.08" x2="12" y2="12" />
+        </svg>
+        <span class="fw-bold">業者見積データベース</span>
+      </a>
+    </nav>
+
+    <div class="d-flex flex-column flex-lg-row">
+      <aside class="sidebar d-flex flex-column bg-white">
+        <div class="p-3 border-bottom">
+          <h6
+            class="mb-0 fw-bold text-secondary d-flex align-items-center gap-1"
+          >
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            検索条件
+          </h6>
+        </div>
+        <div class="p-3 flex-grow-1">
+          <div class="mb-2">
+            <h6 class="fw-bold text-secondary mb-0" style="font-size: 0.75rem">
+              案件情報
+            </h6>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >案件名</label
+            >
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="キーワード検索"
+              id="filterProject"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >建物用途</label
+            >
+            <select class="form-select form-select-sm" id="filterUsage">
+              <option value="">すべて</option>
+              <option>事務所</option>
+              <option>店舗</option>
+              <option>共同住宅</option>
+              <option>工場</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary">構造</label>
+            <div class="d-flex flex-wrap gap-2">
+              <div class="form-check">
+                <input
+                  class="form-check-input filter-structure"
+                  type="checkbox"
+                  value="RC"
+                  id="rc"
+                />
+                <label class="form-check-label small" for="rc">RC</label>
+              </div>
+              <div class="form-check">
+                <input
+                  class="form-check-input filter-structure"
+                  type="checkbox"
+                  value="S"
+                  id="s"
+                />
+                <label class="form-check-label small" for="s">S</label>
+              </div>
+              <div class="form-check">
+                <input
+                  class="form-check-input filter-structure"
+                  type="checkbox"
+                  value="SRC"
+                  id="src"
+                />
+                <label class="form-check-label small" for="src">SRC</label>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >延床面積 (㎡)</label
+            >
+            <div class="input-group input-group-sm">
+              <input
+                type="number"
+                class="form-control"
+                placeholder="最小"
+                id="filterAreaMin"
+              />
+              <span class="input-group-text">~</span>
+              <input
+                type="number"
+                class="form-control"
+                placeholder="最大"
+                id="filterAreaMax"
+              />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >見積期間</label
+            >
+            <div class="input-group input-group-sm">
+              <input type="date" class="form-control" id="filterDateFrom" />
+              <span class="input-group-text">~</span>
+              <input type="date" class="form-control" id="filterDateTo" />
+            </div>
+          </div>
+          <hr />
+          <div class="mb-2">
+            <h6 class="fw-bold text-secondary mb-0" style="font-size: 0.75rem">
+              見積情報
+            </h6>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >品目・仕様</label
+            >
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="キーワード検索"
+              id="filterItem"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary">工種</label>
+            <select class="form-select form-select-sm" id="filterCategory">
+              <option value="">すべて</option>
+              <option value="rebar">鉄筋工事</option>
+              <option value="earthwork">土工事</option>
+              <option value="painting">塗装工事</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >協力会社名</label
+            >
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="会社名"
+              id="filterCompany"
+            />
+          </div>
+        </div>
+        <div class="p-3 border-top bg-light">
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary" onclick="applyFilters()">
+              検索実行
+            </button>
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              onclick="clearFilters()"
+            >
+              条件クリア
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content p-4">
+        <div class="mb-4">
+          <h4 class="fw-bold mb-3">検索結果一覧</h4>
+          <div
+            class="d-flex gap-2 align-items-center flex-wrap mb-3"
+            id="activeFilters"
+          ></div>
+        </div>
+
+        <div id="resultsContainer"></div>
+      </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const fmt = (n) => (n ? n.toLocaleString() : "0");
+      const catNames = {
+        rebar: "鉄筋工事",
+        earthwork: "土工事",
+        painting: "塗装工事",
+      };
+      const typeNames = { direct: "直接費", indirect: "間接費" };
+      const typeBadges = { direct: "primary", indirect: "warning" };
+
+      const projects = [
+        {
+          id: "p1",
+          name: "港区芝浦 Aビル大規模改修工事",
+          type: "事務所",
+          typeColor: "primary",
+          structure: "SRC造",
+          structureCode: "SRC",
+          area: 15200,
+          periodStart: "2024-01",
+          date: "2024-01-15",
+        },
+        {
+          id: "p2",
+          name: "新宿駅前 商業施設新築工事",
+          type: "店舗",
+          typeColor: "success",
+          structure: "S造",
+          structureCode: "S",
+          area: 4500,
+          periodStart: "2024-04",
+          date: "2024-04-20",
+        },
+        {
+          id: "p3",
+          name: "世田谷区マンション改修工事",
+          type: "共同住宅",
+          typeColor: "info",
+          structure: "RC造",
+          structureCode: "RC",
+          area: 8900,
+          periodStart: "2024-07",
+          date: "2024-07-10",
+        },
+        {
+          id: "p4",
+          name: "品川オフィスビル新築工事",
+          type: "事務所",
+          typeColor: "primary",
+          structure: "SRC造",
+          structureCode: "SRC",
+          area: 22000,
+          periodStart: "2024-10",
+          date: "2024-10-05",
+        },
+        {
+          id: "p5",
+          name: "渋谷商業ビル改修工事",
+          type: "店舗",
+          typeColor: "success",
+          structure: "S造",
+          structureCode: "S",
+          area: 6800,
+          periodStart: "2025-02",
+          date: "2025-02-12",
+        },
+        {
+          id: "p6",
+          name: "川崎工場新築工事",
+          type: "工場",
+          typeColor: "warning",
+          structure: "S造",
+          structureCode: "S",
+          area: 12500,
+          periodStart: "2025-06",
+          date: "2025-06-08",
+        },
+        {
+          id: "p7",
+          name: "横浜レジデンス新築工事",
+          type: "共同住宅",
+          typeColor: "info",
+          structure: "RC造",
+          structureCode: "RC",
+          area: 11200,
+          periodStart: "2025-10",
+          date: "2025-10-18",
+        },
+      ];
+
+      const itemRecords = [
+        {
+          projectId: "p1",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 A社",
+          item: "異形棒鋼 SD295A",
+          spec: "D13",
+          qty: 41.2,
+          unit: "t",
+          price: 108000,
+          netRate: 0.98,
+          netPrice: 105840,
+        },
+        {
+          projectId: "p2",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 I社",
+          item: "異形棒鋼 SD295A",
+          spec: "D13",
+          qty: 62.8,
+          unit: "t",
+          price: 110000,
+          netRate: 0.95,
+          netPrice: 104500,
+        },
+        {
+          projectId: "p3",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 A社",
+          item: "異形棒鋼 SD295A",
+          spec: "D13",
+          qty: 55.3,
+          unit: "t",
+          price: 109000,
+          netRate: 0.975,
+          netPrice: 106275,
+        },
+        {
+          projectId: "p4",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 I社",
+          item: "異形棒鋼 SD295A",
+          spec: "D13",
+          qty: 88.5,
+          unit: "t",
+          price: 111000,
+          netRate: 0.96,
+          netPrice: 106560,
+        },
+        {
+          projectId: "p5",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 A社",
+          item: "異形棒鋼 SD295A",
+          spec: "D13",
+          qty: 38.7,
+          unit: "t",
+          price: 107500,
+          netRate: 0.985,
+          netPrice: 105888,
+        },
+        {
+          projectId: "p6",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 K社",
+          item: "異形棒鋼 SD295A",
+          spec: "D13",
+          qty: 72.1,
+          unit: "t",
+          price: 106000,
+          netRate: 0.97,
+          netPrice: 102820,
+        },
+        {
+          projectId: "p7",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 I社",
+          item: "異形棒鋼 SD295A",
+          spec: "D13",
+          qty: 65.9,
+          unit: "t",
+          price: 109500,
+          netRate: 0.955,
+          netPrice: 104573,
+        },
+        {
+          projectId: "p1",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 C社",
+          item: "鉄筋加工費",
+          spec: "",
+          qty: 226.1,
+          unit: "t",
+          price: 35000,
+          netRate: 0.95,
+          netPrice: 33250,
+        },
+        {
+          projectId: "p2",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 J社",
+          item: "鉄筋加工費",
+          spec: "",
+          qty: 180.5,
+          unit: "t",
+          price: 36000,
+          netRate: 0.92,
+          netPrice: 33120,
+        },
+        {
+          projectId: "p3",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 C社",
+          item: "鉄筋加工費",
+          spec: "",
+          qty: 195.3,
+          unit: "t",
+          price: 35500,
+          netRate: 0.94,
+          netPrice: 33370,
+        },
+        {
+          projectId: "p4",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 J社",
+          item: "鉄筋加工費",
+          spec: "",
+          qty: 310.8,
+          unit: "t",
+          price: 34500,
+          netRate: 0.93,
+          netPrice: 32085,
+        },
+        {
+          projectId: "p5",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 C社",
+          item: "鉄筋加工費",
+          spec: "",
+          qty: 145.2,
+          unit: "t",
+          price: 36500,
+          netRate: 0.945,
+          netPrice: 34493,
+        },
+        {
+          projectId: "p6",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 M社",
+          item: "鉄筋加工費",
+          spec: "",
+          qty: 268.4,
+          unit: "t",
+          price: 33500,
+          netRate: 0.935,
+          netPrice: 31323,
+        },
+        {
+          projectId: "p7",
+          categoryKey: "rebar",
+          type: "direct",
+          company: "株式会社 J社",
+          item: "鉄筋加工費",
+          spec: "",
+          qty: 225.6,
+          unit: "t",
+          price: 35800,
+          netRate: 0.925,
+          netPrice: 33115,
+        },
+        {
+          projectId: "p1",
+          categoryKey: "earthwork",
+          type: "direct",
+          company: "株式会社 D社",
+          item: "根切り工事",
+          spec: "機械掘削",
+          qty: 2500,
+          unit: "㎥",
+          price: 3500,
+          netRate: 0.92,
+          netPrice: 3220,
+        },
+        {
+          projectId: "p2",
+          categoryKey: "earthwork",
+          type: "direct",
+          company: "株式会社 K社",
+          item: "根切り工事",
+          spec: "機械掘削",
+          qty: 4500,
+          unit: "㎥",
+          price: 3200,
+          netRate: 0.94,
+          netPrice: 3008,
+        },
+        {
+          projectId: "p3",
+          categoryKey: "earthwork",
+          type: "direct",
+          company: "株式会社 D社",
+          item: "根切り工事",
+          spec: "機械掘削",
+          qty: 3200,
+          unit: "㎥",
+          price: 3400,
+          netRate: 0.93,
+          netPrice: 3162,
+        },
+        {
+          projectId: "p4",
+          categoryKey: "earthwork",
+          type: "direct",
+          company: "株式会社 K社",
+          item: "根切り工事",
+          spec: "機械掘削",
+          qty: 5800,
+          unit: "㎥",
+          price: 3100,
+          netRate: 0.945,
+          netPrice: 2930,
+        },
+        {
+          projectId: "p6",
+          categoryKey: "earthwork",
+          type: "direct",
+          company: "株式会社 N社",
+          item: "根切り工事",
+          spec: "機械掘削",
+          qty: 4100,
+          unit: "㎥",
+          price: 3300,
+          netRate: 0.925,
+          netPrice: 3053,
+        },
+        {
+          projectId: "p7",
+          categoryKey: "earthwork",
+          type: "direct",
+          company: "株式会社 K社",
+          item: "根切り工事",
+          spec: "機械掘削",
+          qty: 3900,
+          unit: "㎥",
+          price: 3250,
+          netRate: 0.935,
+          netPrice: 3039,
+        },
+        {
+          projectId: "p1",
+          categoryKey: "painting",
+          type: "direct",
+          company: "株式会社 G社",
+          item: "外壁塗装",
+          spec: "シリコン樹脂塗料",
+          qty: 3500,
+          unit: "㎡",
+          price: 2800,
+          netRate: 0.93,
+          netPrice: 2604,
+        },
+        {
+          projectId: "p2",
+          categoryKey: "painting",
+          type: "direct",
+          company: "株式会社 O社",
+          item: "外壁塗装",
+          spec: "フッ素樹脂塗料",
+          qty: 5200,
+          unit: "㎡",
+          price: 3500,
+          netRate: 0.93,
+          netPrice: 3255,
+        },
+        {
+          projectId: "p3",
+          categoryKey: "painting",
+          type: "direct",
+          company: "株式会社 G社",
+          item: "外壁塗装",
+          spec: "シリコン樹脂塗料",
+          qty: 4100,
+          unit: "㎡",
+          price: 2900,
+          netRate: 0.925,
+          netPrice: 2683,
+        },
+        {
+          projectId: "p5",
+          categoryKey: "painting",
+          type: "direct",
+          company: "株式会社 O社",
+          item: "外壁塗装",
+          spec: "フッ素樹脂塗料",
+          qty: 6800,
+          unit: "㎡",
+          price: 3400,
+          netRate: 0.935,
+          netPrice: 3179,
+        },
+        {
+          projectId: "p7",
+          categoryKey: "painting",
+          type: "direct",
+          company: "株式会社 G社",
+          item: "外壁塗装",
+          spec: "シリコン樹脂塗料",
+          qty: 5500,
+          unit: "㎡",
+          price: 2850,
+          netRate: 0.92,
+          netPrice: 2622,
+        },
+        {
+          projectId: "p1",
+          categoryKey: "rebar",
+          type: "indirect",
+          company: "株式会社 A社",
+          item: "材料運搬費",
+          spec: "",
+          qty: 1,
+          unit: "式",
+          price: 580000,
+          netRate: 0.98,
+          netPrice: 568400,
+        },
+        {
+          projectId: "p2",
+          categoryKey: "rebar",
+          type: "indirect",
+          company: "株式会社 I社",
+          item: "材料運搬費",
+          spec: "",
+          qty: 1,
+          unit: "式",
+          price: 620000,
+          netRate: 0.95,
+          netPrice: 589000,
+        },
+        {
+          projectId: "p4",
+          categoryKey: "rebar",
+          type: "indirect",
+          company: "株式会社 I社",
+          item: "材料運搬費",
+          spec: "",
+          qty: 1,
+          unit: "式",
+          price: 780000,
+          netRate: 0.96,
+          netPrice: 748800,
+        },
+        {
+          projectId: "p5",
+          categoryKey: "rebar",
+          type: "indirect",
+          company: "株式会社 A社",
+          item: "材料運搬費",
+          spec: "",
+          qty: 1,
+          unit: "式",
+          price: 550000,
+          netRate: 0.97,
+          netPrice: 533500,
+        },
+        {
+          projectId: "p6",
+          categoryKey: "rebar",
+          type: "indirect",
+          company: "株式会社 K社",
+          item: "材料運搬費",
+          spec: "",
+          qty: 1,
+          unit: "式",
+          price: 680000,
+          netRate: 0.94,
+          netPrice: 639200,
+        },
+        {
+          projectId: "p7",
+          categoryKey: "rebar",
+          type: "indirect",
+          company: "株式会社 I社",
+          item: "材料運搬費",
+          spec: "",
+          qty: 1,
+          unit: "式",
+          price: 650000,
+          netRate: 0.955,
+          netPrice: 620750,
+        },
+      ];
+
+      let allItems = [];
+      let groupedItems = [];
+      let filteredGroups = [];
+
+      function flattenData() {
+        allItems = itemRecords.map((rec) => {
+          const proj = projects.find((p) => p.id === rec.projectId);
+          return {
+            ...rec,
+            projectName: proj.name,
+            projectType: proj.type,
+            projectTypeColor: proj.typeColor,
+            projectStructure: proj.structure,
+            projectStructureCode: proj.structureCode,
+            projectArea: proj.area,
+            projectPeriodStart: proj.periodStart,
+            projectDate: proj.date,
+            categoryName: catNames[rec.categoryKey],
+            amount: rec.qty * rec.price,
+            netAmount: rec.qty * rec.netPrice,
+          };
+        });
+      }
+
+      function groupByItem() {
+        const groups = {};
+        allItems.forEach((item) => {
+          const key = `${item.item}|${item.spec}`;
+          if (!groups[key]) {
+            groups[key] = {
+              item: item.item,
+              spec: item.spec,
+              unit: item.unit,
+              records: [],
+            };
+          }
+          groups[key].records.push(item);
+        });
+
+        groupedItems = Object.values(groups).map((g) => {
+          g.records.sort((a, b) => a.projectDate.localeCompare(b.projectDate));
+          const netPrices = g.records.map((r) => r.netPrice);
+          const types = [...new Set(g.records.map((r) => r.type))];
+          const categories = [...new Set(g.records.map((r) => r.categoryName))];
+
+          return {
+            ...g,
+            recordCount: g.records.length,
+            minNetPrice: Math.min(...netPrices),
+            maxNetPrice: Math.max(...netPrices),
+            avgNetPrice:
+              netPrices.reduce((a, b) => a + b, 0) / netPrices.length,
+            types,
+            categories,
+          };
+        });
+      }
+
+      function calculateStats(records) {
+        const usageCount = {},
+          structureCount = {};
+        let totalArea = 0;
+        records.forEach((r) => {
+          usageCount[r.projectType] = (usageCount[r.projectType] || 0) + 1;
+          structureCount[r.projectStructureCode] =
+            (structureCount[r.projectStructureCode] || 0) + 1;
+          totalArea += r.projectArea;
+        });
+        return {
+          usageCount,
+          structureCount,
+          avgArea:
+            records.length > 0 ? Math.round(totalArea / records.length) : 0,
+        };
+      }
+
+      function applyFilters() {
+        const projectKeyword = document
+          .getElementById("filterProject")
+          .value.toLowerCase();
+        const itemKeyword = document
+          .getElementById("filterItem")
+          .value.toLowerCase();
+        const category = document.getElementById("filterCategory").value;
+        const usage = document.getElementById("filterUsage").value;
+        const structures = Array.from(
+          document.querySelectorAll(".filter-structure:checked")
+        ).map((el) => el.value);
+        const areaMin =
+          parseFloat(document.getElementById("filterAreaMin").value) || 0;
+        const areaMax =
+          parseFloat(document.getElementById("filterAreaMax").value) ||
+          Infinity;
+        const company = document
+          .getElementById("filterCompany")
+          .value.toLowerCase();
+        const dateFrom = document.getElementById("filterDateFrom").value;
+        const dateTo = document.getElementById("filterDateTo").value;
+
+        filteredGroups = groupedItems
+          .map((g) => {
+            const matchingRecords = g.records.filter((r) => {
+              if (
+                projectKeyword &&
+                !r.projectName.toLowerCase().includes(projectKeyword)
+              )
+                return false;
+              if (usage && r.projectType !== usage) return false;
+              if (
+                structures.length &&
+                !structures.includes(r.projectStructureCode)
+              )
+                return false;
+              if (r.projectArea < areaMin || r.projectArea > areaMax)
+                return false;
+              if (company && !r.company.toLowerCase().includes(company))
+                return false;
+              if (dateFrom && r.projectDate < dateFrom) return false;
+              if (dateTo && r.projectDate > dateTo) return false;
+              return true;
+            });
+            return { ...g, filteredRecords: matchingRecords };
+          })
+          .filter((g) => {
+            if (
+              itemKeyword &&
+              !g.item.toLowerCase().includes(itemKeyword) &&
+              !g.spec.toLowerCase().includes(itemKeyword)
+            )
+              return false;
+            if (category && !g.records.some((r) => r.categoryKey === category))
+              return false;
+            return g.filteredRecords.length > 0;
+          });
+
+        renderResults();
+        renderActiveFilters();
+      }
+
+      function clearFilters() {
+        document.getElementById("filterProject").value = "";
+        document.getElementById("filterItem").value = "";
+        document.getElementById("filterCategory").value = "";
+        document.getElementById("filterUsage").value = "";
+        document
+          .querySelectorAll(".filter-structure")
+          .forEach((el) => (el.checked = false));
+        document.getElementById("filterAreaMin").value = "";
+        document.getElementById("filterAreaMax").value = "";
+        document.getElementById("filterCompany").value = "";
+        document.getElementById("filterDateFrom").value = "";
+        document.getElementById("filterDateTo").value = "";
+        filteredGroups = groupedItems.map((g) => ({
+          ...g,
+          filteredRecords: g.records,
+        }));
+        renderResults();
+        renderActiveFilters();
+      }
+
+      function renderActiveFilters() {
+        const container = document.getElementById("activeFilters");
+        const filters = [];
+        const projectKeyword = document.getElementById("filterProject").value;
+        if (projectKeyword) filters.push(`案件名: ${projectKeyword}`);
+        const usage = document.getElementById("filterUsage").value;
+        if (usage) filters.push(`建物用途: ${usage}`);
+        const structures = Array.from(
+          document.querySelectorAll(".filter-structure:checked")
+        ).map((el) => el.value);
+        if (structures.length) filters.push(`構造: ${structures.join(", ")}`);
+        const itemKeyword = document.getElementById("filterItem").value;
+        if (itemKeyword) filters.push(`品目: ${itemKeyword}`);
+        const category = document.getElementById("filterCategory").value;
+        if (category) filters.push(`工種: ${catNames[category]}`);
+        const company = document.getElementById("filterCompany").value;
+        if (company) filters.push(`協力会社: ${company}`);
+
+        container.innerHTML = filters.length
+          ? '<small class="text-muted me-2">適用中:</small>' +
+            filters
+              .map(
+                (f) =>
+                  `<span class="badge filter-badge bg-secondary">${f}</span>`
+              )
+              .join("")
+          : '<small class="text-muted">絞り込み条件なし（全品目表示）</small>';
+      }
+
+      function renderResults() {
+        const container = document.getElementById("resultsContainer");
+        if (!filteredGroups.length) {
+          container.innerHTML = `
+                    <div class="text-center py-5">
+                        <svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" class="text-muted mb-3">
+                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <p class="text-muted">検索条件に該当する品目がありません</p>
+                        <button class="btn btn-sm btn-outline-primary" onclick="clearFilters()">条件をクリア</button>
+                    </div>`;
+          return;
+        }
+
+        container.innerHTML = `<div class="results-grid">${filteredGroups
+          .map((g, idx) => {
+            const records = g.filteredRecords;
+            const priceVariation = (
+              ((g.maxNetPrice - g.minNetPrice) / g.avgNetPrice) *
+              100
+            ).toFixed(1);
+            const stats = calculateStats(records);
+
+            return `
+                <div class="card item-group-card shadow-sm" id="group-${idx}">
+                    <div class="card-body" onclick="toggleGroup(${idx})">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-2">${g.item}${
+              g.spec
+                ? ` <span class="text-muted fw-normal">/ ${g.spec}</span>`
+                : ""
+            }</h5>
+                                <div class="tag-cloud">
+                                    ${g.categories
+                                      .map(
+                                        (c) =>
+                                          `<span class="badge bg-secondary">${c}</span>`
+                                      )
+                                      .join("")}
+                                    ${g.types
+                                      .map(
+                                        (t) =>
+                                          `<span class="badge bg-${typeBadges[t]}">${typeNames[t]}</span>`
+                                      )
+                                      .join("")}
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted d-block mb-1">NET単価レンジ</small>
+                                <div class="fw-bold text-primary fs-5 tabular-nums">¥${fmt(
+                                  g.minNetPrice
+                                )} ~ ¥${fmt(g.maxNetPrice)}</div>
+                                <small class="text-muted">変動率: ${priceVariation}%</small>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-stats mb-3">
+                            <div class="summary-section">
+                                <div class="summary-section-title">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                    協力会社別 NET単価レンジ（/${g.unit}）
+                                </div>
+                                <div class="company-summary-list">
+                                    ${(() => {
+                                      const companyData = {};
+                                      records.forEach((r) => {
+                                        const name = r.company.replace(
+                                          "株式会社 ",
+                                          ""
+                                        );
+                                        if (!companyData[name]) {
+                                          companyData[name] = {
+                                            prices: [],
+                                            count: 0,
+                                          };
+                                        }
+                                        companyData[name].prices.push(
+                                          r.netPrice
+                                        );
+                                        companyData[name].count++;
+                                      });
+                                      return Object.entries(companyData)
+                                        .map(([name, data]) => {
+                                          const minP = Math.min(...data.prices);
+                                          const maxP = Math.max(...data.prices);
+                                          const avgP = Math.round(
+                                            data.prices.reduce(
+                                              (a, b) => a + b,
+                                              0
+                                            ) / data.prices.length
+                                          );
+                                          return `
+                                            <div class="company-summary-item">
+                                                <div class="company-header">
+                                                    <span class="company-name">${name}</span>
+                                                    <span class="company-count">${
+                                                      data.count
+                                                    }件</span>
+                                                </div>
+                                                <div class="company-prices">
+                                                    <div class="company-price-item">
+                                                        <span class="company-price-label">最小</span>
+                                                        <span class="company-price-value min">¥${fmt(
+                                                          minP
+                                                        )}</span>
+                                                    </div>
+                                                    <div class="company-price-item">
+                                                        <span class="company-price-label">平均</span>
+                                                        <span class="company-price-value avg">¥${fmt(
+                                                          avgP
+                                                        )}</span>
+                                                    </div>
+                                                    <div class="company-price-item">
+                                                        <span class="company-price-label">最大</span>
+                                                        <span class="company-price-value max">¥${fmt(
+                                                          maxP
+                                                        )}</span>
+                                                    </div>
+                                                </div>
+                                            </div>`;
+                                        })
+                                        .join("");
+                                    })()}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <small class="text-muted">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-3px">
+                                    <polyline points="6 9 12 15 18 9"/>
+                                </svg>
+                                クリックして実績詳細を表示
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="collapse border-top" id="groupDetail-${idx}">
+                        <div class="card-body bg-light">
+                            <h6 class="fw-bold text-secondary mb-3">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px">
+                                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                見積詳細（見積期間終了の時系列）
+                            </h6>
+                            <div class="timeline-container">
+                                ${records
+                                  .map((r) => {
+                                    const [year, month] =
+                                      r.projectPeriodStart.split("-");
+                                    return `
+                                    <div class="timeline-item">
+                                        <div class="timeline-date">
+                                            <span class="year">${year}</span>
+                                            <span class="month">${parseInt(
+                                              month
+                                            )}月</span>
+                                        </div>
+                                        <div class="timeline-dot"></div>
+                                        <div class="timeline-content">
+                                            <div class="project-header">
+                                                <div class="flex-grow-1">
+                                                    <div class="project-badges">
+                                                        <span class="badge bg-${
+                                                          r.projectTypeColor
+                                                        }">${
+                                      r.projectType
+                                    }</span>
+                                                        <span class="badge bg-secondary">${
+                                                          r.projectStructure
+                                                        }</span>
+                                                        <span class="badge bg-light text-dark">${fmt(
+                                                          r.projectArea
+                                                        )} ㎡</span>
+                                                    </div>
+                                                    <div class="project-name">${
+                                                      r.projectName
+                                                    }</div>
+                                                </div>
+                                                <div class="price-display">
+                                                    <div class="price-main tabular-nums">¥${fmt(
+                                                      r.netPrice
+                                                    )}</div>
+                                                    <div class="price-sub">NET率 ${r.netRate.toFixed(
+                                                      3
+                                                    )}</div>
+                                                </div>
+                                            </div>
+                                            <div class="detail-grid">
+                                                <div class="detail-item">
+                                                    <div class="detail-label">協力会社</div>
+                                                    <div class="detail-value">${
+                                                      r.company
+                                                    }</div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <div class="detail-label">数量</div>
+                                                    <div class="detail-value tabular-nums">${fmt(
+                                                      r.qty
+                                                    )} ${r.unit}</div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <div class="detail-label">見積単価</div>
+                                                    <div class="detail-value tabular-nums">¥${fmt(
+                                                      r.price
+                                                    )}</div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <div class="detail-label">見積金額</div>
+                                                    <div class="detail-value tabular-nums">¥${fmt(
+                                                      r.amount
+                                                    )}</div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <div class="detail-label">NET金額</div>
+                                                    <div class="detail-value tabular-nums highlight">¥${fmt(
+                                                      Math.round(r.netAmount)
+                                                    )}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                  })
+                                  .join("")}
+                            </div>
+                            <div class="text-center mt-3 pt-3 border-top" onclick="event.stopPropagation(); toggleGroup(${idx})" style="cursor:pointer">
+                                <small class="text-muted">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-3px">
+                                        <polyline points="18 15 12 9 6 15"/>
+                                    </svg>
+                                    クリックして閉じる
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+          })
+          .join("")}</div>`;
+      }
+
+      function toggleGroup(idx) {
+        const detail = document.getElementById(`groupDetail-${idx}`);
+        const card = document.getElementById(`group-${idx}`);
+        const isExpanded = detail.classList.contains("show");
+        detail.classList.toggle("show");
+        card.classList.toggle("expanded");
+      }
+
+      flattenData();
+      groupByItem();
+      clearFilters();
+    </script>
+  </body>
+</html>
