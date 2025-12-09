@@ -572,6 +572,19 @@
           </div>
         </div>
       </aside>
+      <script>
+        document
+          .querySelector(".sidebar")
+          .addEventListener("keydown", function (e) {
+            if (
+              e.key === "Enter" &&
+              (e.target.tagName === "INPUT" || e.target.tagName === "SELECT")
+            ) {
+              e.preventDefault();
+              applyFilters();
+            }
+          });
+      </script>
 
       <main class="main-content p-4">
         <div class="mb-4">
