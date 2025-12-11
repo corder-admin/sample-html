@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>検索拡張生成（RAG）- 建築見積・物件データ活用支援</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --sidebar-width: 260px;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN",
+          sans-serif;
+      }
+      .app-wrapper {
+        display: flex;
+        height: 100vh;
+        width: 100%;
+      }
+      .sidebar-left {
+        width: var(--sidebar-width);
+        flex-shrink: 0;
+        background: #1e293b;
+        display: flex;
+        flex-direction: column;
+        color: #cbd5e1;
+      }
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        background: #f8fafc;
+      }
+      .main-header {
+        flex-shrink: 0;
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1rem 1.5rem;
+      }
+      .chat-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+      }
+      .input-area {
+        flex-shrink: 0;
+        background: #fff;
+        border-top: 1px solid #e2e8f0;
+        padding: 1rem 1.5rem;
+      }
+      .sidebar-right {
+        width: 0;
+        flex-shrink: 0;
+        background: #f1f5f9;
+        border-left: 1px solid #e2e8f0;
+        overflow: hidden;
+        transition: width 0.3s ease;
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar-right.open {
+        width: 38%;
+      }
+      .viewer-header {
+        flex-shrink: 0;
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.75rem 1rem;
+      }
+      .viewer-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+      }
+      .nav-link-sidebar {
+        color: #94a3b8;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .nav-link-sidebar:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+      .nav-link-sidebar.active {
+        background: rgba(59, 130, 246, 0.2);
+        color: #fff;
+      }
+      .message-row {
+        max-width: 720px;
+        margin: 0 auto 1.5rem;
+      }
+      .msg-bubble-user {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: #fff;
+        border-radius: 1rem 1rem 0.25rem 1rem;
+        padding: 0.875rem 1rem;
+      }
+      .msg-bubble-assistant {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem 1rem 1rem 0.25rem;
+        padding: 0.875rem 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+      .avatar-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .avatar-user {
+        background: #e2e8f0;
+        color: #64748b;
+      }
+      .avatar-assistant {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: #fff;
+      }
+      .source-btn {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+      }
+      .source-btn:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+      }
+      .source-btn.active {
+        border-color: #3b82f6;
+        background: #eff6ff;
+      }
+      .pdf-paper {
+        background: #fff;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        border-radius: 4px;
+        padding: 1.5rem;
+      }
+      .highlight-row {
+        background: #fef9c3 !important;
+      }
+      .typing-dots span {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: #3b82f6;
+        border-radius: 50%;
+        margin-right: 4px;
+        animation: dotBounce 1.4s infinite ease-in-out both;
+      }
+      .typing-dots span:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+      .typing-dots span:nth-child(2) {
+        animation-delay: -0.16s;
+      }
+      @keyframes dotBounce {
+        0%,
+        80%,
+        100% {
+          transform: scale(0);
+        }
+        40% {
+          transform: scale(1);
+        }
+      }
+      .input-box {
+        position: relative;
+      }
+      .input-box textarea {
+        padding-right: 3rem;
+        resize: none;
+        border-radius: 0.75rem;
+      }
+      .input-box .btn-send {
+        position: absolute;
+        right: 0.5rem;
+        bottom: 0.5rem;
+      }
+      .icon {
+        width: 18px;
+        height: 18px;
+        vertical-align: middle;
+      }
+      .icon-sm {
+        width: 16px;
+        height: 16px;
+      }
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-wrapper">
+      <div class="sidebar-left">
+        <div class="p-3 border-bottom border-secondary">
+          <div class="d-flex align-items-center gap-2 text-white">
+            <svg
+              class="icon text-primary"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+              <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+            </svg>
+            <span class="fw-bold">見積過去データ検索</span>
+          </div>
+        </div>
+        <div class="p-3">
+          <button
+            class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
+            onclick="newChat()"
+          >
+            <svg
+              class="icon-sm"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            <span>新しいチャット</span>
+          </button>
+        </div>
+        <div class="px-3 flex-grow-1 overflow-auto">
+          <div class="text-secondary small mb-2">検索キーワード例</div>
+          <div
+            class="nav-link-sidebar mb-1"
+            role="button"
+            onclick="setQuery('異形棒鋼 SD345 D16')"
+          >
+            <svg
+              class="icon-sm"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <span>異形棒鋼 SD345 D16</span>
+          </div>
+          <div
+            class="nav-link-sidebar mb-1"
+            role="button"
+            onclick="setQuery('鉄筋加工費')"
+          >
+            <svg
+              class="icon-sm"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <span>鉄筋加工費</span>
+          </div>
+          <div
+            class="nav-link-sidebar mb-1"
+            role="button"
+            onclick="setQuery('鉄筋組立費')"
+          >
+            <svg
+              class="icon-sm"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <span>鉄筋組立費</span>
+          </div>
+          <div
+            class="nav-link-sidebar mb-1"
+            role="button"
+            onclick="setQuery('高強度鉄筋 SD490')"
+          >
+            <svg
+              class="icon-sm"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <span>高強度鉄筋 SD490</span>
+          </div>
+        </div>
+        <div class="p-3 border-top border-secondary">
+          <small class="text-secondary d-flex align-items-center gap-1">
+            <svg
+              class="icon-sm"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+            デモデータ: 12件
+          </small>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="main-header">
+          <small class="text-muted"
+            >過去見積データからAIが回答します（部分一致検索対応）</small
+          >
+        </div>
+        <div class="chat-area" id="chatArea"></div>
+        <div class="input-area">
+          <div class="input-box mx-auto" style="max-width: 720px">
+            <textarea
+              id="userInput"
+              class="form-control"
+              rows="2"
+              placeholder="検索キーワードを入力（例: 鉄筋、SD345、加工費、A社）"
+            ></textarea>
+            <button id="sendBtn" class="btn btn-primary btn-sm btn-send">
+              <svg
+                class="icon-sm"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+              </svg>
+            </button>
+          </div>
+          <div class="text-center mt-2">
+            <small class="text-muted">Enter で送信 / Shift+Enter で改行</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-right" id="sidebarRight">
+        <div
+          class="viewer-header d-flex align-items-center justify-content-between"
+        >
+          <div class="d-flex align-items-center gap-2 overflow-hidden">
+            <span class="text-danger">
+              <svg
+                class="icon"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                />
+                <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+              </svg>
+            </span>
+            <div class="overflow-hidden">
+              <div class="fw-semibold small" id="viewerTitle">見積書PDF</div>
+              <div class="text-muted small" id="viewerSubtitle">-</div>
+            </div>
+          </div>
+          <button
+            class="btn btn-sm btn-outline-secondary"
+            onclick="closeViewer()"
+          >
+            <svg
+              class="icon-sm"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="viewer-body" id="viewerContent"></div>
+      </div>
+    </div>
+
+    <script>
+      const ICONS = {
+        user: '<svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+        cpu: '<svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>',
+        pdf: '<svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>',
+        link: '<svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',
+      };
+
+      const DATA = [
+        {
+          id: 1,
+          item: "異形棒鋼 SD345",
+          spec: "D16",
+          projectId: "PJ001",
+          project: "○○マンション新築工事",
+          date: "2023/03/15",
+          company: "株式会社 A社",
+          qty: 72.5,
+          unit: "t",
+          price: 118000,
+          netRate: 0.97,
+          netPrice: 114460,
+          netAmount: 8298350,
+        },
+        {
+          id: 2,
+          item: "異形棒鋼 SD345",
+          spec: "D16",
+          projectId: "PJ002",
+          project: "△△病院増築工事",
+          date: "2023/09/22",
+          company: "株式会社 B社",
+          qty: 58.3,
+          unit: "t",
+          price: 116000,
+          netRate: 0.96,
+          netPrice: 111360,
+          netAmount: 6492288,
+        },
+        {
+          id: 3,
+          item: "異形棒鋼 SD345",
+          spec: "D16",
+          projectId: "PJ003",
+          project: "共愛会 本部事務局棟改築工事",
+          date: "2024/08/15",
+          company: "株式会社 A社",
+          qty: 85.2,
+          unit: "t",
+          price: 115000,
+          netRate: 0.98,
+          netPrice: 112700,
+          netAmount: 9602040,
+        },
+        {
+          id: 4,
+          item: "鉄筋加工費",
+          spec: "工場加工",
+          projectId: "PJ001",
+          project: "○○マンション新築工事",
+          date: "2023/03/15",
+          company: "株式会社 C社",
+          qty: 180.5,
+          unit: "t",
+          price: 36000,
+          netRate: 0.94,
+          netPrice: 33840,
+          netAmount: 6108120,
+        },
+        {
+          id: 5,
+          item: "鉄筋加工費",
+          spec: "工場加工",
+          projectId: "PJ002",
+          project: "△△病院増築工事",
+          date: "2023/09/22",
+          company: "株式会社 D社",
+          qty: 142.8,
+          unit: "t",
+          price: 34500,
+          netRate: 0.95,
+          netPrice: 32775,
+          netAmount: 4680270,
+        },
+        {
+          id: 6,
+          item: "鉄筋加工費",
+          spec: "工場加工",
+          projectId: "PJ003",
+          project: "共愛会 本部事務局棟改築工事",
+          date: "2024/08/15",
+          company: "株式会社 C社",
+          qty: 226.1,
+          unit: "t",
+          price: 35000,
+          netRate: 0.95,
+          netPrice: 33250,
+          netAmount: 7517825,
+        },
+        {
+          id: 7,
+          item: "鉄筋組立費",
+          spec: "現場組立",
+          projectId: "PJ001",
+          project: "○○マンション新築工事",
+          date: "2023/03/15",
+          company: "株式会社 C社",
+          qty: 180.5,
+          unit: "t",
+          price: 43000,
+          netRate: 0.94,
+          netPrice: 40420,
+          netAmount: 7295810,
+        },
+        {
+          id: 8,
+          item: "鉄筋組立費",
+          spec: "現場組立",
+          projectId: "PJ002",
+          project: "△△病院増築工事",
+          date: "2023/09/22",
+          company: "株式会社 D社",
+          qty: 142.8,
+          unit: "t",
+          price: 41500,
+          netRate: 0.95,
+          netPrice: 39425,
+          netAmount: 5629890,
+        },
+        {
+          id: 9,
+          item: "鉄筋組立費",
+          spec: "現場組立",
+          projectId: "PJ003",
+          project: "共愛会 本部事務局棟改築工事",
+          date: "2024/08/15",
+          company: "株式会社 C社",
+          qty: 226.1,
+          unit: "t",
+          price: 42000,
+          netRate: 0.95,
+          netPrice: 39900,
+          netAmount: 9021390,
+        },
+        {
+          id: 10,
+          item: "高強度鉄筋 SD490",
+          spec: "D25",
+          projectId: "PJ001",
+          project: "○○マンション新築工事",
+          date: "2023/03/15",
+          company: "株式会社 B社",
+          qty: 12.3,
+          unit: "t",
+          price: 275000,
+          netRate: 0.97,
+          netPrice: 266750,
+          netAmount: 3281025,
+        },
+        {
+          id: 11,
+          item: "高強度鉄筋 SD490",
+          spec: "D25",
+          projectId: "PJ002",
+          project: "△△病院増築工事",
+          date: "2023/09/22",
+          company: "株式会社 A社",
+          qty: 8.5,
+          unit: "t",
+          price: 272000,
+          netRate: 0.96,
+          netPrice: 261120,
+          netAmount: 2219520,
+        },
+        {
+          id: 12,
+          item: "高強度鉄筋 SD490",
+          spec: "D25",
+          projectId: "PJ003",
+          project: "共愛会 本部事務局棟改築工事",
+          date: "2024/08/15",
+          company: "株式会社 B社",
+          qty: 7.1,
+          unit: "t",
+          price: 270000,
+          netRate: 0.98,
+          netPrice: 264600,
+          netAmount: 1878660,
+        },
+      ];
+
+      const PROJECTS = {
+        PJ001: {
+          id: "PJ001",
+          name: "○○マンション新築工事",
+          usage: "共同住宅",
+          structure: "RC造",
+          area: "4,850.25",
+          date: "2023/03/15",
+          location: "東京都世田谷区",
+          floors: "地上12階/地下1階",
+        },
+        PJ002: {
+          id: "PJ002",
+          name: "△△病院増築工事",
+          usage: "病院",
+          structure: "SRC造",
+          area: "3,280.50",
+          date: "2023/09/22",
+          location: "神奈川県横浜市",
+          floors: "地上8階",
+        },
+        PJ003: {
+          id: "PJ003",
+          name: "共愛会 本部事務局棟改築工事",
+          usage: "事務所",
+          structure: "S造",
+          area: "1,520.80",
+          date: "2024/08/15",
+          location: "埼玉県さいたま市",
+          floors: "地上5階",
+        },
+      };
+
+      const state = { messages: [], viewingIds: [], thinking: false };
+
+      function search(query) {
+        const keywords = query
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((k) => k.length > 0);
+        return DATA.filter((d) => {
+          const text = (
+            d.item +
+            " " +
+            d.spec +
+            " " +
+            d.project +
+            " " +
+            d.company
+          ).toLowerCase();
+          return keywords.every((kw) => text.includes(kw));
+        });
+      }
+
+      function formatNum(n) {
+        return n.toLocaleString();
+      }
+      function escapeHtml(t) {
+        return t
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function parseMarkdown(text) {
+        if (!text) return "";
+        let html = "";
+        const lines = text.split("\n");
+        let inTable = false;
+        let tableRows = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+
+          if (line.trim().startsWith("|") && line.trim().endsWith("|")) {
+            inTable = true;
+            tableRows.push(line);
+            continue;
+          }
+
+          if (inTable) {
+            html += renderTable(tableRows);
+            inTable = false;
+            tableRows = [];
+          }
+
+          if (line.trim() === "") {
+            html += '<div class="mb-2"></div>';
+          } else if (line.trim() === "---") {
+            html += '<hr class="my-2">';
+          } else if (line.trim().startsWith("- ")) {
+            let processed = line.trim().substring(2);
+            processed = processed.replace(
+              /\*\*(.+?)\*\*/g,
+              "<strong>$1</strong>"
+            );
+            html += '<div class="ms-3">• ' + processed + "</div>";
+          } else {
+            let processed = line;
+            processed = processed.replace(
+              /\*\*(.+?)\*\*/g,
+              "<strong>$1</strong>"
+            );
+            processed = processed.replace(
+              /\*(.+?)\*/g,
+              '<em class="text-muted small">$1</em>'
+            );
+            html += "<div>" + processed + "</div>";
+          }
+        }
+
+        if (inTable && tableRows.length > 0) {
+          html += renderTable(tableRows);
+        }
+
+        return html;
+      }
+
+      function renderTable(rows) {
+        if (rows.length < 3) return "";
+
+        const parseRow = (line) =>
+          line
+            .split("|")
+            .filter((c, i, arr) => i > 0 && i < arr.length - 1)
+            .map((c) => c.trim());
+        const headers = parseRow(rows[0]);
+        const aligns = parseRow(rows[1]).map((c) => {
+          if (c.startsWith(":") && c.endsWith(":")) return "center";
+          if (c.endsWith(":")) return "end";
+          return "start";
+        });
+
+        let html =
+          '<div class="table-responsive my-2"><table class="table table-sm table-bordered small"><thead class="table-light"><tr>';
+        headers.forEach((h, i) => {
+          html += '<th class="text-' + aligns[i] + '">' + h + "</th>";
+        });
+        html += "</tr></thead><tbody>";
+
+        for (let i = 2; i < rows.length; i++) {
+          const cells = parseRow(rows[i]);
+          html += "<tr>";
+          cells.forEach((c, j) => {
+            html +=
+              '<td class="text-' + (aligns[j] || "start") + '">' + c + "</td>";
+          });
+          html += "</tr>";
+        }
+        html += "</tbody></table></div>";
+        return html;
+      }
+
+      function generateResponse(query, results) {
+        if (results.length === 0) {
+          return (
+            "「**" +
+            escapeHtml(query) +
+            "**」に該当するデータは見つかりませんでした。\n\n別のキーワードでお試しください。\n例: 異形棒鋼 SD345 D16、鉄筋加工費、鉄筋組立費"
+          );
+        }
+
+        const sorted = results
+          .slice()
+          .sort((a, b) => new Date(a.date) - new Date(b.date));
+        const uniqueCompanies = [...new Set(sorted.map((r) => r.company))];
+        const itemName =
+          sorted[0].item + (sorted[0].spec ? " " + sorted[0].spec : "");
+
+        let text =
+          "「**" +
+          escapeHtml(query) +
+          "**」について、過去 **見積" +
+          results.length +
+          "件**、**協力会社" +
+          uniqueCompanies.length +
+          "社** から以下の見積実績が見つかりました。\n\n";
+        text += "**品目: " + itemName + "**\n\n";
+        text += "| 案件日付 | 案件名 | 協力会社 | 数量 | NET単価 | NET金額 |\n";
+        text += "|:--|:--|:--|--:|--:|--:|\n";
+
+        sorted.forEach((r) => {
+          text +=
+            "| " +
+            r.date +
+            " | " +
+            r.project +
+            " | " +
+            r.company +
+            " | " +
+            r.qty +
+            " " +
+            r.unit +
+            " | ¥" +
+            formatNum(r.netPrice) +
+            " | ¥" +
+            formatNum(r.netAmount) +
+            " |\n";
+        });
+
+        const prices = sorted.map((r) => r.netPrice);
+        const minPrice = Math.min.apply(null, prices);
+        const maxPrice = Math.max.apply(null, prices);
+        const avgPrice = Math.round(
+          prices.reduce((a, b) => a + b, 0) / prices.length
+        );
+        const minCompany = sorted.find((r) => r.netPrice === minPrice).company;
+
+        text += "\n**単価分析**\n";
+        text += "- 最安値: ¥" + formatNum(minPrice) + " (" + minCompany + ")\n";
+        text += "- 最高値: ¥" + formatNum(maxPrice) + "\n";
+        text += "- 平均: ¥" + formatNum(avgPrice) + "\n";
+        text += "\n---\n";
+        text +=
+          "*この回答は社内の見積データベースから抽出した過去実績に基づいています。*";
+
+        return text;
+      }
+
+      function render() {
+        const area = document.getElementById("chatArea");
+        area.innerHTML = "";
+
+        if (state.messages.length === 0) {
+          area.innerHTML =
+            '<div class="text-center py-5"><div class="text-muted mb-3"><svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div><h5 class="text-muted">過去見積データを検索</h5><p class="text-muted small">キーワードを入力して過去案件の見積単価を検索できます</p></div>';
+          return;
+        }
+
+        state.messages.forEach((m) => {
+          const isUser = m.role === "user";
+          const row = document.createElement("div");
+          row.className = "message-row";
+
+          const contentHtml = isUser
+            ? escapeHtml(m.content)
+            : parseMarkdown(m.content);
+
+          let srcHtml = "";
+          if (m.results && m.results.length > 0) {
+            const pdfTitle = m.isProjectInfo
+              ? "案件情報データ.pdf"
+              : "見積実績データ.pdf";
+            srcHtml =
+              '<div class="mt-3"><div class="text-muted small mb-2">' +
+              ICONS.link +
+              ' 根拠データ</div><div class="d-flex flex-wrap gap-2"><div class="source-btn" onclick="openResults([' +
+              m.results.map((r) => r.id).join(",") +
+              '])"><div class="d-flex align-items-center gap-2"><span class="text-danger">' +
+              ICONS.pdf +
+              '</span><div><div class="small fw-medium text-primary">' +
+              pdfTitle +
+              '</div><div class="text-muted" style="font-size:0.7rem">クリックして詳細を表示</div></div></div></div></div></div>';
+          }
+
+          let projectBtnHtml = "";
+          if (m.results && m.results.length > 0 && !m.isProjectInfo) {
+            const projectIds = [...new Set(m.results.map((r) => r.projectId))];
+            let btns = projectIds
+              .map(
+                (pid) =>
+                  '<button class="btn btn-outline-secondary btn-sm" onclick="showProjectInfo(\'' +
+                  pid +
+                  "')\">" +
+                  PROJECTS[pid].name +
+                  "</button>"
+              )
+              .join("");
+            projectBtnHtml =
+              '<div class="mt-3 pt-3 border-top"><div class="text-muted small mb-2">さらにこの案件情報についてもお調べしましょうか？</div><div class="d-flex flex-wrap gap-2">' +
+              btns +
+              "</div></div>";
+          }
+
+          row.innerHTML =
+            '<div class="d-flex gap-3 ' +
+            (isUser ? "flex-row-reverse" : "") +
+            '"><div class="avatar-icon ' +
+            (isUser ? "avatar-user" : "avatar-assistant") +
+            '">' +
+            (isUser ? ICONS.user : ICONS.cpu) +
+            '</div><div style="max-width:calc(100% - 50px)"><div class="d-flex align-items-center gap-2 mb-1 ' +
+            (isUser ? "justify-content-end" : "") +
+            '"><span class="fw-semibold small">' +
+            (isUser ? "あなた" : "AIアシスタント") +
+            '</span><span class="text-muted small">' +
+            m.time +
+            '</span></div><div class="' +
+            (isUser ? "msg-bubble-user" : "msg-bubble-assistant") +
+            '">' +
+            contentHtml +
+            "</div>" +
+            (isUser ? "" : srcHtml + projectBtnHtml) +
+            "</div></div>";
+          area.appendChild(row);
+        });
+
+        if (state.thinking) {
+          const row = document.createElement("div");
+          row.className = "message-row";
+          row.innerHTML =
+            '<div class="d-flex gap-3"><div class="avatar-icon avatar-assistant">' +
+            ICONS.cpu +
+            '</div><div class="d-flex align-items-center gap-2 py-2"><div class="typing-dots"><span></span><span></span><span></span></div><span class="text-muted small">過去データを検索中...</span></div></div>';
+          area.appendChild(row);
+        }
+
+        const messages = area.querySelectorAll(".message-row");
+        if (messages.length > 0) {
+          const lastMessage = messages[messages.length - 1];
+          area.scrollTop = lastMessage.offsetTop - 100;
+        }
+      }
+
+      function openResults(ids) {
+        state.viewingIds = ids;
+        const results = DATA.filter((d) => ids.includes(d.id));
+        const sorted = results
+          .slice()
+          .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        document.getElementById("sidebarRight").classList.add("open");
+        document.getElementById("viewerTitle").textContent = "見積実績一覧.pdf";
+        document.getElementById("viewerSubtitle").textContent =
+          sorted.length + "件のデータ";
+
+        let rows = sorted
+          .map(
+            (r) =>
+              '<tr class="highlight-row"><td class="text-nowrap">' +
+              r.date +
+              '</td><td class="small">' +
+              r.project +
+              '</td><td class="text-nowrap">' +
+              r.company +
+              '</td><td><div class="fw-medium">' +
+              r.item +
+              "</div>" +
+              (r.spec
+                ? '<small class="text-muted">' + r.spec + "</small>"
+                : "") +
+              '</td><td class="text-end">' +
+              r.qty +
+              '</td><td class="text-center">' +
+              r.unit +
+              '</td><td class="text-end">¥' +
+              formatNum(r.price) +
+              '</td><td class="text-center">' +
+              (r.netRate * 100).toFixed(0) +
+              '%</td><td class="text-end text-primary">¥' +
+              formatNum(r.netPrice) +
+              '</td><td class="text-end fw-medium text-primary">¥' +
+              formatNum(r.netAmount) +
+              "</td></tr>"
+          )
+          .join("");
+
+        const totalNetAmount = sorted.reduce((s, r) => s + r.netAmount, 0);
+
+        document.getElementById("viewerContent").innerHTML =
+          '<div class="pdf-paper"><div class="d-flex justify-content-between border-bottom border-2 border-dark pb-3 mb-3"><div><h5 class="mb-1">見積実績データ</h5><div class="text-muted small">過去案件からの抽出データ</div></div><div class="text-end"><small class="text-muted">抽出件数</small><div class="fw-medium">' +
+          sorted.length +
+          '件</div></div></div><div class="table-responsive"><table class="table table-sm table-bordered small mb-0"><thead class="table-light"><tr><th>案件日付</th><th>案件名</th><th>協力会社</th><th>品目・仕様</th><th class="text-end">数量</th><th>単位</th><th class="text-end">単価</th><th class="text-center">NET率</th><th class="text-end">NET単価</th><th class="text-end">NET金額</th></tr></thead><tbody>' +
+          rows +
+          '</tbody><tfoot class="table-light"><tr><td colspan="9" class="text-end fw-bold">NET金額合計</td><td class="text-end fw-bold text-primary">¥' +
+          formatNum(totalNetAmount) +
+          '</td></tr></tfoot></table></div><div class="text-center text-muted small mt-4">CONFIDENTIAL - 社外秘</div></div>';
+        render();
+      }
+
+      function closeViewer() {
+        state.viewingIds = [];
+        document.getElementById("sidebarRight").classList.remove("open");
+        render();
+      }
+
+      async function showProjectInfo(projectId) {
+        const pj = PROJECTS[projectId];
+        if (!pj) return;
+
+        const time = new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        state.messages.push({
+          role: "user",
+          content: pj.name + " の案件情報を教えて",
+          time: time,
+        });
+        state.thinking = true;
+        render();
+
+        await new Promise((r) => setTimeout(r, 1500));
+
+        const relatedItems = DATA.filter((d) => d.projectId === projectId);
+
+        let text = "「**" + pj.name + "**」の案件情報をお調べしました。\n\n";
+        text += "**案件概要**\n\n";
+        text += "| 項目 | 内容 |\n";
+        text += "|:--|:--|\n";
+        text += "| 案件名 | " + pj.name + " |\n";
+        text += "| 建物用途 | " + pj.usage + " |\n";
+        text += "| 構造 | " + pj.structure + " |\n";
+        text += "| 延べ床面積 | " + pj.area + " ㎡ |\n";
+        text += "| 階数 | " + pj.floors + " |\n";
+        text += "| 所在地 | " + pj.location + " |\n";
+        text += "| 見積日 | " + pj.date + " |\n";
+
+        if (relatedItems.length > 0) {
+          const total = relatedItems.reduce((s, r) => s + r.netAmount, 0);
+          text +=
+            "\n**この案件の見積実績（" + relatedItems.length + "件）**\n\n";
+          text += "| 品目 | 協力会社 | NET単価 | NET金額 |\n";
+          text += "|:--|:--|--:|--:|\n";
+          relatedItems.forEach((r) => {
+            text +=
+              "| " +
+              r.item +
+              " " +
+              r.spec +
+              " | " +
+              r.company +
+              " | ¥" +
+              formatNum(r.netPrice) +
+              " | ¥" +
+              formatNum(r.netAmount) +
+              " |\n";
+          });
+          text += "\n合計: **¥" + formatNum(total) + "**\n";
+        }
+
+        text +=
+          "\n---\n*類似の用途・構造・規模の案件実績として参考にご活用ください。*";
+
+        state.messages.push({
+          role: "assistant",
+          content: text,
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          results: relatedItems,
+          isProjectInfo: true,
+        });
+        state.thinking = false;
+        render();
+      }
+
+      function setQuery(q) {
+        document.getElementById("userInput").value = q;
+        send();
+      }
+
+      function newChat() {
+        state.messages = [];
+        state.viewingIds = [];
+        closeViewer();
+        render();
+      }
+
+      async function send() {
+        const inp = document.getElementById("userInput");
+        const txt = inp.value.trim();
+        if (!txt || state.thinking) return;
+
+        const time = new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        state.messages.push({ role: "user", content: txt, time: time });
+        inp.value = "";
+        state.thinking = true;
+        render();
+
+        await new Promise((r) => setTimeout(r, 2000));
+
+        const results = search(txt);
+        state.messages.push({
+          role: "assistant",
+          content: generateResponse(txt, results),
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          results: results,
+        });
+        state.thinking = false;
+        render();
+      }
+
+      document.getElementById("sendBtn").addEventListener("click", send);
+      document
+        .getElementById("userInput")
+        .addEventListener("keydown", function (e) {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            send();
+          }
+        });
+
+      render();
+    </script>
+  </body>
+</html>
