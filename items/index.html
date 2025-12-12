@@ -600,6 +600,61 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+    <!-- NET単価実績チャートモーダル -->
+    <div class="modal fade" id="chartModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="chartModalTitle">NET単価実績チャート</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body py-2">
+                                    <small class="text-muted">品目・仕様</small>
+                                    <div class="fw-bold" id="chartItemName">-</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body py-2">
+                                    <small class="text-muted">単位</small>
+                                    <div class="fw-bold" id="chartUnit">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="height: 400px; position: relative;">
+                        <canvas id="netPriceChart"></canvas>
+                    </div>
+                    <div class="mt-3">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered mb-0" id="chartDataTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>見積時期</th>
+                                        <th>案件名</th>
+                                        <th>協力会社</th>
+                                        <th class="text-end">NET単価</th>
+                                        <th class="text-end">NET率</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
       const fmt = (n) => (n ? n.toLocaleString() : "0");
       const catNames = {
@@ -1413,13 +1468,19 @@
                             </div>
                         </div>
                         
-                        <div class="text-center">
+                        <div class="d-flex justify-content-center gap-3 align-items-center flex-wrap">
                             <small class="text-muted">
                                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-3px">
                                     <polyline points="6 9 12 15 18 9"/>
                                 </svg>
                                 クリックして実績詳細を表示
                             </small>
+                            <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); showChart(${idx})">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px">
+                                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                                </svg>
+                                NET単価実績チャート
+                            </button>
                         </div>
                     </div>
                     
@@ -1537,6 +1598,140 @@
       flattenData();
       groupByItem();
       clearFilters();
+
+      let chartInstance = null;
+      const companyColors = {
+        'A社': '#0d6efd',
+        'I社': '#198754',
+        'C社': '#dc3545',
+        'J社': '#fd7e14',
+        'K社': '#6f42c1',
+        'D社': '#20c997',
+        'G社': '#e83e8c',
+        'M社': '#6c757d',
+        'N社': '#17a2b8',
+        'O社': '#ffc107'
+      };
+
+      function getCompanyColor(company) {
+        const name = company.replace('株式会社 ', '');
+        return companyColors[name] || '#6c757d';
+      }
+
+      function showChart(idx) {
+        const group = filteredGroups[idx];
+        const records = group.filteredRecords;
+
+        document.getElementById('chartModalTitle').textContent = `NET単価実績チャート - ${group.item}`;
+        document.getElementById('chartItemName').textContent = group.item + (group.spec ? ` / ${group.spec}` : '');
+        document.getElementById('chartUnit').textContent = group.unit;
+
+        // テーブルデータ作成
+        const tbody = document.querySelector('#chartDataTable tbody');
+        tbody.innerHTML = records.map(r => `
+            <tr>
+                <td>${r.projectPeriodStart}</td>
+                <td>${r.projectName}</td>
+                <td>${r.company}</td>
+                <td class="text-end tabular-nums">¥${fmt(r.netPrice)}</td>
+                <td class="text-end tabular-nums">${r.netRate.toFixed(3)}</td>
+            </tr>
+        `).join('');
+
+        // チャート作成
+        const ctx = document.getElementById('netPriceChart').getContext('2d');
+
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        // 協力会社別にデータをグループ化
+        const companyData = {};
+        records.forEach(r => {
+            const name = r.company;
+            if (!companyData[name]) {
+                companyData[name] = [];
+            }
+            companyData[name].push({
+                x: r.projectPeriodStart,
+                y: r.netPrice,
+                project: r.projectName
+            });
+        });
+
+        const datasets = Object.entries(companyData).map(([company, data]) => ({
+            label: company.replace('株式会社 ', ''),
+            data: data,
+            borderColor: getCompanyColor(company),
+            backgroundColor: getCompanyColor(company) + '33',
+            borderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            fill: false,
+            tension: 0.1
+        }));
+
+        // 全期間のラベルを作成
+        const allPeriods = [...new Set(records.map(r => r.projectPeriodStart))].sort();
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: allPeriods,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const point = context.raw;
+                                return `${context.dataset.label}: ¥${fmt(point.y)} (${point.project})`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: '見積時期'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: `NET単価 (円/${group.unit})`
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '¥' + fmt(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById('chartModal'));
+        modal.show();
+      }
     </script>
   </body>
 </html>
