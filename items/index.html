@@ -382,6 +382,36 @@
           left: -24px;
         }
       }
+
+      /* チャートモーダルのレスポンシブ対応 */
+      .chart-container {
+        height: 400px;
+        position: relative;
+      }
+      @media (max-width: 768px) {
+        .chart-container {
+          height: 300px;
+        }
+        .modal-dialog.modal-xl {
+          margin: 0.5rem;
+        }
+        #chartDataTable {
+          font-size: 0.8rem;
+        }
+        #chartDataTable th,
+        #chartDataTable td {
+          padding: 0.5rem 0.25rem;
+          white-space: nowrap;
+        }
+      }
+      @media (max-width: 576px) {
+        .chart-container {
+          height: 250px;
+        }
+        .modal-body .row .col-md-6 {
+          margin-bottom: 0.5rem;
+        }
+      }
     </style>
   </head>
   <body>
@@ -611,25 +641,25 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
+                    <div class="row g-2 mb-3">
+                        <div class="col-12 col-sm-6">
                             <div class="card bg-light border-0">
-                                <div class="card-body py-2">
+                                <div class="card-body py-2 px-3">
                                     <small class="text-muted">品目・仕様</small>
                                     <div class="fw-bold" id="chartItemName">-</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-sm-6">
                             <div class="card bg-light border-0">
-                                <div class="card-body py-2">
+                                <div class="card-body py-2 px-3">
                                     <small class="text-muted">単位</small>
                                     <div class="fw-bold" id="chartUnit">-</div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div style="height: 400px; position: relative;">
+                    <div class="chart-container">
                         <canvas id="netPriceChart"></canvas>
                     </div>
                     <div class="mt-3">
@@ -1674,6 +1704,10 @@
         // 全期間のラベルを作成
         const allPeriods = [...new Set(records.map(r => r.projectPeriodStart))].sort();
 
+        // レスポンシブ設定の判定
+        const isMobile = window.innerWidth < 768;
+        const isSmallMobile = window.innerWidth < 576;
+
         chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
@@ -1689,26 +1723,48 @@
                 },
                 plugins: {
                     legend: {
-                        position: 'top',
+                        position: isMobile ? 'bottom' : 'top',
                         labels: {
                             usePointStyle: true,
-                            padding: 20
+                            padding: isMobile ? 10 : 20,
+                            font: {
+                                size: isMobile ? 10 : 12
+                            },
+                            boxWidth: isMobile ? 20 : 40,
+                            boxHeight: isMobile ? 10 : 12
                         }
                     },
                     tooltip: {
+                        enabled: !isSmallMobile,
                         callbacks: {
                             label: function(context) {
                                 const point = context.raw;
                                 return `${context.dataset.label}: ¥${fmt(point.y)} (${point.project})`;
                             }
+                        },
+                        bodyFont: {
+                            size: isMobile ? 10 : 12
+                        },
+                        titleFont: {
+                            size: isMobile ? 11 : 13
                         }
                     }
                 },
                 scales: {
                     x: {
                         title: {
-                            display: true,
-                            text: '見積時期'
+                            display: !isSmallMobile,
+                            text: '見積時期',
+                            font: {
+                                size: isMobile ? 10 : 12
+                            }
+                        },
+                        ticks: {
+                            font: {
+                                size: isMobile ? 9 : 11
+                            },
+                            maxRotation: isMobile ? 45 : 0,
+                            minRotation: isMobile ? 45 : 0
                         },
                         grid: {
                             display: false
@@ -1716,11 +1772,20 @@
                     },
                     y: {
                         title: {
-                            display: true,
-                            text: `NET単価 (円/${group.unit})`
+                            display: !isSmallMobile,
+                            text: `NET単価 (円/${group.unit})`,
+                            font: {
+                                size: isMobile ? 10 : 12
+                            }
                         },
                         ticks: {
+                            font: {
+                                size: isMobile ? 9 : 11
+                            },
                             callback: function(value) {
+                                if (isMobile) {
+                                    return '¥' + (value >= 1000 ? Math.round(value / 1000) + 'k' : value);
+                                }
                                 return '¥' + fmt(value);
                             }
                         }
