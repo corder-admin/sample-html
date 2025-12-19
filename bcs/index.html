@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BCS.CSV Viewer</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
+    <style>
+      :root {
+        --primary: #2563eb;
+        --secondary: #10b981;
+        --accent: #f59e0b;
+        --purple: #8b5cf6;
+        --pink: #ec4899;
+        --red: #ef4444;
+        --bg: #0f172a;
+        --card: #1e293b;
+        --text: #e2e8f0;
+        --border: #334155;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Noto Sans JP", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        padding: 20px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-family: "M PLUS Rounded 1c", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .input-section {
+        background: var(--card);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .input-section label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .input-methods {
+        margin-bottom: 15px;
+      }
+
+      .file-upload-area {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 30px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: rgba(37, 99, 235, 0.05);
+      }
+
+      .file-upload-area:hover,
+      .file-upload-area.dragover {
+        border-color: var(--primary);
+        background: rgba(37, 99, 235, 0.15);
+      }
+
+      .upload-icon {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      .upload-main {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+      }
+
+      .upload-sub {
+        color: #94a3b8;
+        font-size: 0.9rem;
+      }
+
+      .upload-hint {
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-top: 10px;
+      }
+
+      .btn-link {
+        background: none;
+        border: none;
+        color: var(--primary);
+        text-decoration: underline;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .btn-link:hover {
+        color: #60a5fa;
+      }
+
+      .divider {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+        color: #64748b;
+        font-size: 0.85rem;
+      }
+
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      .divider span {
+        padding: 0 15px;
+      }
+
+      .file-info {
+        margin-top: 10px;
+        padding: 10px 15px;
+        background: rgba(16, 185, 129, 0.15);
+        border-radius: 8px;
+        color: #34d399;
+        font-size: 0.9rem;
+        display: none;
+      }
+
+      .file-info.show {
+        display: block;
+      }
+
+      .input-section textarea {
+        width: 100%;
+        height: 200px;
+        background: var(--bg);
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-family: "Courier New", monospace;
+        font-size: 0.85rem;
+        padding: 15px;
+        resize: vertical;
+      }
+
+      .input-section textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #1d4ed8;
+      }
+
+      .btn-secondary {
+        background: var(--border);
+        color: var(--text);
+      }
+
+      .btn-secondary:hover {
+        background: #475569;
+      }
+
+      .btn-sample {
+        background: var(--secondary);
+        color: white;
+      }
+
+      .btn-sample:hover {
+        background: #059669;
+      }
+
+      .output-section {
+        background: var(--card);
+        border-radius: 12px;
+        padding: 20px;
+      }
+
+      .output-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .output-header h2 {
+        font-size: 1.1rem;
+        color: var(--accent);
+      }
+
+      .stats {
+        display: flex;
+        gap: 15px;
+        font-size: 0.85rem;
+        color: #94a3b8;
+      }
+
+      .tree-container {
+        background: var(--bg);
+        border-radius: 8px;
+        padding: 20px;
+        overflow-x: auto;
+        min-height: 300px;
+        max-height: 600px;
+        overflow-y: auto;
+      }
+
+      .tree-node {
+        margin: 2px 0;
+        white-space: nowrap;
+      }
+
+      .tree-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .tree-row:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .tree-row.collapsed > .tree-children {
+        display: none;
+      }
+
+      .tree-toggle {
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--border);
+        border-radius: 4px;
+        font-size: 0.7rem;
+        color: #94a3b8;
+        flex-shrink: 0;
+      }
+
+      .tree-toggle.empty {
+        visibility: hidden;
+      }
+
+      .type-badge {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        text-align: center;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        color: white;
+        flex-shrink: 0;
+      }
+
+      .type-D {
+        background: var(--primary);
+      }
+      .type-A {
+        background: #6b7280;
+      }
+      .type-P {
+        background: var(--accent);
+      }
+      .type-Q {
+        background: var(--purple);
+      }
+      .type-B {
+        background: var(--pink);
+      }
+      .type-E {
+        background: #14b8a6;
+      }
+      .type-N {
+        background: #8b5cf6;
+      }
+      .type-S {
+        background: #f97316;
+      }
+      .type-T {
+        background: var(--red);
+      }
+
+      .node-name {
+        font-weight: 700;
+        color: #f1f5f9;
+      }
+
+      .node-spec {
+        color: #94a3b8;
+        font-size: 0.9rem;
+      }
+
+      .node-qty {
+        color: #22d3ee;
+        font-size: 0.85rem;
+      }
+
+      .node-price {
+        color: #fb923c;
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+
+      .node-price.negative {
+        color: #f87171;
+      }
+
+      .tree-children {
+        margin-left: 24px;
+        border-left: 2px solid var(--border);
+        padding-left: 12px;
+      }
+
+      .level-0 .tree-row {
+        background: rgba(220, 38, 38, 0.15);
+      }
+      .level-1 .tree-row {
+        background: rgba(37, 99, 235, 0.15);
+      }
+      .level-2 .tree-row {
+        background: rgba(5, 150, 105, 0.15);
+      }
+      .level-3 .tree-row {
+        background: rgba(124, 58, 237, 0.12);
+      }
+      .level-4 .tree-row {
+        background: rgba(236, 72, 153, 0.12);
+      }
+      .level-5 .tree-row {
+        background: rgba(20, 184, 166, 0.12);
+      }
+      .level-6 .tree-row {
+        background: rgba(249, 115, 22, 0.12);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #64748b;
+      }
+
+      .empty-state p {
+        margin: 10px 0;
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border);
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        color: #94a3b8;
+      }
+
+      .error-msg {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid var(--red);
+        color: #fca5a5;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 10px;
+        }
+        .input-section textarea {
+          height: 150px;
+        }
+        .tree-container {
+          padding: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <h1>📄 BCS.CSV Viewer</h1>
+    </header>
+
+    <div class="container">
+      <section class="input-section">
+        <div class="input-methods">
+          <div class="file-upload-area" id="dropZone">
+            <input type="file" id="fileInput" accept=".csv,.txt" hidden />
+            <div class="upload-content">
+              <span class="upload-icon">📁</span>
+              <p class="upload-main">ファイルをドラッグ＆ドロップ</p>
+              <p class="upload-sub">
+                または
+                <button
+                  class="btn-link"
+                  onclick="document.getElementById('fileInput').click()"
+                >
+                  ファイルを選択
+                </button>
+              </p>
+              <p class="upload-hint">BCS.CSV（Shift-JIS / UTF-8 対応）</p>
+            </div>
+          </div>
+          <div class="divider"><span>または</span></div>
+          <label for="csvInput">📋 CSVデータを直接貼り付け</label>
+        </div>
+        <textarea
+          id="csvInput"
+          placeholder="BCS.CSV形式のデータをここに貼り付けてください..."
+        ></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="parseCSV()">
+            🌳 ツリー表示
+          </button>
+          <button class="btn btn-secondary" onclick="clearAll()">
+            🗑️ クリア
+          </button>
+          <button class="btn btn-sample" onclick="loadSample()">
+            📥 サンプル読込
+          </button>
+        </div>
+        <div class="file-info" id="fileInfo"></div>
+      </section>
+
+      <section class="output-section">
+        <div class="output-header">
+          <h2>🌳 ツリービュー</h2>
+          <div class="stats" id="stats"></div>
+        </div>
+        <div id="errorMsg"></div>
+        <div class="tree-container" id="treeContainer">
+          <div class="empty-state">
+            <p>📄 CSVデータを貼り付けて「ツリー表示」をクリック</p>
+            <p>または「サンプル読込」でサンプルデータを表示</p>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="legend-item">
+            <span class="type-badge type-P">P</span> 親行
+          </div>
+          <div class="legend-item">
+            <span class="type-badge type-D">D</span> 通常行
+          </div>
+          <div class="legend-item">
+            <span class="type-badge type-A">A</span> 補助行
+          </div>
+          <div class="legend-item">
+            <span class="type-badge type-T">T</span> 合計行
+          </div>
+          <div class="legend-item">
+            <span class="type-badge type-S">S</span> 小計行
+          </div>
+          <div class="legend-item">
+            <span class="type-badge type-Q">Q</span> 代価親
+          </div>
+          <div class="legend-item">
+            <span class="type-badge type-B">B</span> 別紙親
+          </div>
+          <div class="legend-item">
+            <span class="type-badge type-E">E</span> エレメント
+          </div>
+          <div class="legend-item">
+            <span class="type-badge type-N">N</span> QBE計
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      // ファイルアップロード処理
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+      const fileInfo = document.getElementById("fileInfo");
+
+      // ドラッグ＆ドロップイベント
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((evt) => {
+        dropZone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+      });
+
+      ["dragenter", "dragover"].forEach((evt) => {
+        dropZone.addEventListener(evt, () =>
+          dropZone.classList.add("dragover")
+        );
+      });
+
+      ["dragleave", "drop"].forEach((evt) => {
+        dropZone.addEventListener(evt, () =>
+          dropZone.classList.remove("dragover")
+        );
+      });
+
+      dropZone.addEventListener("drop", (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) handleFile(files[0]);
+      });
+
+      dropZone.addEventListener("click", () => fileInput.click());
+
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) handleFile(e.target.files[0]);
+      });
+
+      // ファイル読み込み
+      async function handleFile(file) {
+        const fileName = file.name;
+        const fileSize = (file.size / 1024).toFixed(1);
+
+        try {
+          const buffer = await file.arrayBuffer();
+          const uint8Array = new Uint8Array(buffer);
+
+          // encoding.jsで文字コード自動判定
+          const detectedEncoding = Encoding.detect(uint8Array);
+          console.log("Detected encoding:", detectedEncoding);
+
+          // Unicode配列に変換
+          const unicodeArray = Encoding.convert(uint8Array, {
+            to: "UNICODE",
+            from: detectedEncoding || "SJIS",
+          });
+
+          // 文字列に変換
+          const text = Encoding.codeToString(unicodeArray);
+
+          document.getElementById("csvInput").value = text;
+          fileInfo.innerHTML = `📄 <strong>${fileName}</strong> (${fileSize} KB) を読み込みました <span style="color:#94A3B8">［${
+            detectedEncoding || "SJIS"
+          }］</span>`;
+          fileInfo.classList.add("show");
+
+          // 自動でパース
+          parseCSV();
+        } catch (err) {
+          document.getElementById(
+            "errorMsg"
+          ).innerHTML = `<div class="error-msg">⚠️ ファイル読み込みエラー: ${err.message}</div>`;
+        }
+      }
+
+      // CSVパース
+      function parseCSVLine(line) {
+        const result = [];
+        let current = "";
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+              current += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === "," && !inQuotes) {
+            result.push(current.trim());
+            current = "";
+          } else {
+            current += char;
+          }
+        }
+        result.push(current.trim());
+        return result;
+      }
+
+      // BCS行オブジェクト作成
+      function createBCSRow(cols) {
+        return {
+          h1: parseInt(cols[0]) || 0,
+          h2: parseInt(cols[1]) || 0,
+          h3: parseInt(cols[2]) || 0,
+          h4: parseInt(cols[3]) || 0,
+          h5: parseInt(cols[4]) || 0,
+          h6: parseInt(cols[5]) || 0,
+          h7: parseInt(cols[6]) || 0,
+          layer: parseInt(cols[7]) || 0,
+          seq: parseInt(cols[8]) || 0,
+          type: (cols[9] || "").toUpperCase(),
+          name: cols[10] || "",
+          spec: cols[11] || "",
+          qty: parseFloat(cols[12]) || 0,
+          unit: cols[13] || "",
+          price: parseInt(cols[14]) || 0,
+          remark: cols[15] || "",
+          upperName: cols[16] || "",
+          upperSpec: cols[17] || "",
+          upperRemark: cols[18] || "",
+          children: [],
+        };
+      }
+
+      // 階層キー取得
+      function getHierarchyKey(row, depth) {
+        const keys = [row.h1, row.h2, row.h3, row.h4, row.h5, row.h6, row.h7];
+        return keys.slice(0, depth).join("-");
+      }
+
+      // ツリー構築
+      function buildTree(rows) {
+        const root = { children: [], name: "ROOT", type: "" };
+        const stack = [{ node: root, depth: 0, key: "" }];
+
+        for (const row of rows) {
+          const depth = row.layer || 1;
+          const key = getHierarchyKey(row, depth);
+
+          // 適切な親を見つける
+          while (stack.length > 1) {
+            const parent = stack[stack.length - 1];
+            const parentKey = getHierarchyKey(row, parent.depth);
+
+            if (parent.depth < depth && key.startsWith(parent.key)) {
+              break;
+            }
+            stack.pop();
+          }
+
+          const parent = stack[stack.length - 1];
+          parent.node.children.push(row);
+
+          // P/Q/B/E行は子を持てる
+          if (["P", "Q", "B", "E"].includes(row.type)) {
+            stack.push({ node: row, depth: depth, key: key });
+          }
+        }
+
+        return root.children;
+      }
+
+      // ノードHTML生成
+      function renderNode(row, level) {
+        const hasChildren = row.children && row.children.length > 0;
+        const toggleClass = hasChildren ? "" : "empty";
+        const toggleIcon = hasChildren ? "▼" : "";
+
+        const priceClass = row.price < 0 ? "negative" : "";
+        const priceStr = row.price ? row.price.toLocaleString() : "";
+        const qtyStr = row.qty ? `${row.qty}${row.unit}` : "";
+
+        let html = `<div class="tree-node level-${Math.min(level, 6)}">`;
+        html += `<div class="tree-row" onclick="toggleNode(this)">`;
+        html += `<span class="tree-toggle ${toggleClass}">${toggleIcon}</span>`;
+        html += `<span class="type-badge type-${row.type}">${
+          row.type || "?"
+        }</span>`;
+        html += `<span class="node-name">${escapeHtml(row.name)}</span>`;
+
+        if (row.spec) {
+          html += `<span class="node-spec">（${escapeHtml(row.spec)}）</span>`;
+        }
+        if (qtyStr) {
+          html += `<span class="node-qty">${qtyStr}</span>`;
+        }
+        if (priceStr) {
+          html += `<span class="node-price ${priceClass}">@${priceStr}</span>`;
+        }
+
+        html += `</div>`;
+
+        if (hasChildren) {
+          html += `<div class="tree-children">`;
+          for (const child of row.children) {
+            html += renderNode(child, level + 1);
+          }
+          html += `</div>`;
+        }
+
+        html += `</div>`;
+        return html;
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function toggleNode(el) {
+        const node = el.closest(".tree-node");
+        const toggle = el.querySelector(".tree-toggle");
+        const children = node.querySelector(".tree-children");
+
+        if (children) {
+          const isHidden = children.style.display === "none";
+          children.style.display = isHidden ? "block" : "none";
+          toggle.textContent = isHidden ? "▼" : "▶";
+        }
+      }
+
+      // メイン処理
+      function parseCSV() {
+        const input = document.getElementById("csvInput").value.trim();
+        const container = document.getElementById("treeContainer");
+        const errorDiv = document.getElementById("errorMsg");
+        const statsDiv = document.getElementById("stats");
+
+        errorDiv.innerHTML = "";
+
+        if (!input) {
+          container.innerHTML =
+            '<div class="empty-state"><p>データが入力されていません</p></div>';
+          statsDiv.innerHTML = "";
+          return;
+        }
+
+        try {
+          const lines = input.split(/\r?\n/).filter((l) => l.trim());
+          const rows = [];
+
+          for (const line of lines) {
+            const cols = parseCSVLine(line);
+            if (cols.length >= 10) {
+              rows.push(createBCSRow(cols));
+            }
+          }
+
+          if (rows.length === 0) {
+            throw new Error("有効なBCS.CSV行が見つかりません");
+          }
+
+          const tree = buildTree(rows);
+
+          let html = "";
+          for (const node of tree) {
+            html += renderNode(node, 0);
+          }
+
+          container.innerHTML = html;
+
+          // 統計
+          const typeCount = {};
+          rows.forEach((r) => {
+            typeCount[r.type] = (typeCount[r.type] || 0) + 1;
+          });
+
+          statsDiv.innerHTML = `
+          <span>📊 ${rows.length}行</span>
+          <span>P:${typeCount["P"] || 0}</span>
+          <span>D:${typeCount["D"] || 0}</span>
+          <span>T:${typeCount["T"] || 0}</span>
+        `;
+        } catch (e) {
+          errorDiv.innerHTML = `<div class="error-msg">⚠️ エラー: ${e.message}</div>`;
+          container.innerHTML =
+            '<div class="empty-state"><p>パースに失敗しました</p></div>';
+          statsDiv.innerHTML = "";
+        }
+      }
+
+      function clearAll() {
+        document.getElementById("csvInput").value = "";
+        document.getElementById("treeContainer").innerHTML =
+          '<div class="empty-state"><p>📄 CSVデータを貼り付けて「ツリー表示」をクリック</p></div>';
+        document.getElementById("errorMsg").innerHTML = "";
+        document.getElementById("stats").innerHTML = "";
+        document.getElementById("fileInfo").classList.remove("show");
+        document.getElementById("fileInput").value = "";
+      }
+
+      function loadSample() {
+        const sample = `1,,,,,,,,,,Aビル新築工事,,,式,95847000,,,,
+2,,,,,,,1,,P,共通仮設工事,,,式,6430000,,,,
+2,,,,,,,2,1,D,仮設建物,現場事務所,1,式,200000,,,,
+2,,,,,,,2,2,D,工事施設,仮囲い,1,式,650000,,,,
+2,,,,,,,2,3,D,安全施設,安全設備一式,1,式,380000,,,,
+2,,,,,,,2,,T,共通仮設工事,,,,,,,,
+3,,,,,,,1,,P,建築工事,,,式,52592000,,,,
+3,2,,,,,,2,,P,土工事,,,式,4688000,,,,
+3,2,,,,,,3,1,D,根切,機械,206,m3,1100,,,,
+3,2,,,,,,3,2,D,残土処分,場外搬出,618,m3,3300,,,,
+3,2,,,,,,3,3,D,埋戻,購入土,412,m3,3850,,,,
+3,2,,,,,,3,4,D,床付け,転圧,320,m2,450,,,,
+3,2,,,,,,3,9,D,値引,調整,1,式,-200,,,,
+3,2,,,,,,3,,T,土工事,,,,,,,,
+3,3,,,,,,2,,P,杭工事,,,式,8450000,,,,
+3,3,,,,,,3,1,D,PHC杭,φ400 L=12m,24,本,185000,,,,
+3,3,,,,,,3,2,D,杭打機運搬,往復,1,式,380000,,,,
+3,3,,,,,,3,,T,杭工事,,,,,,,,
+3,4,,,,,,2,,P,コンクリート工事,,,式,12840000,,,,
+3,4,,,,,,3,1,D,普通コンクリート,21-18-20,485,m3,18500,,,,
+3,4,,,,,,3,2,D,型枠,合板,2840,m2,2800,,,,
+3,4,,,,,,3,,T,コンクリート工事,,,,,,,,
+3,,,,,,,2,,T,建築工事,,,,,,,,
+4,,,,,,,1,,P,電気設備工事,,,式,6254000,,,,
+4,2,,,,,,2,,P,幹線設備,,,式,1850000,,,,
+4,2,,,,,,3,1,D,ケーブル配線,CV38sq,450,m,2200,,,,
+4,2,,,,,,3,,T,幹線設備,,,,,,,,
+4,,,,,,,2,,T,電気設備工事,,,,,,,,`;
+        document.getElementById("csvInput").value = sample;
+        parseCSV();
+      }
+    </script>
+  </body>
+</html>
