@@ -1,0 +1,131 @@
+/**
+ * データ処理の純粋関数群
+ * これらの関数は外部状態に依存せず、同じ入力に対して常に同じ出力を返す
+ */
+
+/**
+ * 案件データとアイテムレコードを統合してフラット化する
+ * @param {Array} itemRecords - アイテムレコードの配列
+ * @param {Array} projects - 案件データの配列
+ * @param {Object} catNames - カテゴリー名のマッピング
+ * @returns {Array} フラット化されたアイテムデータ
+ */
+export function flattenData(itemRecords, projects, catNames) {
+  return itemRecords.map((rec) => {
+    const proj = projects.find((p) => p.id === rec.projectId);
+    return {
+      ...rec,
+      projectName: proj.name,
+      projectType: proj.type,
+      projectTypeColor: proj.typeColor,
+      projectStructure: proj.structure,
+      projectStructureCode: proj.structureCode,
+      projectArea: proj.area,
+      projectPeriodStart: proj.periodStart,
+      projectDate: proj.date,
+      categoryName: catNames[rec.categoryKey],
+      amount: rec.qty * rec.price,
+      netAmount: rec.qty * rec.netPrice,
+    };
+  });
+}
+
+/**
+ * アイテムデータを品目・仕様でグループ化する
+ * @param {Array} items - フラット化されたアイテムデータ
+ * @returns {Array} グループ化されたアイテムデータ
+ */
+export function groupByItem(items) {
+  const groups = {};
+  items.forEach((item) => {
+    const key = `${item.item}|${item.spec}`;
+    if (!groups[key]) {
+      groups[key] = {
+        item: item.item,
+        spec: item.spec,
+        unit: item.unit,
+        records: [],
+      };
+    }
+    groups[key].records.push(item);
+  });
+
+  return Object.values(groups).map((g) => {
+    g.records.sort((a, b) => a.projectDate.localeCompare(b.projectDate));
+    const netPrices = g.records.map((r) => r.netPrice);
+    const types = [...new Set(g.records.map((r) => r.type))];
+    const categories = [...new Set(g.records.map((r) => r.categoryName))];
+
+    return {
+      ...g,
+      recordCount: g.records.length,
+      minNetPrice: Math.min(...netPrices),
+      maxNetPrice: Math.max(...netPrices),
+      avgNetPrice: netPrices.reduce((a, b) => a + b, 0) / netPrices.length,
+      types,
+      categories,
+    };
+  });
+}
+
+/**
+ * レコードの統計情報を計算する
+ * @param {Array} records - レコードの配列
+ * @returns {Object} 統計情報（用途カウント、構造カウント、平均面積）
+ */
+export function calculateStats(records) {
+  const usageCount = {},
+    structureCount = {};
+  let totalArea = 0;
+  records.forEach((r) => {
+    usageCount[r.projectType] = (usageCount[r.projectType] || 0) + 1;
+    structureCount[r.projectStructureCode] =
+      (structureCount[r.projectStructureCode] || 0) + 1;
+    totalArea += r.projectArea;
+  });
+  return {
+    usageCount,
+    structureCount,
+    avgArea: records.length > 0 ? Math.round(totalArea / records.length) : 0,
+  };
+}
+
+/**
+ * 協力会社別にレコードをグループ化する
+ * @param {Array} records - レコードの配列
+ * @returns {Object} 会社名をキーとした価格データのマッピング
+ */
+export function groupByCompany(records) {
+  const companyData = {};
+  records.forEach((r) => {
+    const name = r.company.replace("株式会社 ", "");
+    if (!companyData[name]) {
+      companyData[name] = { prices: [], count: 0 };
+    }
+    companyData[name].prices.push(r.netPrice);
+    companyData[name].count++;
+  });
+  return companyData;
+}
+
+/**
+ * 会社データから価格統計を計算する
+ * @param {Object} companyData - groupByCompanyの出力
+ * @returns {Array} 会社名と価格統計の配列
+ */
+export function calculateCompanyStats(companyData) {
+  return Object.entries(companyData).map(([name, data]) => {
+    const minPrice = Math.min(...data.prices);
+    const maxPrice = Math.max(...data.prices);
+    const avgPrice = Math.round(
+      data.prices.reduce((a, b) => a + b, 0) / data.prices.length
+    );
+    return {
+      name,
+      count: data.count,
+      minPrice,
+      maxPrice,
+      avgPrice,
+    };
+  });
+}
