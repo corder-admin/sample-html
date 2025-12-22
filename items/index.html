@@ -634,56 +634,71 @@
 
     <!-- NET単価実績チャートモーダル -->
     <div class="modal fade" id="chartModal" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="chartModalTitle">NET単価実績チャート</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="chartModalTitle">
+              NET単価実績チャート
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-2 mb-3">
+              <div class="col-12 col-sm-6">
+                <div class="card bg-light border-0">
+                  <div class="card-body py-2 px-3">
+                    <small class="text-muted">品目・仕様</small>
+                    <div class="fw-bold" id="chartItemName">-</div>
+                  </div>
                 </div>
-                <div class="modal-body">
-                    <div class="row g-2 mb-3">
-                        <div class="col-12 col-sm-6">
-                            <div class="card bg-light border-0">
-                                <div class="card-body py-2 px-3">
-                                    <small class="text-muted">品目・仕様</small>
-                                    <div class="fw-bold" id="chartItemName">-</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 col-sm-6">
-                            <div class="card bg-light border-0">
-                                <div class="card-body py-2 px-3">
-                                    <small class="text-muted">単位</small>
-                                    <div class="fw-bold" id="chartUnit">-</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="netPriceChart"></canvas>
-                    </div>
-                    <div class="mt-3">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered mb-0" id="chartDataTable">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>見積時期</th>
-                                        <th>案件名</th>
-                                        <th>協力会社</th>
-                                        <th class="text-end">NET単価</th>
-                                        <th class="text-end">NET率</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
+              </div>
+              <div class="col-12 col-sm-6">
+                <div class="card bg-light border-0">
+                  <div class="card-body py-2 px-3">
+                    <small class="text-muted">単位</small>
+                    <div class="fw-bold" id="chartUnit">-</div>
+                  </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
-                </div>
+              </div>
             </div>
+            <div class="chart-container">
+              <canvas id="netPriceChart"></canvas>
+            </div>
+            <div class="mt-3">
+              <div class="table-responsive">
+                <table
+                  class="table table-sm table-bordered mb-0"
+                  id="chartDataTable"
+                >
+                  <thead class="table-light">
+                    <tr>
+                      <th>見積時期</th>
+                      <th>案件名</th>
+                      <th>協力会社</th>
+                      <th class="text-end">NET単価</th>
+                      <th class="text-end">NET率</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              閉じる
+            </button>
+          </div>
         </div>
+      </div>
     </div>
     <script>
       const fmt = (n) => (n ? n.toLocaleString() : "0");
@@ -1631,34 +1646,39 @@
 
       let chartInstance = null;
       const companyColors = {
-        'A社': '#0d6efd',
-        'I社': '#198754',
-        'C社': '#dc3545',
-        'J社': '#fd7e14',
-        'K社': '#6f42c1',
-        'D社': '#20c997',
-        'G社': '#e83e8c',
-        'M社': '#6c757d',
-        'N社': '#17a2b8',
-        'O社': '#ffc107'
+        A社: "#0d6efd",
+        I社: "#198754",
+        C社: "#dc3545",
+        J社: "#fd7e14",
+        K社: "#6f42c1",
+        D社: "#20c997",
+        G社: "#e83e8c",
+        M社: "#6c757d",
+        N社: "#17a2b8",
+        O社: "#ffc107",
       };
 
       function getCompanyColor(company) {
-        const name = company.replace('株式会社 ', '');
-        return companyColors[name] || '#6c757d';
+        const name = company.replace("株式会社 ", "");
+        return companyColors[name] || "#6c757d";
       }
 
       function showChart(idx) {
         const group = filteredGroups[idx];
         const records = group.filteredRecords;
 
-        document.getElementById('chartModalTitle').textContent = `NET単価実績チャート - ${group.item}`;
-        document.getElementById('chartItemName').textContent = group.item + (group.spec ? ` / ${group.spec}` : '');
-        document.getElementById('chartUnit').textContent = group.unit;
+        document.getElementById(
+          "chartModalTitle"
+        ).textContent = `NET単価実績チャート - ${group.item}`;
+        document.getElementById("chartItemName").textContent =
+          group.item + (group.spec ? ` / ${group.spec}` : "");
+        document.getElementById("chartUnit").textContent = group.unit;
 
         // テーブルデータ作成
-        const tbody = document.querySelector('#chartDataTable tbody');
-        tbody.innerHTML = records.map(r => `
+        const tbody = document.querySelector("#chartDataTable tbody");
+        tbody.innerHTML = records
+          .map(
+            (r) => `
             <tr>
                 <td>${r.projectPeriodStart}</td>
                 <td>${r.projectName}</td>
@@ -1666,135 +1686,146 @@
                 <td class="text-end tabular-nums">¥${fmt(r.netPrice)}</td>
                 <td class="text-end tabular-nums">${r.netRate.toFixed(3)}</td>
             </tr>
-        `).join('');
+        `
+          )
+          .join("");
 
         // チャート作成
-        const ctx = document.getElementById('netPriceChart').getContext('2d');
+        const ctx = document.getElementById("netPriceChart").getContext("2d");
 
         if (chartInstance) {
-            chartInstance.destroy();
+          chartInstance.destroy();
         }
 
         // 協力会社別にデータをグループ化
         const companyData = {};
-        records.forEach(r => {
-            const name = r.company;
-            if (!companyData[name]) {
-                companyData[name] = [];
-            }
-            companyData[name].push({
-                x: r.projectPeriodStart,
-                y: r.netPrice,
-                project: r.projectName
-            });
+        records.forEach((r) => {
+          const name = r.company;
+          if (!companyData[name]) {
+            companyData[name] = [];
+          }
+          companyData[name].push({
+            x: r.projectPeriodStart,
+            y: r.netPrice,
+            project: r.projectName,
+          });
         });
 
         const datasets = Object.entries(companyData).map(([company, data]) => ({
-            label: company.replace('株式会社 ', ''),
-            data: data,
-            borderColor: getCompanyColor(company),
-            backgroundColor: getCompanyColor(company) + '33',
-            borderWidth: 2,
-            pointRadius: 6,
-            pointHoverRadius: 8,
-            fill: false,
-            tension: 0.1
+          label: company.replace("株式会社 ", ""),
+          data: data,
+          borderColor: getCompanyColor(company),
+          backgroundColor: getCompanyColor(company) + "33",
+          borderWidth: 2,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          fill: false,
+          tension: 0.1,
         }));
 
         // 全期間のラベルを作成
-        const allPeriods = [...new Set(records.map(r => r.projectPeriodStart))].sort();
+        const allPeriods = [
+          ...new Set(records.map((r) => r.projectPeriodStart)),
+        ].sort();
 
         // レスポンシブ設定の判定
         const isMobile = window.innerWidth < 768;
         const isSmallMobile = window.innerWidth < 576;
 
         chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: allPeriods,
-                datasets: datasets
+          type: "line",
+          data: {
+            labels: allPeriods,
+            datasets: datasets,
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              intersect: false,
+              mode: "index",
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
+            plugins: {
+              legend: {
+                position: isMobile ? "bottom" : "top",
+                labels: {
+                  usePointStyle: true,
+                  padding: isMobile ? 10 : 20,
+                  font: {
+                    size: isMobile ? 10 : 12,
+                  },
+                  boxWidth: isMobile ? 20 : 40,
+                  boxHeight: isMobile ? 10 : 12,
                 },
-                plugins: {
-                    legend: {
-                        position: isMobile ? 'bottom' : 'top',
-                        labels: {
-                            usePointStyle: true,
-                            padding: isMobile ? 10 : 20,
-                            font: {
-                                size: isMobile ? 10 : 12
-                            },
-                            boxWidth: isMobile ? 20 : 40,
-                            boxHeight: isMobile ? 10 : 12
-                        }
-                    },
-                    tooltip: {
-                        enabled: !isSmallMobile,
-                        callbacks: {
-                            label: function(context) {
-                                const point = context.raw;
-                                return `${context.dataset.label}: ¥${fmt(point.y)} (${point.project})`;
-                            }
-                        },
-                        bodyFont: {
-                            size: isMobile ? 10 : 12
-                        },
-                        titleFont: {
-                            size: isMobile ? 11 : 13
-                        }
-                    }
+              },
+              tooltip: {
+                enabled: !isSmallMobile,
+                callbacks: {
+                  label: function (context) {
+                    const point = context.raw;
+                    return `${context.dataset.label}: ¥${fmt(point.y)} (${
+                      point.project
+                    })`;
+                  },
                 },
-                scales: {
-                    x: {
-                        title: {
-                            display: !isSmallMobile,
-                            text: '見積時期',
-                            font: {
-                                size: isMobile ? 10 : 12
-                            }
-                        },
-                        ticks: {
-                            font: {
-                                size: isMobile ? 9 : 11
-                            },
-                            maxRotation: isMobile ? 45 : 0,
-                            minRotation: isMobile ? 45 : 0
-                        },
-                        grid: {
-                            display: false
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: !isSmallMobile,
-                            text: `NET単価 (円/${group.unit})`,
-                            font: {
-                                size: isMobile ? 10 : 12
-                            }
-                        },
-                        ticks: {
-                            font: {
-                                size: isMobile ? 9 : 11
-                            },
-                            callback: function(value) {
-                                if (isMobile) {
-                                    return '¥' + (value >= 1000 ? Math.round(value / 1000) + 'k' : value);
-                                }
-                                return '¥' + fmt(value);
-                            }
-                        }
+                bodyFont: {
+                  size: isMobile ? 10 : 12,
+                },
+                titleFont: {
+                  size: isMobile ? 11 : 13,
+                },
+              },
+            },
+            scales: {
+              x: {
+                title: {
+                  display: !isSmallMobile,
+                  text: "見積時期",
+                  font: {
+                    size: isMobile ? 10 : 12,
+                  },
+                },
+                ticks: {
+                  font: {
+                    size: isMobile ? 9 : 11,
+                  },
+                  maxRotation: isMobile ? 45 : 0,
+                  minRotation: isMobile ? 45 : 0,
+                },
+                grid: {
+                  display: false,
+                },
+              },
+              y: {
+                title: {
+                  display: !isSmallMobile,
+                  text: `NET単価 (円/${group.unit})`,
+                  font: {
+                    size: isMobile ? 10 : 12,
+                  },
+                },
+                ticks: {
+                  font: {
+                    size: isMobile ? 9 : 11,
+                  },
+                  callback: function (value) {
+                    if (isMobile) {
+                      return (
+                        "¥" +
+                        (value >= 1000 ? Math.round(value / 1000) + "k" : value)
+                      );
                     }
-                }
-            }
+                    return "¥" + fmt(value);
+                  },
+                },
+              },
+            },
+          },
         });
 
-        const modal = new bootstrap.Modal(document.getElementById('chartModal'));
+        const modal = new bootstrap.Modal(
+          document.getElementById("chartModal")
+        );
         modal.show();
       }
     </script>
