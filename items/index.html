@@ -668,10 +668,14 @@
       </div>
     </div>
     <script type="module">
-      import { projects } from './data/projects.js';
-      import { itemRecords } from './data/itemRecords.js';
-      import { catNames, typeNames, typeBadges } from './data/constants.js';
-      import { fmt, getCompanyColor, normalizeCompanyName } from './scripts/utils/utils.js';
+      import { projects } from "./data/projects.js";
+      import { itemRecords } from "./data/itemRecords.js";
+      import { catNames, typeNames, typeBadges } from "./data/constants.js";
+      import {
+        fmt,
+        getCompanyColor,
+        normalizeCompanyName,
+      } from "./scripts/utils/utils.js";
 
       let allItems = [];
       let groupedItems = [];
@@ -854,10 +858,7 @@
         container.innerHTML = filters.length
           ? '<small class="text-muted me-2">適用中:</small>' +
             filters
-              .map(
-                (f) =>
-                  `<span class="badge bg-secondary small">${f}</span>`
-              )
+              .map((f) => `<span class="badge bg-secondary small">${f}</span>`)
               .join("")
           : '<small class="text-muted">絞り込み条件なし（全品目表示）</small>';
       }
@@ -915,10 +916,9 @@
                                 <div class="fw-bold text-primary fs-5 tabular-nums">¥${fmt(
                                   g.minNetPrice
                                 )} ~ ¥${fmt(g.maxNetPrice)}</div>
-                                <small class="text-muted">変動率: ${priceVariation}%</small>
                             </div>
                         </div>
-                        
+
                         <div class="list-group list-group-flush mb-3 border rounded">
                             <div class="list-group-item">
                                 <div class="summary-section-title">
@@ -964,7 +964,7 @@
                                                 </div>
                                                 <div class="company-prices">
                                                     <div class="company-price-item">
-                                                        <span class="company-price-label">最小</span>
+                                                        <span class="company-price-label">最安</span>
                                                         <span class="company-price-value min">¥${fmt(
                                                           minP
                                                         )}</span>
@@ -976,7 +976,7 @@
                                                         )}</span>
                                                     </div>
                                                     <div class="company-price-item">
-                                                        <span class="company-price-label">最大</span>
+                                                        <span class="company-price-label">最高</span>
                                                         <span class="company-price-value max">¥${fmt(
                                                           maxP
                                                         )}</span>
