@@ -39,12 +39,13 @@
       }
 
       .hero-body {
-        padding: 2rem 1.5rem;
+        padding: 1rem 1.5rem;
       }
 
       .title {
         font-family: "M PLUS Rounded 1c", sans-serif;
         color: white !important;
+        font-size: 1.25rem;
       }
 
       .box {
@@ -644,14 +645,35 @@
           return 0; // 親の合計に含めない(二重計上防止)
         },
 
-        [BCS_ROW_TYPES.PARENT]: (row) => sumChildrenAmount(row),
-        [BCS_ROW_TYPES.QUOTE]: (row) => sumChildrenAmount(row),
-        [BCS_ROW_TYPES.APPENDIX]: (row) => sumChildrenAmount(row),
-        [BCS_ROW_TYPES.ELEMENT]: (row) => sumChildrenAmount(row),
+        [BCS_ROW_TYPES.PARENT]: (row) => {
+          const total = sumChildrenAmount(row);
+          row.calculatedAmount = total;
+          return total;
+        },
+        [BCS_ROW_TYPES.QUOTE]: (row) => {
+          const total = sumChildrenAmount(row);
+          row.calculatedAmount = total;
+          return total;
+        },
+        [BCS_ROW_TYPES.APPENDIX]: (row) => {
+          const total = sumChildrenAmount(row);
+          row.calculatedAmount = total;
+          return total;
+        },
+        [BCS_ROW_TYPES.ELEMENT]: (row) => {
+          const total = sumChildrenAmount(row);
+          row.calculatedAmount = total;
+          return total;
+        },
 
         [BCS_ROW_TYPES.ASSIST]: () => 0,
 
-        default: (row) => calculateAmount(row),
+        default: (row) => {
+          // typeが空の場合（ルート行）も子要素の合計を計算
+          const total = sumChildrenAmount(row);
+          row.calculatedAmount = total;
+          return total;
+        },
       };
 
       // 合計金額を再帰的に計算
@@ -667,8 +689,12 @@
         const stack = [{ node: root, depth: 0, key: "" }];
 
         for (const row of rows) {
-          const depth = row.layer || 1;
+          // layerをそのまま使用（ルート行はlayer=0）
+          const depth = row.layer;
           const key = getHierarchyKey(row, depth);
+
+          // T/S行は表示用なので金額計算から除外（表示は行うが計算には含めない）
+          // ただし、ツリー表示のために追加は行う
 
           // 適切な親を見つける
           while (stack.length > 1) {
@@ -684,8 +710,8 @@
           const parent = stack[stack.length - 1];
           parent.node.children.push(row);
 
-          // P/Q/B/E行は子を持てる
-          if (PARENT_TYPES.includes(row.type)) {
+          // P/Q/B/E行、またはルート行（type=""）は子を持てる
+          if (PARENT_TYPES.includes(row.type) || !row.type) {
             stack.push({ node: row, depth: depth, key: key });
           }
         }
@@ -723,23 +749,23 @@
           parts.push(`<span class="node-qty">${row.qty}${row.unit}</span>`);
         }
 
-        // 単価
-        if (row.price) {
+        // 単価（Dタイプのみ）
+        if (row.type === BCS_ROW_TYPES.DETAIL && row.price) {
           const priceClass = row.price < 0 ? "negative" : "";
           parts.push(
             `<span class="node-price ${priceClass}">@${row.price.toLocaleString()}</span>`
           );
         }
 
-        // T行・S行の合計金額
+        // 計算された金額（P/T/S/ルート行など）
         if (
-          TOTAL_TYPES.includes(row.type) &&
           row.calculatedAmount !== undefined &&
-          row.calculatedAmount !== 0
+          row.type !== BCS_ROW_TYPES.DETAIL
         ) {
           const amountClass = row.calculatedAmount < 0 ? "negative" : "";
+          const prefix = TOTAL_TYPES.includes(row.type) ? "合計:" : "@";
           parts.push(
-            `<span class="node-price ${amountClass}">合計:¥${row.calculatedAmount.toLocaleString()}</span>`
+            `<span class="node-price ${amountClass}">${prefix}${row.calculatedAmount.toLocaleString()}</span>`
           );
         }
 
