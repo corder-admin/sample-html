@@ -534,33 +534,30 @@
       // 定数定義
       // ========================================
       const BCS_ROW_TYPES = {
-        DETAIL: 'D',      // 通常行
-        ASSIST: 'A',      // 補助行
-        PARENT: 'P',      // 親行
-        QUOTE: 'Q',       // 代価親行
-        APPENDIX: 'B',    // 別紙親行
-        ELEMENT: 'E',     // エレメント親行
-        QBE_TOTAL: 'N',   // QBE計行
-        SUBTOTAL: 'S',    // 小計行
-        TOTAL: 'T'        // 合計行
+        DETAIL: "D", // 通常行
+        ASSIST: "A", // 補助行
+        PARENT: "P", // 親行
+        QUOTE: "Q", // 代価親行
+        APPENDIX: "B", // 別紙親行
+        ELEMENT: "E", // エレメント親行
+        QBE_TOTAL: "N", // QBE計行
+        SUBTOTAL: "S", // 小計行
+        TOTAL: "T", // 合計行
       };
 
       const PARENT_TYPES = [
         BCS_ROW_TYPES.PARENT,
         BCS_ROW_TYPES.QUOTE,
         BCS_ROW_TYPES.APPENDIX,
-        BCS_ROW_TYPES.ELEMENT
+        BCS_ROW_TYPES.ELEMENT,
       ];
 
-      const TOTAL_TYPES = [
-        BCS_ROW_TYPES.TOTAL,
-        BCS_ROW_TYPES.SUBTOTAL
-      ];
+      const TOTAL_TYPES = [BCS_ROW_TYPES.TOTAL, BCS_ROW_TYPES.SUBTOTAL];
 
       const UI_MESSAGES = {
-        EMPTY_INPUT: 'データが入力されていません',
-        INVALID_CSV: '有効なBCS.CSV行が見つかりません',
-        PARSE_FAILED: 'パースに失敗しました'
+        EMPTY_INPUT: "データが入力されていません",
+        INVALID_CSV: "有効なBCS.CSV行が見つかりません",
+        PARSE_FAILED: "パースに失敗しました",
       };
 
       // ========================================
@@ -620,7 +617,7 @@
 
         return {
           text: Encoding.codeToString(unicodeArray),
-          encoding: detectedEncoding || "SJIS"
+          encoding: detectedEncoding || "SJIS",
         };
       }
 
@@ -632,8 +629,9 @@
 
       // エラーメッセージ表示
       function showError(message) {
-        document.getElementById("errorMsg").innerHTML =
-          `<div class="error-msg">⚠️ ${message}</div>`;
+        document.getElementById(
+          "errorMsg"
+        ).innerHTML = `<div class="error-msg">⚠️ ${message}</div>`;
       }
 
       // ファイル読み込みオーケストレーション
@@ -710,7 +708,7 @@
       }
 
       // ========================================
-      // 金額計算処理 (Strategy Pattern)
+      // 金額計算処理
       // ========================================
 
       // 基本金額計算
@@ -753,12 +751,13 @@
 
         [BCS_ROW_TYPES.ASSIST]: () => 0,
 
-        default: (row) => calculateAmount(row)
+        default: (row) => calculateAmount(row),
       };
 
       // 合計金額を再帰的に計算
       function calculateTotalAmount(node) {
-        const calculator = AmountCalculators[node.type] || AmountCalculators.default;
+        const calculator =
+          AmountCalculators[node.type] || AmountCalculators.default;
         return calculator(node);
       }
 
@@ -800,19 +799,19 @@
       }
 
       // ========================================
-      // ノードHTML生成 (ヘルパー関数で構造化)
+      // ノードHTML生成
       // ========================================
 
       // トグルアイコン生成
       function createToggleIcon(hasChildren) {
-        const className = hasChildren ? '' : 'empty';
-        const icon = hasChildren ? '▼' : '';
+        const className = hasChildren ? "" : "empty";
+        const icon = hasChildren ? "▼" : "";
         return `<span class="tree-toggle ${className}">${icon}</span>`;
       }
 
       // 型バッジ生成
       function createTypeBadge(type) {
-        return `<span class="type-badge type-${type}">${type || '?'}</span>`;
+        return `<span class="type-badge type-${type}">${type || "?"}</span>`;
       }
 
       // 金額情報生成
@@ -826,17 +825,25 @@
 
         // 単価
         if (row.price) {
-          const priceClass = row.price < 0 ? 'negative' : '';
-          parts.push(`<span class="node-price ${priceClass}">@${row.price.toLocaleString()}</span>`);
+          const priceClass = row.price < 0 ? "negative" : "";
+          parts.push(
+            `<span class="node-price ${priceClass}">@${row.price.toLocaleString()}</span>`
+          );
         }
 
         // T行・S行の合計金額
-        if (TOTAL_TYPES.includes(row.type) && row.calculatedAmount !== undefined && row.calculatedAmount !== 0) {
-          const amountClass = row.calculatedAmount < 0 ? 'negative' : '';
-          parts.push(`<span class="node-price ${amountClass}">合計:¥${row.calculatedAmount.toLocaleString()}</span>`);
+        if (
+          TOTAL_TYPES.includes(row.type) &&
+          row.calculatedAmount !== undefined &&
+          row.calculatedAmount !== 0
+        ) {
+          const amountClass = row.calculatedAmount < 0 ? "negative" : "";
+          parts.push(
+            `<span class="node-price ${amountClass}">合計:¥${row.calculatedAmount.toLocaleString()}</span>`
+          );
         }
 
-        return parts.join('');
+        return parts.join("");
       }
 
       // ノードHTML生成 (メイン)
@@ -848,16 +855,25 @@
             ${createToggleIcon(hasChildren)}
             ${createTypeBadge(row.type)}
             <span class="node-name">${escapeHtml(row.name)}</span>
-            ${row.spec ? `<span class="node-spec">（${escapeHtml(row.spec)}）</span>` : ''}
+            ${
+              row.spec
+                ? `<span class="node-spec">（${escapeHtml(row.spec)}）</span>`
+                : ""
+            }
             ${createAmountInfo(row)}
           </div>
         `;
 
         const childrenContent = hasChildren
-          ? `<div class="tree-children">${row.children.map(child => renderNode(child, level + 1)).join('')}</div>`
-          : '';
+          ? `<div class="tree-children">${row.children
+              .map((child) => renderNode(child, level + 1))
+              .join("")}</div>`
+          : "";
 
-        return `<div class="tree-node level-${Math.min(level, 6)}">${rowContent}${childrenContent}</div>`;
+        return `<div class="tree-node level-${Math.min(
+          level,
+          6
+        )}">${rowContent}${childrenContent}</div>`;
       }
 
       function escapeHtml(str) {
@@ -881,7 +897,7 @@
       }
 
       // ========================================
-      // CSVパース処理 (SRP準拠)
+      // CSVパース処理
       // ========================================
 
       // 入力検証
@@ -894,7 +910,7 @@
 
       // CSV行のパース
       function parseCSVRows(csvText) {
-        const lines = csvText.split(/\r?\n/).filter(l => l.trim());
+        const lines = csvText.split(/\r?\n/).filter((l) => l.trim());
         const rows = [];
 
         for (const line of lines) {
@@ -914,7 +930,7 @@
       // 統計情報計算
       function calculateStats(rows) {
         const typeCount = {};
-        rows.forEach(r => {
+        rows.forEach((r) => {
           typeCount[r.type] = (typeCount[r.type] || 0) + 1;
         });
         return typeCount;
@@ -922,7 +938,7 @@
 
       // 統計情報のUI更新
       function updateStats(typeCount, totalRows) {
-        const statsDiv = document.getElementById('stats');
+        const statsDiv = document.getElementById("stats");
         statsDiv.innerHTML = `
           <span>📊 ${totalRows}行</span>
           <span>P:${typeCount[BCS_ROW_TYPES.PARENT] || 0}</span>
@@ -933,35 +949,36 @@
 
       // 空状態のUI表示
       function showEmptyState() {
-        const container = document.getElementById('treeContainer');
-        const statsDiv = document.getElementById('stats');
-        container.innerHTML = '<div class="empty-state"><p>データが入力されていません</p></div>';
-        statsDiv.innerHTML = '';
+        const container = document.getElementById("treeContainer");
+        const statsDiv = document.getElementById("stats");
+        container.innerHTML =
+          '<div class="empty-state"><p>データが入力されていません</p></div>';
+        statsDiv.innerHTML = "";
       }
 
       // パース失敗時のUI表示
       function showParseError(message) {
-        const container = document.getElementById('treeContainer');
-        const statsDiv = document.getElementById('stats');
+        const container = document.getElementById("treeContainer");
+        const statsDiv = document.getElementById("stats");
         showError(`エラー: ${message}`);
         container.innerHTML = `<div class="empty-state"><p>${UI_MESSAGES.PARSE_FAILED}</p></div>`;
-        statsDiv.innerHTML = '';
+        statsDiv.innerHTML = "";
       }
 
       // メイン処理 - CSVパースオーケストレーション
       function parseCSV() {
-        const input = document.getElementById('csvInput').value;
-        const container = document.getElementById('treeContainer');
-        const errorDiv = document.getElementById('errorMsg');
+        const input = document.getElementById("csvInput").value;
+        const container = document.getElementById("treeContainer");
+        const errorDiv = document.getElementById("errorMsg");
 
-        errorDiv.innerHTML = '';
+        errorDiv.innerHTML = "";
 
         try {
           const validInput = validateCSVInput(input);
           const rows = parseCSVRows(validInput);
           const tree = buildTree(rows);
 
-          const html = tree.map(node => renderNode(node, 0)).join('');
+          const html = tree.map((node) => renderNode(node, 0)).join("");
           container.innerHTML = html;
 
           const typeCount = calculateStats(rows);
