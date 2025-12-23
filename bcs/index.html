@@ -530,7 +530,42 @@
     </div>
 
     <script>
+      // ========================================
+      // 定数定義
+      // ========================================
+      const BCS_ROW_TYPES = {
+        DETAIL: 'D',      // 通常行
+        ASSIST: 'A',      // 補助行
+        PARENT: 'P',      // 親行
+        QUOTE: 'Q',       // 代価親行
+        APPENDIX: 'B',    // 別紙親行
+        ELEMENT: 'E',     // エレメント親行
+        QBE_TOTAL: 'N',   // QBE計行
+        SUBTOTAL: 'S',    // 小計行
+        TOTAL: 'T'        // 合計行
+      };
+
+      const PARENT_TYPES = [
+        BCS_ROW_TYPES.PARENT,
+        BCS_ROW_TYPES.QUOTE,
+        BCS_ROW_TYPES.APPENDIX,
+        BCS_ROW_TYPES.ELEMENT
+      ];
+
+      const TOTAL_TYPES = [
+        BCS_ROW_TYPES.TOTAL,
+        BCS_ROW_TYPES.SUBTOTAL
+      ];
+
+      const UI_MESSAGES = {
+        EMPTY_INPUT: 'データが入力されていません',
+        INVALID_CSV: '有効なBCS.CSV行が見つかりません',
+        PARSE_FAILED: 'パースに失敗しました'
+      };
+
+      // ========================================
       // ファイルアップロード処理
+      // ========================================
       const dropZone = document.getElementById("dropZone");
       const fileInput = document.getElementById("fileInput");
       const fileInfo = document.getElementById("fileInfo");
@@ -566,40 +601,53 @@
         if (e.target.files.length > 0) handleFile(e.target.files[0]);
       });
 
-      // ファイル読み込み
+      // ========================================
+      // ファイル読み込み処理 (SRP準拠)
+      // ========================================
+
+      // ファイルのエンコーディング検出と変換
+      async function decodeFile(file) {
+        const buffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(buffer);
+
+        const detectedEncoding = Encoding.detect(uint8Array);
+        console.log("Detected encoding:", detectedEncoding);
+
+        const unicodeArray = Encoding.convert(uint8Array, {
+          to: "UNICODE",
+          from: detectedEncoding || "SJIS",
+        });
+
+        return {
+          text: Encoding.codeToString(unicodeArray),
+          encoding: detectedEncoding || "SJIS"
+        };
+      }
+
+      // ファイル情報のUI更新
+      function updateFileInfo(fileName, fileSize, encoding) {
+        fileInfo.innerHTML = `📄 <strong>${fileName}</strong> (${fileSize} KB) を読み込みました <span style="color:#94A3B8">［${encoding}］</span>`;
+        fileInfo.classList.add("show");
+      }
+
+      // エラーメッセージ表示
+      function showError(message) {
+        document.getElementById("errorMsg").innerHTML =
+          `<div class="error-msg">⚠️ ${message}</div>`;
+      }
+
+      // ファイル読み込みオーケストレーション
       async function handleFile(file) {
         const fileName = file.name;
         const fileSize = (file.size / 1024).toFixed(1);
 
         try {
-          const buffer = await file.arrayBuffer();
-          const uint8Array = new Uint8Array(buffer);
-
-          // encoding.jsで文字コード自動判定
-          const detectedEncoding = Encoding.detect(uint8Array);
-          console.log("Detected encoding:", detectedEncoding);
-
-          // Unicode配列に変換
-          const unicodeArray = Encoding.convert(uint8Array, {
-            to: "UNICODE",
-            from: detectedEncoding || "SJIS",
-          });
-
-          // 文字列に変換
-          const text = Encoding.codeToString(unicodeArray);
-
+          const { text, encoding } = await decodeFile(file);
           document.getElementById("csvInput").value = text;
-          fileInfo.innerHTML = `📄 <strong>${fileName}</strong> (${fileSize} KB) を読み込みました <span style="color:#94A3B8">［${
-            detectedEncoding || "SJIS"
-          }］</span>`;
-          fileInfo.classList.add("show");
-
-          // 自動でパース
+          updateFileInfo(fileName, fileSize, encoding);
           parseCSV();
         } catch (err) {
-          document.getElementById(
-            "errorMsg"
-          ).innerHTML = `<div class="error-msg">⚠️ ファイル読み込みエラー: ${err.message}</div>`;
+          showError(`ファイル読み込みエラー: ${err.message}`);
         }
       }
 
@@ -661,6 +709,59 @@
         return keys.slice(0, depth).join("-");
       }
 
+      // ========================================
+      // 金額計算処理 (Strategy Pattern)
+      // ========================================
+
+      // 基本金額計算
+      function calculateAmount(row) {
+        if (!row.qty || !row.price) return 0;
+        return row.qty * row.price;
+      }
+
+      // 子要素の金額合計を計算
+      function sumChildrenAmount(node) {
+        if (!node.children || node.children.length === 0) {
+          return calculateAmount(node);
+        }
+
+        return node.children.reduce((total, child) => {
+          return total + calculateTotalAmount(child);
+        }, 0);
+      }
+
+      // 型別金額計算戦略
+      const AmountCalculators = {
+        [BCS_ROW_TYPES.DETAIL]: (row) => calculateAmount(row),
+
+        [BCS_ROW_TYPES.TOTAL]: (row) => {
+          const total = sumChildrenAmount(row);
+          row.calculatedAmount = total;
+          return 0; // 親の合計に含めない(二重計上防止)
+        },
+
+        [BCS_ROW_TYPES.SUBTOTAL]: (row) => {
+          const total = sumChildrenAmount(row);
+          row.calculatedAmount = total;
+          return 0; // 親の合計に含めない(二重計上防止)
+        },
+
+        [BCS_ROW_TYPES.PARENT]: (row) => sumChildrenAmount(row),
+        [BCS_ROW_TYPES.QUOTE]: (row) => sumChildrenAmount(row),
+        [BCS_ROW_TYPES.APPENDIX]: (row) => sumChildrenAmount(row),
+        [BCS_ROW_TYPES.ELEMENT]: (row) => sumChildrenAmount(row),
+
+        [BCS_ROW_TYPES.ASSIST]: () => 0,
+
+        default: (row) => calculateAmount(row)
+      };
+
+      // 合計金額を再帰的に計算
+      function calculateTotalAmount(node) {
+        const calculator = AmountCalculators[node.type] || AmountCalculators.default;
+        return calculator(node);
+      }
+
       // ツリー構築
       function buildTree(rows) {
         const root = { children: [], name: "ROOT", type: "" };
@@ -685,54 +786,78 @@
           parent.node.children.push(row);
 
           // P/Q/B/E行は子を持てる
-          if (["P", "Q", "B", "E"].includes(row.type)) {
+          if (PARENT_TYPES.includes(row.type)) {
             stack.push({ node: row, depth: depth, key: key });
           }
+        }
+
+        // 全ノードの金額を計算
+        for (const rootNode of root.children) {
+          calculateTotalAmount(rootNode);
         }
 
         return root.children;
       }
 
-      // ノードHTML生成
+      // ========================================
+      // ノードHTML生成 (ヘルパー関数で構造化)
+      // ========================================
+
+      // トグルアイコン生成
+      function createToggleIcon(hasChildren) {
+        const className = hasChildren ? '' : 'empty';
+        const icon = hasChildren ? '▼' : '';
+        return `<span class="tree-toggle ${className}">${icon}</span>`;
+      }
+
+      // 型バッジ生成
+      function createTypeBadge(type) {
+        return `<span class="type-badge type-${type}">${type || '?'}</span>`;
+      }
+
+      // 金額情報生成
+      function createAmountInfo(row) {
+        const parts = [];
+
+        // 数量・単位
+        if (row.qty) {
+          parts.push(`<span class="node-qty">${row.qty}${row.unit}</span>`);
+        }
+
+        // 単価
+        if (row.price) {
+          const priceClass = row.price < 0 ? 'negative' : '';
+          parts.push(`<span class="node-price ${priceClass}">@${row.price.toLocaleString()}</span>`);
+        }
+
+        // T行・S行の合計金額
+        if (TOTAL_TYPES.includes(row.type) && row.calculatedAmount !== undefined && row.calculatedAmount !== 0) {
+          const amountClass = row.calculatedAmount < 0 ? 'negative' : '';
+          parts.push(`<span class="node-price ${amountClass}">合計:¥${row.calculatedAmount.toLocaleString()}</span>`);
+        }
+
+        return parts.join('');
+      }
+
+      // ノードHTML生成 (メイン)
       function renderNode(row, level) {
         const hasChildren = row.children && row.children.length > 0;
-        const toggleClass = hasChildren ? "" : "empty";
-        const toggleIcon = hasChildren ? "▼" : "";
 
-        const priceClass = row.price < 0 ? "negative" : "";
-        const priceStr = row.price ? row.price.toLocaleString() : "";
-        const qtyStr = row.qty ? `${row.qty}${row.unit}` : "";
+        const rowContent = `
+          <div class="tree-row" onclick="toggleNode(this)">
+            ${createToggleIcon(hasChildren)}
+            ${createTypeBadge(row.type)}
+            <span class="node-name">${escapeHtml(row.name)}</span>
+            ${row.spec ? `<span class="node-spec">（${escapeHtml(row.spec)}）</span>` : ''}
+            ${createAmountInfo(row)}
+          </div>
+        `;
 
-        let html = `<div class="tree-node level-${Math.min(level, 6)}">`;
-        html += `<div class="tree-row" onclick="toggleNode(this)">`;
-        html += `<span class="tree-toggle ${toggleClass}">${toggleIcon}</span>`;
-        html += `<span class="type-badge type-${row.type}">${
-          row.type || "?"
-        }</span>`;
-        html += `<span class="node-name">${escapeHtml(row.name)}</span>`;
+        const childrenContent = hasChildren
+          ? `<div class="tree-children">${row.children.map(child => renderNode(child, level + 1)).join('')}</div>`
+          : '';
 
-        if (row.spec) {
-          html += `<span class="node-spec">（${escapeHtml(row.spec)}）</span>`;
-        }
-        if (qtyStr) {
-          html += `<span class="node-qty">${qtyStr}</span>`;
-        }
-        if (priceStr) {
-          html += `<span class="node-price ${priceClass}">@${priceStr}</span>`;
-        }
-
-        html += `</div>`;
-
-        if (hasChildren) {
-          html += `<div class="tree-children">`;
-          for (const child of row.children) {
-            html += renderNode(child, level + 1);
-          }
-          html += `</div>`;
-        }
-
-        html += `</div>`;
-        return html;
+        return `<div class="tree-node level-${Math.min(level, 6)}">${rowContent}${childrenContent}</div>`;
       }
 
       function escapeHtml(str) {
@@ -755,63 +880,98 @@
         }
       }
 
-      // メイン処理
-      function parseCSV() {
-        const input = document.getElementById("csvInput").value.trim();
-        const container = document.getElementById("treeContainer");
-        const errorDiv = document.getElementById("errorMsg");
-        const statsDiv = document.getElementById("stats");
+      // ========================================
+      // CSVパース処理 (SRP準拠)
+      // ========================================
 
-        errorDiv.innerHTML = "";
+      // 入力検証
+      function validateCSVInput(input) {
+        if (!input || !input.trim()) {
+          throw new Error(UI_MESSAGES.EMPTY_INPUT);
+        }
+        return input.trim();
+      }
 
-        if (!input) {
-          container.innerHTML =
-            '<div class="empty-state"><p>データが入力されていません</p></div>';
-          statsDiv.innerHTML = "";
-          return;
+      // CSV行のパース
+      function parseCSVRows(csvText) {
+        const lines = csvText.split(/\r?\n/).filter(l => l.trim());
+        const rows = [];
+
+        for (const line of lines) {
+          const cols = parseCSVLine(line);
+          if (cols.length >= 10) {
+            rows.push(createBCSRow(cols));
+          }
         }
 
+        if (rows.length === 0) {
+          throw new Error(UI_MESSAGES.INVALID_CSV);
+        }
+
+        return rows;
+      }
+
+      // 統計情報計算
+      function calculateStats(rows) {
+        const typeCount = {};
+        rows.forEach(r => {
+          typeCount[r.type] = (typeCount[r.type] || 0) + 1;
+        });
+        return typeCount;
+      }
+
+      // 統計情報のUI更新
+      function updateStats(typeCount, totalRows) {
+        const statsDiv = document.getElementById('stats');
+        statsDiv.innerHTML = `
+          <span>📊 ${totalRows}行</span>
+          <span>P:${typeCount[BCS_ROW_TYPES.PARENT] || 0}</span>
+          <span>D:${typeCount[BCS_ROW_TYPES.DETAIL] || 0}</span>
+          <span>T:${typeCount[BCS_ROW_TYPES.TOTAL] || 0}</span>
+        `;
+      }
+
+      // 空状態のUI表示
+      function showEmptyState() {
+        const container = document.getElementById('treeContainer');
+        const statsDiv = document.getElementById('stats');
+        container.innerHTML = '<div class="empty-state"><p>データが入力されていません</p></div>';
+        statsDiv.innerHTML = '';
+      }
+
+      // パース失敗時のUI表示
+      function showParseError(message) {
+        const container = document.getElementById('treeContainer');
+        const statsDiv = document.getElementById('stats');
+        showError(`エラー: ${message}`);
+        container.innerHTML = `<div class="empty-state"><p>${UI_MESSAGES.PARSE_FAILED}</p></div>`;
+        statsDiv.innerHTML = '';
+      }
+
+      // メイン処理 - CSVパースオーケストレーション
+      function parseCSV() {
+        const input = document.getElementById('csvInput').value;
+        const container = document.getElementById('treeContainer');
+        const errorDiv = document.getElementById('errorMsg');
+
+        errorDiv.innerHTML = '';
+
         try {
-          const lines = input.split(/\r?\n/).filter((l) => l.trim());
-          const rows = [];
-
-          for (const line of lines) {
-            const cols = parseCSVLine(line);
-            if (cols.length >= 10) {
-              rows.push(createBCSRow(cols));
-            }
-          }
-
-          if (rows.length === 0) {
-            throw new Error("有効なBCS.CSV行が見つかりません");
-          }
-
+          const validInput = validateCSVInput(input);
+          const rows = parseCSVRows(validInput);
           const tree = buildTree(rows);
 
-          let html = "";
-          for (const node of tree) {
-            html += renderNode(node, 0);
-          }
-
+          const html = tree.map(node => renderNode(node, 0)).join('');
           container.innerHTML = html;
 
-          // 統計
-          const typeCount = {};
-          rows.forEach((r) => {
-            typeCount[r.type] = (typeCount[r.type] || 0) + 1;
-          });
-
-          statsDiv.innerHTML = `
-          <span>📊 ${rows.length}行</span>
-          <span>P:${typeCount["P"] || 0}</span>
-          <span>D:${typeCount["D"] || 0}</span>
-          <span>T:${typeCount["T"] || 0}</span>
-        `;
+          const typeCount = calculateStats(rows);
+          updateStats(typeCount, rows.length);
         } catch (e) {
-          errorDiv.innerHTML = `<div class="error-msg">⚠️ エラー: ${e.message}</div>`;
-          container.innerHTML =
-            '<div class="empty-state"><p>パースに失敗しました</p></div>';
-          statsDiv.innerHTML = "";
+          if (e.message === UI_MESSAGES.EMPTY_INPUT) {
+            showEmptyState();
+          } else {
+            showParseError(e.message);
+          }
         }
       }
 
