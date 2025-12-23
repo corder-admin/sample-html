@@ -8,6 +8,10 @@
       href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js"></script>
     <style>
       :root {
@@ -23,12 +27,6 @@
         --border: #334155;
       }
 
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
       body {
         font-family: "Noto Sans JP", sans-serif;
         background: var(--bg);
@@ -36,46 +34,34 @@
         min-height: 100vh;
       }
 
-      .header {
+      .hero {
         background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-        padding: 20px;
-        text-align: center;
       }
 
-      .header h1 {
+      .hero-body {
+        padding: 2rem 1.5rem;
+      }
+
+      .title {
         font-family: "M PLUS Rounded 1c", sans-serif;
-        font-size: 1.5rem;
-        font-weight: 700;
+        color: white !important;
       }
 
-      .container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-
-      .input-section {
+      .box {
         background: var(--card);
         border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
+        box-shadow: none;
       }
 
-      .input-section label {
-        display: block;
-        margin-bottom: 10px;
-        font-weight: 700;
+      .label {
         color: var(--accent);
-      }
-
-      .input-methods {
-        margin-bottom: 15px;
+        font-weight: 700;
       }
 
       .file-upload-area {
         border: 2px dashed var(--border);
-        border-radius: 12px;
-        padding: 30px 20px;
+        border-radius: 8px;
+        padding: 1rem;
         text-align: center;
         cursor: pointer;
         transition: all 0.3s;
@@ -89,26 +75,25 @@
       }
 
       .upload-icon {
-        font-size: 2.5rem;
-        display: block;
-        margin-bottom: 10px;
+        font-size: 1.5rem;
+        margin-bottom: 0.25rem;
       }
 
       .upload-main {
         font-weight: 700;
-        font-size: 1.1rem;
-        margin-bottom: 8px;
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
       }
 
       .upload-sub {
         color: #94a3b8;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
       }
 
       .upload-hint {
         color: #64748b;
-        font-size: 0.8rem;
-        margin-top: 10px;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
       }
 
       .btn-link {
@@ -117,17 +102,12 @@
         color: var(--primary);
         text-decoration: underline;
         cursor: pointer;
-        font-size: 0.9rem;
-      }
-
-      .btn-link:hover {
-        color: #60a5fa;
       }
 
       .divider {
         display: flex;
         align-items: center;
-        margin: 20px 0;
+        margin: 1rem 0;
         color: #64748b;
         font-size: 0.85rem;
       }
@@ -141,115 +121,76 @@
       }
 
       .divider span {
-        padding: 0 15px;
+        padding: 0 1rem;
       }
 
-      .file-info {
-        margin-top: 10px;
-        padding: 10px 15px;
+      .notification.is-success-custom {
         background: rgba(16, 185, 129, 0.15);
-        border-radius: 8px;
         color: #34d399;
-        font-size: 0.9rem;
-        display: none;
+        border-radius: 8px;
       }
 
-      .file-info.show {
-        display: block;
-      }
-
-      .input-section textarea {
-        width: 100%;
-        height: 200px;
+      .textarea {
         background: var(--bg);
         border: 2px solid var(--border);
-        border-radius: 8px;
         color: var(--text);
         font-family: "Courier New", monospace;
-        font-size: 0.85rem;
-        padding: 15px;
         resize: vertical;
       }
 
-      .input-section textarea:focus {
-        outline: none;
+      .textarea:focus {
         border-color: var(--primary);
+        box-shadow: none;
       }
 
-      .btn-row {
-        display: flex;
-        gap: 10px;
-        margin-top: 15px;
-        flex-wrap: wrap;
-      }
-
-      .btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .btn-primary {
+      .button.is-primary {
         background: var(--primary);
-        color: white;
       }
 
-      .btn-primary:hover {
+      .button.is-primary:hover {
         background: #1d4ed8;
       }
 
-      .btn-secondary {
+      .button.is-secondary {
         background: var(--border);
         color: var(--text);
       }
 
-      .btn-secondary:hover {
+      .button.is-secondary:hover {
         background: #475569;
       }
 
-      .btn-sample {
+      .button.is-success {
         background: var(--secondary);
-        color: white;
       }
 
-      .btn-sample:hover {
+      .button.is-success:hover {
         background: #059669;
       }
 
-      .output-section {
-        background: var(--card);
-        border-radius: 12px;
-        padding: 20px;
-      }
-
-      .output-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .output-header h2 {
-        font-size: 1.1rem;
+      .subtitle.is-6 {
         color: var(--accent);
       }
 
-      .stats {
-        display: flex;
-        gap: 15px;
-        font-size: 0.85rem;
+      .tags {
         color: #94a3b8;
+      }
+
+      .tag {
+        background-color: var(--border);
+        color: var(--text);
+      }
+
+      .notification.is-danger.is-light {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid var(--red);
+        color: #fca5a5;
       }
 
       .tree-container {
         background: var(--bg);
         border-radius: 8px;
-        padding: 20px;
+        padding: 1.5rem;
         overflow-x: auto;
         min-height: 300px;
         max-height: 600px;
@@ -273,10 +214,6 @@
 
       .tree-row:hover {
         background: rgba(255, 255, 255, 0.1);
-      }
-
-      .tree-row.collapsed > .tree-children {
-        display: none;
       }
 
       .tree-toggle {
@@ -309,33 +246,15 @@
         flex-shrink: 0;
       }
 
-      .type-D {
-        background: var(--primary);
-      }
-      .type-A {
-        background: #6b7280;
-      }
-      .type-P {
-        background: var(--accent);
-      }
-      .type-Q {
-        background: var(--purple);
-      }
-      .type-B {
-        background: var(--pink);
-      }
-      .type-E {
-        background: #14b8a6;
-      }
-      .type-N {
-        background: #8b5cf6;
-      }
-      .type-S {
-        background: #f97316;
-      }
-      .type-T {
-        background: var(--red);
-      }
+      .type-D { background: var(--primary); }
+      .type-A { background: #6b7280; }
+      .type-P { background: var(--accent); }
+      .type-Q { background: var(--purple); }
+      .type-B { background: var(--pink); }
+      .type-E { background: #14b8a6; }
+      .type-N { background: #8b5cf6; }
+      .type-S { background: #f97316; }
+      .type-T { background: var(--red); }
 
       .node-name {
         font-weight: 700;
@@ -368,45 +287,18 @@
         padding-left: 12px;
       }
 
-      .level-0 .tree-row {
-        background: rgba(220, 38, 38, 0.15);
-      }
-      .level-1 .tree-row {
-        background: rgba(37, 99, 235, 0.15);
-      }
-      .level-2 .tree-row {
-        background: rgba(5, 150, 105, 0.15);
-      }
-      .level-3 .tree-row {
-        background: rgba(124, 58, 237, 0.12);
-      }
-      .level-4 .tree-row {
-        background: rgba(236, 72, 153, 0.12);
-      }
-      .level-5 .tree-row {
-        background: rgba(20, 184, 166, 0.12);
-      }
-      .level-6 .tree-row {
-        background: rgba(249, 115, 22, 0.12);
-      }
+      .level-0 .tree-row { background: rgba(220, 38, 38, 0.15); }
+      .level-1 .tree-row { background: rgba(37, 99, 235, 0.15); }
+      .level-2 .tree-row { background: rgba(5, 150, 105, 0.15); }
+      .level-3 .tree-row { background: rgba(124, 58, 237, 0.12); }
+      .level-4 .tree-row { background: rgba(236, 72, 153, 0.12); }
+      .level-5 .tree-row { background: rgba(20, 184, 166, 0.12); }
+      .level-6 .tree-row { background: rgba(249, 115, 22, 0.12); }
 
       .empty-state {
         text-align: center;
-        padding: 60px 20px;
+        padding: 3rem 1.5rem;
         color: #64748b;
-      }
-
-      .empty-state p {
-        margin: 10px 0;
-      }
-
-      .legend {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid var(--border);
       }
 
       .legend-item {
@@ -416,37 +308,18 @@
         font-size: 0.8rem;
         color: #94a3b8;
       }
-
-      .error-msg {
-        background: rgba(239, 68, 68, 0.2);
-        border: 1px solid var(--red);
-        color: #fca5a5;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-      }
-
-      @media (max-width: 768px) {
-        .container {
-          padding: 10px;
-        }
-        .input-section textarea {
-          height: 150px;
-        }
-        .tree-container {
-          padding: 10px;
-        }
-      }
     </style>
   </head>
   <body>
-    <header class="header">
-      <h1>📄 BCS.CSV Viewer</h1>
-    </header>
+    <section class="hero">
+      <div class="hero-body">
+        <h1 class="title has-text-centered">📄 BCS.CSV Viewer</h1>
+      </div>
+    </section>
 
-    <div class="container">
-      <section class="input-section">
-        <div class="input-methods">
+    <section class="section">
+      <div class="container is-widescreen">
+        <div class="box mb-5">
           <div class="file-upload-area" id="dropZone">
             <input type="file" id="fileInput" accept=".csv,.txt" hidden />
             <div class="upload-content">
@@ -464,70 +337,97 @@
               <p class="upload-hint">BCS.CSV（Shift-JIS / UTF-8 対応）</p>
             </div>
           </div>
-          <div class="divider"><span>または</span></div>
-          <label for="csvInput">📋 CSVデータを直接貼り付け</label>
-        </div>
-        <textarea
-          id="csvInput"
-          placeholder="BCS.CSV形式のデータをここに貼り付けてください..."
-        ></textarea>
-        <div class="btn-row">
-          <button class="btn btn-primary" onclick="parseCSV()">
-            🌳 ツリー表示
-          </button>
-          <button class="btn btn-secondary" onclick="clearAll()">
-            🗑️ クリア
-          </button>
-          <button class="btn btn-sample" onclick="loadSample()">
-            📥 サンプル読込
-          </button>
-        </div>
-        <div class="file-info" id="fileInfo"></div>
-      </section>
 
-      <section class="output-section">
-        <div class="output-header">
-          <h2>🌳 ツリービュー</h2>
-          <div class="stats" id="stats"></div>
+          <div class="divider"><span>または</span></div>
+
+          <div class="field">
+            <label class="label" for="csvInput">📋 CSVデータを直接貼り付け</label>
+            <div class="control">
+              <textarea
+                id="csvInput"
+                class="textarea"
+                rows="6"
+                placeholder="BCS.CSV形式のデータをここに貼り付けてください..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="field is-grouped is-grouped-multiline mt-4">
+            <div class="control">
+              <button class="button is-primary" onclick="parseCSV()">
+                <span>🌳 ツリー表示</span>
+              </button>
+            </div>
+            <div class="control">
+              <button class="button is-secondary" onclick="clearAll()">
+                <span>🗑️ クリア</span>
+              </button>
+            </div>
+            <div class="control">
+              <button class="button is-success" onclick="loadSample()">
+                <span>📥 サンプル読込</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="fileInfo" class="notification is-success-custom mt-4" style="display: none;"></div>
         </div>
-        <div id="errorMsg"></div>
-        <div class="tree-container" id="treeContainer">
-          <div class="empty-state">
-            <p>📄 CSVデータを貼り付けて「ツリー表示」をクリック</p>
-            <p>または「サンプル読込」でサンプルデータを表示</p>
+
+        <div class="box">
+          <div class="level">
+            <div class="level-left">
+              <div class="level-item">
+                <h2 class="subtitle is-6">🌳 ツリービュー</h2>
+              </div>
+            </div>
+            <div class="level-right">
+              <div class="level-item">
+                <div class="tags" id="stats"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="errorMsg"></div>
+
+          <div class="tree-container" id="treeContainer">
+            <div class="empty-state">
+              <p>📄 CSVデータを貼り付けて「ツリー表示」をクリック</p>
+              <p>または「サンプル読込」でサンプルデータを表示</p>
+            </div>
+          </div>
+
+          <div class="is-flex is-flex-wrap-wrap mt-4 pt-4" style="gap: 12px; border-top: 1px solid var(--border);">
+            <div class="legend-item">
+              <span class="type-badge type-P">P</span> 親行
+            </div>
+            <div class="legend-item">
+              <span class="type-badge type-D">D</span> 通常行
+            </div>
+            <div class="legend-item">
+              <span class="type-badge type-A">A</span> 補助行
+            </div>
+            <div class="legend-item">
+              <span class="type-badge type-T">T</span> 合計行
+            </div>
+            <div class="legend-item">
+              <span class="type-badge type-S">S</span> 小計行
+            </div>
+            <div class="legend-item">
+              <span class="type-badge type-Q">Q</span> 代価親
+            </div>
+            <div class="legend-item">
+              <span class="type-badge type-B">B</span> 別紙親
+            </div>
+            <div class="legend-item">
+              <span class="type-badge type-E">E</span> エレメント
+            </div>
+            <div class="legend-item">
+              <span class="type-badge type-N">N</span> QBE計
+            </div>
           </div>
         </div>
-        <div class="legend">
-          <div class="legend-item">
-            <span class="type-badge type-P">P</span> 親行
-          </div>
-          <div class="legend-item">
-            <span class="type-badge type-D">D</span> 通常行
-          </div>
-          <div class="legend-item">
-            <span class="type-badge type-A">A</span> 補助行
-          </div>
-          <div class="legend-item">
-            <span class="type-badge type-T">T</span> 合計行
-          </div>
-          <div class="legend-item">
-            <span class="type-badge type-S">S</span> 小計行
-          </div>
-          <div class="legend-item">
-            <span class="type-badge type-Q">Q</span> 代価親
-          </div>
-          <div class="legend-item">
-            <span class="type-badge type-B">B</span> 別紙親
-          </div>
-          <div class="legend-item">
-            <span class="type-badge type-E">E</span> エレメント
-          </div>
-          <div class="legend-item">
-            <span class="type-badge type-N">N</span> QBE計
-          </div>
-        </div>
-      </section>
-    </div>
+      </div>
+    </section>
 
     <script>
       // ========================================
@@ -624,14 +524,14 @@
       // ファイル情報のUI更新
       function updateFileInfo(fileName, fileSize, encoding) {
         fileInfo.innerHTML = `📄 <strong>${fileName}</strong> (${fileSize} KB) を読み込みました <span style="color:#94A3B8">［${encoding}］</span>`;
-        fileInfo.classList.add("show");
+        fileInfo.style.display = "block";
       }
 
       // エラーメッセージ表示
       function showError(message) {
         document.getElementById(
           "errorMsg"
-        ).innerHTML = `<div class="error-msg">⚠️ ${message}</div>`;
+        ).innerHTML = `<div class="notification is-danger is-light">⚠️ ${message}</div>`;
       }
 
       // ファイル読み込みオーケストレーション
@@ -940,10 +840,10 @@
       function updateStats(typeCount, totalRows) {
         const statsDiv = document.getElementById("stats");
         statsDiv.innerHTML = `
-          <span>📊 ${totalRows}行</span>
-          <span>P:${typeCount[BCS_ROW_TYPES.PARENT] || 0}</span>
-          <span>D:${typeCount[BCS_ROW_TYPES.DETAIL] || 0}</span>
-          <span>T:${typeCount[BCS_ROW_TYPES.TOTAL] || 0}</span>
+          <span class="tag">📊 ${totalRows}行</span>
+          <span class="tag">P:${typeCount[BCS_ROW_TYPES.PARENT] || 0}</span>
+          <span class="tag">D:${typeCount[BCS_ROW_TYPES.DETAIL] || 0}</span>
+          <span class="tag">T:${typeCount[BCS_ROW_TYPES.TOTAL] || 0}</span>
         `;
       }
 
@@ -995,10 +895,10 @@
       function clearAll() {
         document.getElementById("csvInput").value = "";
         document.getElementById("treeContainer").innerHTML =
-          '<div class="empty-state"><p>📄 CSVデータを貼り付けて「ツリー表示」をクリック</p></div>';
+          '<div class="empty-state"><p>📄 CSVデータを貼り付けて「ツリー表示」をクリック</p><p>または「サンプル読込」でサンプルデータを表示</p></div>';
         document.getElementById("errorMsg").innerHTML = "";
         document.getElementById("stats").innerHTML = "";
-        document.getElementById("fileInfo").classList.remove("show");
+        document.getElementById("fileInfo").style.display = "none";
         document.getElementById("fileInput").value = "";
       }
 
