@@ -368,8 +368,7 @@ function appData() {
           },
         ];
 
-        const chartWidth = Math.max(600, allWeeks.length * 80);
-        this.$refs.chartWrapper.style.width = chartWidth + "px";
+        this.$refs.chartWrapper.style.width = "100%";
 
         this.chartInstance = new Chart(ctx, {
           type: "line",
