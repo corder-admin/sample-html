@@ -496,24 +496,29 @@
                   </div>
 
                   <div
-                    class="d-flex justify-content-center gap-3 align-items-center flex-wrap"
+                    class="d-flex justify-content-center gap-2 align-items-center flex-wrap"
                   >
-                    <small class="text-muted">
+                    <button
+                      class="btn btn-sm btn-outline-secondary"
+                      @click.stop="expandedGroups[idx] = !expandedGroups[idx]"
+                    >
                       <svg
-                        class="icon-inline-sm"
-                        width="16"
-                        height="16"
+                        class="icon-inline"
+                        width="14"
+                        height="14"
                         fill="none"
                         stroke="currentColor"
                         stroke-width="2"
                         viewBox="0 0 24 24"
                       >
-                        <polyline points="6 9 12 15 18 9" />
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <path d="M3 9h18" />
+                        <path d="M9 21V9" />
                       </svg>
-                      クリックして実績詳細を表示
-                    </small>
+                      実績詳細
+                    </button>
                     <button
-                      class="btn btn-sm btn-outline-primary"
+                      class="btn btn-sm btn-outline-secondary"
                       @click.stop="showChart(idx)"
                     >
                       <svg
@@ -529,7 +534,25 @@
                         <line x1="12" y1="20" x2="12" y2="4" />
                         <line x1="6" y1="20" x2="6" y2="14" />
                       </svg>
-                      実行単価チャート
+                      単価チャート
+                    </button>
+                    <button
+                      class="btn btn-sm btn-outline-secondary"
+                      @click.stop="openDetailModal(idx)"
+                    >
+                      <svg
+                        class="icon-inline"
+                        width="14"
+                        height="14"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                      </svg>
+                      詳細分析
                     </button>
                   </div>
                 </div>
@@ -763,6 +786,319 @@
                   </div>
                 </div>
               </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail Analysis Modal -->
+        <div
+          class="modal fade"
+          id="detailModal"
+          tabindex="-1"
+          x-ref="detailModal"
+          @hidden.bs.modal="closeDetailModal()"
+        >
+          <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+              <!-- Header -->
+              <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                  <svg
+                    class="icon-inline me-2"
+                    width="20"
+                    height="20"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                  </svg>
+                  詳細分析 -
+                  <span x-text="detailModal.currentGroup?.item"></span>
+                </h5>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                ></button>
+              </div>
+
+              <!-- Control Bar - Card-based Grouping -->
+              <div class="bg-light border-bottom p-3">
+                <div class="row g-3">
+                  <!-- List View Card -->
+                  <div class="col-12 col-md-6 col-lg-5">
+                    <div
+                      class="card h-100 cursor-pointer"
+                      :class="detailModal.displayMode === 'list' ? 'border-primary shadow-sm' : 'border-secondary'"
+                      @click="setDetailDisplayMode('list')"
+                    >
+                      <div class="card-body py-2 px-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                          <div
+                            class="rounded-circle d-flex align-items-center justify-content-center"
+                            :class="detailModal.displayMode === 'list' ? 'bg-primary text-white' : 'bg-secondary text-white'"
+                            style="width: 28px; height: 28px"
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <line x1="8" y1="6" x2="21" y2="6" />
+                              <line x1="8" y1="12" x2="21" y2="12" />
+                              <line x1="8" y1="18" x2="21" y2="18" />
+                              <line x1="3" y1="6" x2="3.01" y2="6" />
+                              <line x1="3" y1="12" x2="3.01" y2="12" />
+                              <line x1="3" y1="18" x2="3.01" y2="18" />
+                            </svg>
+                          </div>
+                          <span
+                            class="fw-semibold"
+                            :class="detailModal.displayMode === 'list' ? 'text-primary' : 'text-secondary'"
+                            >リスト表示</span
+                          >
+                          <span
+                            x-show="detailModal.displayMode === 'list'"
+                            class="badge bg-primary ms-auto"
+                            >選択中</span
+                          >
+                        </div>
+                        <div
+                          class="d-flex align-items-center gap-2"
+                          @click.stop
+                        >
+                          <label class="form-label small mb-0 text-muted"
+                            >グループ:</label
+                          >
+                          <select
+                            class="form-select form-select-sm"
+                            style="width: auto"
+                            x-model="detailModal.groupBy"
+                            :disabled="detailModal.displayMode !== 'list'"
+                          >
+                            <option value="timeline">時系列</option>
+                            <option value="majorCode">大工事項目別</option>
+                            <option value="region">支店別</option>
+                            <option value="building">建物情報別</option>
+                            <option value="vendor">業者別</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Chart View Card -->
+                  <div class="col-12 col-md-6 col-lg-5">
+                    <div
+                      class="card h-100 cursor-pointer"
+                      :class="detailModal.displayMode === 'chart' ? 'border-primary shadow-sm' : 'border-secondary'"
+                      @click="setDetailDisplayMode('chart')"
+                    >
+                      <div class="card-body py-2 px-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                          <div
+                            class="rounded-circle d-flex align-items-center justify-content-center"
+                            :class="detailModal.displayMode === 'chart' ? 'bg-primary text-white' : 'bg-secondary text-white'"
+                            style="width: 28px; height: 28px"
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <line x1="18" y1="20" x2="18" y2="10" />
+                              <line x1="12" y1="20" x2="12" y2="4" />
+                              <line x1="6" y1="20" x2="6" y2="14" />
+                            </svg>
+                          </div>
+                          <span
+                            class="fw-semibold"
+                            :class="detailModal.displayMode === 'chart' ? 'text-primary' : 'text-secondary'"
+                            >チャート表示</span
+                          >
+                          <span
+                            x-show="detailModal.displayMode === 'chart'"
+                            class="badge bg-primary ms-auto"
+                            >選択中</span
+                          >
+                        </div>
+                        <div
+                          class="d-flex flex-wrap align-items-center gap-2"
+                          @click.stop
+                        >
+                          <label class="form-label small mb-0 text-muted"
+                            >種別:</label
+                          >
+                          <select
+                            class="form-select form-select-sm"
+                            style="width: auto"
+                            x-model="detailModal.chartType"
+                            @change="detailModal.displayMode === 'chart' && renderDetailChart()"
+                            :disabled="detailModal.displayMode !== 'chart'"
+                          >
+                            <option value="trend">単価推移</option>
+                            <option value="comparison">グループ比較</option>
+                            <option value="distribution">単価分布</option>
+                          </select>
+                          <template
+                            x-if="detailModal.chartType === 'comparison'"
+                          >
+                            <div class="d-flex align-items-center gap-2">
+                              <label class="form-label small mb-0 text-muted"
+                                >比較軸:</label
+                              >
+                              <select
+                                class="form-select form-select-sm"
+                                style="width: auto"
+                                x-model="detailModal.groupBy"
+                                @change="detailModal.displayMode === 'chart' && renderDetailChart()"
+                                :disabled="detailModal.displayMode !== 'chart'"
+                              >
+                                <option value="timeline">時系列</option>
+                                <option value="majorCode">大工事項目別</option>
+                                <option value="region">支店別</option>
+                                <option value="building">建物情報別</option>
+                                <option value="vendor">業者別</option>
+                              </select>
+                            </div>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Summary Stats -->
+                  <div
+                    class="col-12 col-lg-2 d-flex align-items-center justify-content-lg-end"
+                  >
+                    <div class="d-flex gap-2 align-items-center">
+                      <span
+                        class="badge bg-info fs-6"
+                        x-text="(detailModal.currentGroup?.filteredRecords?.length || 0) + '件'"
+                      ></span>
+                      <small class="text-muted d-none d-lg-inline">
+                        <span
+                          class="fw-semibold text-success"
+                          x-text="`¥${formatNumber(detailModal.currentGroup?.minPrice)}`"
+                        ></span>
+                        ~
+                        <span
+                          class="fw-semibold text-danger"
+                          x-text="`¥${formatNumber(detailModal.currentGroup?.maxPrice)}`"
+                        ></span>
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Modal Body -->
+              <div class="modal-body p-4 bg-body-secondary">
+                <!-- List View -->
+                <div x-show="detailModal.displayMode === 'list'">
+                  <template
+                    x-for="(records, key) in getGroupedDetailData()"
+                    :key="key"
+                  >
+                    <div class="mb-4">
+                      <!-- Group Header -->
+                      <div
+                        class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom"
+                      >
+                        <h6 class="fw-bold mb-0" x-text="key"></h6>
+                        <span
+                          class="badge bg-secondary"
+                          x-text="records.length + '件'"
+                        ></span>
+                        <span class="ms-auto small text-muted">
+                          平均:
+                          <span
+                            class="fw-semibold"
+                            x-text="`¥${formatNumber(calcPriceStats(records.map(r => r.price)).avg)}`"
+                          ></span>
+                        </span>
+                      </div>
+                      <!-- Group Table -->
+                      <div class="card shadow-sm">
+                        <div class="table-responsive">
+                          <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                              <tr>
+                                <th>発注日</th>
+                                <th>支店</th>
+                                <th>工事名称</th>
+                                <th>業者</th>
+                                <th>建物情報</th>
+                                <th class="text-end">実行単価</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <template
+                                x-for="r in records"
+                                :key="r.orderDate + r.vendor + r.projectName"
+                              >
+                                <tr>
+                                  <td x-text="r.orderDateFormatted"></td>
+                                  <td>
+                                    <span
+                                      class="badge bg-info"
+                                      x-text="r.region"
+                                    ></span>
+                                  </td>
+                                  <td
+                                    class="text-truncate"
+                                    style="max-width: 200px"
+                                    x-text="r.projectName"
+                                  ></td>
+                                  <td x-text="r.vendor"></td>
+                                  <td
+                                    x-text="`${r.floors}階/${r.resUnits}戸`"
+                                  ></td>
+                                  <td
+                                    class="text-end fw-bold text-primary tabular-nums"
+                                    x-text="'¥' + formatNumber(r.price)"
+                                  ></td>
+                                </tr>
+                              </template>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Chart View -->
+                <div x-show="detailModal.displayMode === 'chart'" x-transition>
+                  <div class="card shadow-sm">
+                    <div class="card-body">
+                      <div class="detail-chart-container">
+                        <canvas x-ref="detailChart"></canvas>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer -->
               <div class="modal-footer">
                 <button
                   type="button"

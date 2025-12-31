@@ -69,6 +69,16 @@ function appData() {
     },
     chartInstance: null,
 
+    // Detail Analysis Modal State
+    detailModal: {
+      isOpen: false,
+      currentGroup: null,
+      groupBy: "timeline",
+      displayMode: "list",
+      chartType: "trend",
+    },
+    detailChartInstance: null,
+
     regionNames: [],
     regionDropdownOpen: false,
 
@@ -177,9 +187,12 @@ function appData() {
             if (dateTo && r.orderDate > dateTo) return false;
             if (!isInRange(r.floors, f.floorMin, f.floorMax)) return false;
             if (!isInRange(r.unitRow, f.unitRowMin, f.unitRowMax)) return false;
-            if (!isInRange(r.resUnits, f.resUnitMin, f.resUnitMax)) return false;
-            if (!isInRange(r.constArea, f.constAreaMin, f.constAreaMax)) return false;
-            if (!isInRange(r.totalArea, f.totalAreaMin, f.totalAreaMax)) return false;
+            if (!isInRange(r.resUnits, f.resUnitMin, f.resUnitMax))
+              return false;
+            if (!isInRange(r.constArea, f.constAreaMin, f.constAreaMax))
+              return false;
+            if (!isInRange(r.totalArea, f.totalAreaMin, f.totalAreaMax))
+              return false;
             return true;
           });
           const prices = matchingRecords.map((r) => r.price);
@@ -379,12 +392,28 @@ function appData() {
         const ctx = this.$refs.netPriceChart.getContext("2d");
         if (this.chartInstance) this.chartInstance.destroy();
 
-        const { weekLabels, actualData, stats, weekCount } = this.prepareChartData(records);
+        const { weekLabels, actualData, stats, weekCount } =
+          this.prepareChartData(records);
 
         const datasets = [
-          this.createReferenceLine("最小値", stats.min, weekCount, CHART_COLORS.min),
-          this.createReferenceLine("平均値", stats.avg, weekCount, CHART_COLORS.avg),
-          this.createReferenceLine("最大値", stats.max, weekCount, CHART_COLORS.max),
+          this.createReferenceLine(
+            "最小値",
+            stats.min,
+            weekCount,
+            CHART_COLORS.min
+          ),
+          this.createReferenceLine(
+            "平均値",
+            stats.avg,
+            weekCount,
+            CHART_COLORS.avg
+          ),
+          this.createReferenceLine(
+            "最大値",
+            stats.max,
+            weekCount,
+            CHART_COLORS.max
+          ),
           {
             label: "実行単価",
             data: actualData,
@@ -414,7 +443,8 @@ function appData() {
               },
               tooltip: {
                 callbacks: {
-                  label: (context) => `${context.dataset.label}: ¥${formatNumber(context.raw)}`,
+                  label: (context) =>
+                    `${context.dataset.label}: ¥${formatNumber(context.raw)}`,
                 },
               },
             },
@@ -435,6 +465,321 @@ function appData() {
         });
 
         new bootstrap.Modal(this.$refs.chartModal).show();
+      });
+    },
+
+    // =========================================================================
+    // Detail Analysis Modal Methods
+    // =========================================================================
+
+    /**
+     * Open detail analysis modal for a specific item group
+     * @param {number} idx - Index of the filtered group
+     */
+    openDetailModal(idx) {
+      const group = this.filteredGroups[idx];
+      this.detailModal = {
+        isOpen: true,
+        currentGroup: { ...group },
+        groupBy: "timeline",
+        displayMode: "list",
+        chartType: "trend",
+      };
+      this.$nextTick(() => {
+        new bootstrap.Modal(this.$refs.detailModal).show();
+      });
+    },
+
+    /**
+     * Close detail analysis modal and cleanup
+     */
+    closeDetailModal() {
+      if (this.detailChartInstance) {
+        this.detailChartInstance.destroy();
+        this.detailChartInstance = null;
+      }
+      this.detailModal.isOpen = false;
+    },
+
+    /**
+     * Set display mode and trigger chart render if needed
+     * @param {string} mode - 'list' or 'chart'
+     */
+    setDetailDisplayMode(mode) {
+      this.detailModal.displayMode = mode;
+      if (mode === "chart") {
+        this.renderDetailChart();
+      }
+    },
+
+    /**
+     * Get grouped detail data based on current groupBy setting
+     * @returns {Object} Grouped records { key: records[] }
+     */
+    getGroupedDetailData() {
+      const records = this.detailModal.currentGroup?.filteredRecords || [];
+      const groupBy = this.detailModal.groupBy;
+
+      const keyFn = {
+        timeline: (r) => r.orderMonth,
+        majorCode: (r) => r.majorCode,
+        region: (r) => r.region,
+        building: (r) => buildingInfoKey(r),
+        vendor: (r) => r.vendor,
+      }[groupBy];
+
+      const groups = groupRecordsBy(records, keyFn);
+
+      // Sort by key for timeline
+      if (groupBy === "timeline") {
+        return Object.fromEntries(
+          Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
+        );
+      }
+
+      // Sort groups by record count (descending) for others
+      return Object.fromEntries(
+        Object.entries(groups).sort(([, a], [, b]) => b.length - a.length)
+      );
+    },
+
+    /**
+     * Prepare chart data based on current chart type
+     * @returns {Object} Chart data
+     */
+    prepareDetailChartData() {
+      const records = this.detailModal.currentGroup?.filteredRecords || [];
+      switch (this.detailModal.chartType) {
+        case "trend":
+          return this.prepareChartData(records);
+        case "comparison":
+          return this.prepareComparisonData();
+        case "distribution":
+          return createDistribution(
+            records.map((r) => r.price),
+            10
+          );
+        default:
+          return null;
+      }
+    },
+
+    /**
+     * Prepare comparison chart data (min/avg/max by group)
+     * @returns {Object} { labels, avgPrices, minPrices, maxPrices }
+     */
+    prepareComparisonData() {
+      const grouped = this.getGroupedDetailData();
+      const labels = Object.keys(grouped);
+      const avgPrices = labels.map(
+        (k) => calcPriceStats(grouped[k].map((r) => r.price)).avg
+      );
+      const minPrices = labels.map(
+        (k) => calcPriceStats(grouped[k].map((r) => r.price)).min
+      );
+      const maxPrices = labels.map(
+        (k) => calcPriceStats(grouped[k].map((r) => r.price)).max
+      );
+      return { labels, avgPrices, minPrices, maxPrices };
+    },
+
+    /**
+     * Render detail chart based on current chart type
+     */
+    renderDetailChart() {
+      this.$nextTick(() => {
+        const ctx = this.$refs.detailChart?.getContext("2d");
+        if (!ctx) return;
+
+        if (this.detailChartInstance) {
+          this.detailChartInstance.destroy();
+        }
+
+        const chartType = this.detailModal.chartType;
+        const data = this.prepareDetailChartData();
+
+        if (chartType === "trend") {
+          this.renderTrendChart(ctx, data);
+        } else if (chartType === "comparison") {
+          this.renderComparisonChart(ctx, data);
+        } else if (chartType === "distribution") {
+          this.renderDistributionChart(ctx, data);
+        }
+      });
+    },
+
+    /**
+     * Render trend line chart
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {Object} data - Chart data from prepareChartData
+     */
+    renderTrendChart(ctx, data) {
+      const { weekLabels, actualData, stats, weekCount } = data;
+      const unit = this.detailModal.currentGroup?.unit || "";
+
+      const datasets = [
+        this.createReferenceLine(
+          "最小値",
+          stats.min,
+          weekCount,
+          CHART_COLORS.min
+        ),
+        this.createReferenceLine(
+          "平均値",
+          stats.avg,
+          weekCount,
+          CHART_COLORS.avg
+        ),
+        this.createReferenceLine(
+          "最大値",
+          stats.max,
+          weekCount,
+          CHART_COLORS.max
+        ),
+        {
+          label: "実行単価",
+          data: actualData,
+          borderColor: CHART_COLORS.actual.border,
+          backgroundColor: CHART_COLORS.actual.background,
+          borderWidth: 2,
+          pointRadius: 8,
+          pointHoverRadius: 10,
+          fill: false,
+          tension: 0.1,
+        },
+      ];
+
+      this.detailChartInstance = new Chart(ctx, {
+        type: "line",
+        data: { labels: weekLabels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: "index" },
+          plugins: {
+            legend: {
+              position: "top",
+              labels: { usePointStyle: true, padding: 20 },
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) =>
+                  `${context.dataset.label}: ¥${formatNumber(context.raw)}`,
+              },
+            },
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "発注週" },
+              grid: { display: false },
+            },
+            y: {
+              title: { display: true, text: `実行単価 (円/${unit})` },
+              ticks: { callback: (value) => "¥" + formatNumber(value) },
+            },
+          },
+        },
+      });
+    },
+
+    /**
+     * Render comparison bar chart (min/avg/max by group)
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {Object} data - { labels, avgPrices, minPrices, maxPrices }
+     */
+    renderComparisonChart(ctx, data) {
+      const { labels, avgPrices, minPrices, maxPrices } = data;
+      const unit = this.detailModal.currentGroup?.unit || "";
+
+      this.detailChartInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "最小",
+              data: minPrices,
+              backgroundColor: CHART_COLORS.min.border,
+            },
+            {
+              label: "平均",
+              data: avgPrices,
+              backgroundColor: CHART_COLORS.avg.border,
+            },
+            {
+              label: "最大",
+              data: maxPrices,
+              backgroundColor: CHART_COLORS.max.border,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "top" },
+            tooltip: {
+              callbacks: {
+                label: (context) =>
+                  `${context.dataset.label}: ¥${formatNumber(context.raw)}`,
+              },
+            },
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: {
+              title: { display: true, text: `実行単価 (円/${unit})` },
+              ticks: { callback: (value) => "¥" + formatNumber(value) },
+            },
+          },
+        },
+      });
+    },
+
+    /**
+     * Render distribution histogram chart
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {Object} data - { labels, counts }
+     */
+    renderDistributionChart(ctx, data) {
+      const { labels, counts } = data;
+
+      this.detailChartInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "件数",
+              data: counts,
+              backgroundColor: CHART_COLORS.actual.border,
+              borderColor: CHART_COLORS.actual.border,
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (context) => `${context.raw}件`,
+              },
+            },
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "単価範囲" },
+              grid: { display: false },
+            },
+            y: {
+              title: { display: true, text: "件数" },
+              ticks: { stepSize: 1 },
+            },
+          },
+        },
       });
     },
   };
