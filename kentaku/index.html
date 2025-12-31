@@ -98,18 +98,49 @@
             <label class="form-label small fw-semibold text-secondary"
               >支店名</label
             >
-            <select
-              class="form-select form-select-sm"
-              x-model="filters.region"
-              @change="applyFilters()"
-            >
-              <option value="">すべて</option>
-              <option>厚木</option>
-              <option>横浜</option>
-              <option>高崎</option>
-              <option>春日部</option>
-              <option>つくば</option>
-            </select>
+            <div class="position-relative">
+              <button
+                type="button"
+                class="form-select form-select-sm text-start"
+                @click="toggleRegionDropdown()"
+                @click.away="regionDropdownOpen = false"
+              >
+                <span x-text="selectedRegionsText"></span>
+              </button>
+              <div
+                class="dropdown-menu w-100 p-2"
+                :class="{ 'show': regionDropdownOpen }"
+                @click.stop
+              >
+                <div style="max-height: 200px; overflow-y: auto">
+                  <template x-for="region in regionNames" :key="region">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        :id="'region-' + region"
+                        :checked="isRegionSelected(region)"
+                        @change="toggleRegion(region)"
+                      />
+                      <label
+                        class="form-check-label small"
+                        :for="'region-' + region"
+                        x-text="region"
+                      ></label>
+                    </div>
+                  </template>
+                </div>
+                <div class="border-top pt-2 mt-2">
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm w-100"
+                    @click="confirmRegionSelection()"
+                  >
+                    決定
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="mb-3">
             <label class="form-label small fw-semibold text-secondary"

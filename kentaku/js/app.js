@@ -23,7 +23,7 @@ function appData() {
   return {
     filters: {
       project: "",
-      region: "",
+      regions: [],
       majorCodes: [],
       dateFrom: "",
       dateTo: "",
@@ -59,6 +59,9 @@ function appData() {
     },
     chartInstance: null,
 
+    regionNames: [],
+    regionDropdownOpen: false,
+
     init() {
       this.processData();
       this.groupByItem();
@@ -66,6 +69,38 @@ function appData() {
       this.projectNames = [
         ...new Set(this.rawRecords.map((r) => r.projectName)),
       ].sort();
+      this.regionNames = [
+        ...new Set(this.rawRecords.map((r) => r.region)),
+      ].sort();
+    },
+
+    toggleRegionDropdown() {
+      this.regionDropdownOpen = !this.regionDropdownOpen;
+    },
+
+    toggleRegion(region) {
+      const idx = this.filters.regions.indexOf(region);
+      if (idx === -1) {
+        this.filters.regions.push(region);
+      } else {
+        this.filters.regions.splice(idx, 1);
+      }
+    },
+
+    confirmRegionSelection() {
+      this.regionDropdownOpen = false;
+      this.applyFilters();
+    },
+
+    isRegionSelected(region) {
+      return this.filters.regions.includes(region);
+    },
+
+    get selectedRegionsText() {
+      if (this.filters.regions.length === 0) return "すべて";
+      if (this.filters.regions.length <= 2)
+        return this.filters.regions.join(", ");
+      return `${this.filters.regions.length}件選択中`;
     },
 
     processData() {
@@ -110,7 +145,7 @@ function appData() {
     applyFilters() {
       const projectKw = this.filters.project.toLowerCase();
       const itemKw = this.filters.item.toLowerCase();
-      const region = this.filters.region;
+      const regions = this.filters.regions;
       const majorCodes = this.filters.majorCodes;
       const vendor = this.filters.vendor.toLowerCase();
       const dateFrom = this.filters.dateFrom.replace(/-/g, "");
@@ -131,7 +166,7 @@ function appData() {
           const matchingRecords = g.records.filter((r) => {
             if (projectKw && !r.projectName.toLowerCase().includes(projectKw))
               return false;
-            if (region && r.region !== region) return false;
+            if (regions.length && !regions.includes(r.region)) return false;
             if (majorCodes.length && !majorCodes.includes(r.majorCode))
               return false;
             if (vendor && !r.vendor.toLowerCase().includes(vendor))
@@ -170,7 +205,7 @@ function appData() {
     clearFilters() {
       this.filters = {
         project: "",
-        region: "",
+        regions: [],
         majorCodes: [],
         dateFrom: "",
         dateTo: "",
@@ -197,7 +232,8 @@ function appData() {
       const filters = [];
       if (this.filters.project)
         filters.push(`工事名称: ${this.filters.project}`);
-      if (this.filters.region) filters.push(`支店名: ${this.filters.region}`);
+      if (this.filters.regions.length)
+        filters.push(`支店名: ${this.filters.regions.join(", ")}`);
       if (this.filters.majorCodes.length)
         filters.push(`大工事項目: ${this.filters.majorCodes.join(", ")}`);
       if (this.filters.item)
