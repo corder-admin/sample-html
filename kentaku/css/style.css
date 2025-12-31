@@ -340,3 +340,38 @@
   background: #e7f1ff;
   color: #0d6efd;
 }
+
+/* Detail Analysis Modal */
+#detailModal .modal-body {
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+}
+
+.detail-chart-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+}
+
+#detailModal .table {
+  font-size: 0.875rem;
+}
+
+#detailModal .table th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  #detailModal .bg-light .d-flex.gap-3 {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  #detailModal .bg-light .ms-auto {
+    margin-left: 0 !important;
+    margin-top: 0.5rem;
+  }
+  .detail-chart-container {
+    height: 300px;
+  }
+}

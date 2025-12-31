@@ -62,7 +62,11 @@ function parseDateString(dateStr) {
   date.setHours(0, 0, 0, 0);
 
   // Validate the date is real (e.g., not Feb 30)
-  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month ||
+    date.getDate() !== day
+  ) {
     return null;
   }
   return date;
@@ -151,7 +155,9 @@ function calcPriceStats(prices) {
   }
   const min = Math.min(...prices);
   const max = Math.max(...prices);
-  const avg = Math.round(prices.reduce((sum, price) => sum + price, 0) / prices.length);
+  const avg = Math.round(
+    prices.reduce((sum, price) => sum + price, 0) / prices.length
+  );
   return { min, max, avg };
 }
 
@@ -172,3 +178,64 @@ function isInRange(value, min, max) {
   return value >= lowerBound && value <= upperBound;
 }
 
+// =============================================================================
+// Grouping Utilities
+// =============================================================================
+
+/**
+ * Group records by a specified field or key function
+ * @param {Array} records - Records to group
+ * @param {string|Function} keyFn - Field name or function to extract key
+ * @returns {Object} Grouped records { key: records[] }
+ */
+function groupRecordsBy(records, keyFn) {
+  const groups = {};
+  records.forEach((r) => {
+    const key = typeof keyFn === "function" ? keyFn(r) : r[keyFn];
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+  return groups;
+}
+
+/**
+ * Create building info composite key from record
+ * @param {Object} record - Record with floors, unitRow, resUnits
+ * @returns {string} Composite key like "2階/4戸並/8戸"
+ */
+function buildingInfoKey(record) {
+  return `${record.floors}階/${record.unitRow}戸並/${record.resUnits}戸`;
+}
+
+/**
+ * Generate distribution buckets for histogram
+ * @param {number[]} values - Array of numeric values
+ * @param {number} bucketCount - Number of buckets (default: 10)
+ * @returns {{labels: string[], counts: number[]}} Distribution data
+ */
+function createDistribution(values, bucketCount = 10) {
+  if (!values || values.length === 0) {
+    return { labels: [], counts: [] };
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min;
+  const step = range / bucketCount || 1;
+
+  const buckets = Array(bucketCount).fill(0);
+  const labels = [];
+
+  for (let i = 0; i < bucketCount; i++) {
+    const low = min + step * i;
+    labels.push(`¥${formatNumber(Math.round(low))}~`);
+  }
+
+  values.forEach((v) => {
+    const idx =
+      range === 0 ? 0 : Math.min(Math.floor((v - min) / step), bucketCount - 1);
+    buckets[idx]++;
+  });
+
+  return { labels, counts: buckets };
+}
