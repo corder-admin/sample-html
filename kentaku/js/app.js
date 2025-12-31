@@ -10,7 +10,7 @@
  * 分類: アプリケーション層 (Application Layer)
  *
  * 依存関係:
- *   - utils.js  : ユーティリティ関数（fmt, parseDate, getWeekNumber等）
+ *   - utils.js  : ユーティリティ関数（formatNumber, formatDateHyphen, getWeekNumber, calcPriceStats, isInRange等）
  *   - data.js   : 生データ（rawRecords）
  *   - Alpine.js : リアクティブUIフレームワーク
  *   - Chart.js  : グラフ描画ライブラリ
@@ -18,6 +18,16 @@
  *
  * =============================================================================
  */
+
+/**
+ * Chart.js color constants for consistent styling
+ */
+const CHART_COLORS = {
+  min: { border: "#198754", background: "#19875422" },
+  avg: { border: "#0d6efd", background: "#0d6efd22" },
+  max: { border: "#dc3545", background: "#dc354522" },
+  actual: { border: "#6f42c1", background: "#6f42c1" },
+};
 
 function appData() {
   return {
@@ -106,7 +116,7 @@ function appData() {
     processData() {
       this.records = this.rawRecords.map((r) => ({
         ...r,
-        orderDateFormatted: parseDate(r.orderDate),
+        orderDateFormatted: formatDateHyphen(r.orderDate),
         orderMonth: r.orderDate
           ? r.orderDate.slice(0, 4) + "-" + r.orderDate.slice(4, 6)
           : "",
@@ -132,12 +142,13 @@ function appData() {
       this.itemGroups = Object.values(groups).map((g) => {
         g.records.sort((a, b) => a.orderDate.localeCompare(b.orderDate));
         const prices = g.records.map((r) => r.price);
+        const stats = calcPriceStats(prices);
         return {
           ...g,
           recordCount: g.records.length,
-          minPrice: Math.min(...prices),
-          maxPrice: Math.max(...prices),
-          avgPrice: prices.reduce((a, b) => a + b, 0) / prices.length,
+          minPrice: stats.min,
+          maxPrice: stats.max,
+          avgPrice: stats.avg,
         };
       });
     },
@@ -150,16 +161,7 @@ function appData() {
       const vendor = this.filters.vendor.toLowerCase();
       const dateFrom = this.filters.dateFrom.replace(/-/g, "");
       const dateTo = this.filters.dateTo.replace(/-/g, "");
-      const floorMin = this.filters.floorMin || 0;
-      const floorMax = this.filters.floorMax || Infinity;
-      const unitRowMin = this.filters.unitRowMin || 0;
-      const unitRowMax = this.filters.unitRowMax || Infinity;
-      const resUnitMin = this.filters.resUnitMin || 0;
-      const resUnitMax = this.filters.resUnitMax || Infinity;
-      const constAreaMin = this.filters.constAreaMin || 0;
-      const constAreaMax = this.filters.constAreaMax || Infinity;
-      const totalAreaMin = this.filters.totalAreaMin || 0;
-      const totalAreaMax = this.filters.totalAreaMax || Infinity;
+      const f = this.filters;
 
       this.filteredGroups = this.itemGroups
         .map((g) => {
@@ -173,22 +175,20 @@ function appData() {
               return false;
             if (dateFrom && r.orderDate < dateFrom) return false;
             if (dateTo && r.orderDate > dateTo) return false;
-            if (r.floors < floorMin || r.floors > floorMax) return false;
-            if (r.unitRow < unitRowMin || r.unitRow > unitRowMax) return false;
-            if (r.resUnits < resUnitMin || r.resUnits > resUnitMax)
-              return false;
-            if (r.constArea < constAreaMin || r.constArea > constAreaMax)
-              return false;
-            if (r.totalArea < totalAreaMin || r.totalArea > totalAreaMax)
-              return false;
+            if (!isInRange(r.floors, f.floorMin, f.floorMax)) return false;
+            if (!isInRange(r.unitRow, f.unitRowMin, f.unitRowMax)) return false;
+            if (!isInRange(r.resUnits, f.resUnitMin, f.resUnitMax)) return false;
+            if (!isInRange(r.constArea, f.constAreaMin, f.constAreaMax)) return false;
+            if (!isInRange(r.totalArea, f.totalAreaMin, f.totalAreaMax)) return false;
             return true;
           });
           const prices = matchingRecords.map((r) => r.price);
+          const stats = calcPriceStats(prices);
           return {
             ...g,
             filteredRecords: matchingRecords,
-            minPrice: prices.length ? Math.min(...prices) : 0,
-            maxPrice: prices.length ? Math.max(...prices) : 0,
+            minPrice: stats.min,
+            maxPrice: stats.max,
           };
         })
         .filter((g) => {
@@ -247,25 +247,23 @@ function appData() {
     },
 
     getVendorSummary(records) {
-      const vd = {};
-      records.forEach((r) => {
-        const n = r.vendor;
-        if (!vd[n]) vd[n] = { prices: [], count: 0 };
-        vd[n].prices.push(r.price);
-        vd[n].count++;
+      const vendorData = {};
+      records.forEach((record) => {
+        const vendorName = record.vendor;
+        if (!vendorData[vendorName]) {
+          vendorData[vendorName] = { prices: [], count: 0 };
+        }
+        vendorData[vendorName].prices.push(record.price);
+        vendorData[vendorName].count++;
       });
-      return Object.entries(vd).map(([name, data]) => {
-        const mn = Math.min(...data.prices);
-        const mx = Math.max(...data.prices);
-        const av = Math.round(
-          data.prices.reduce((a, b) => a + b, 0) / data.prices.length
-        );
+      return Object.entries(vendorData).map(([name, data]) => {
+        const stats = calcPriceStats(data.prices);
         return {
           name: name.replace(/株式会社|有限会社/g, "").trim(),
           count: data.count,
-          min: mn,
-          avg: av,
-          max: mx,
+          min: stats.min,
+          avg: stats.avg,
+          max: stats.max,
         };
       });
     },
@@ -315,6 +313,58 @@ function appData() {
       }
     },
 
+    /**
+     * Prepare chart data by grouping records by week
+     * @param {Array} records - Filtered records to chart
+     * @returns {{weekLabels: string[], actualData: number[], stats: {min: number, max: number, avg: number}}}
+     */
+    prepareChartData(records) {
+      const weekData = {};
+      records.forEach((record) => {
+        if (!weekData[record.orderWeek]) {
+          weekData[record.orderWeek] = {
+            prices: [],
+            weekStart: record.orderWeekStart,
+          };
+        }
+        weekData[record.orderWeek].prices.push(record.price);
+      });
+
+      const allWeeks = Object.keys(weekData).sort();
+      const weekLabels = allWeeks.map((week) => weekData[week].weekStart);
+      const actualData = allWeeks.map((week) => {
+        const prices = weekData[week].prices;
+        return prices.reduce((a, b) => a + b, 0) / prices.length;
+      });
+
+      const allPrices = records.map((r) => r.price);
+      const stats = calcPriceStats(allPrices);
+
+      return { weekLabels, actualData, stats, weekCount: allWeeks.length };
+    },
+
+    /**
+     * Create a reference line dataset for chart
+     * @param {string} label - Dataset label
+     * @param {number} value - Constant value for the line
+     * @param {number} count - Number of data points
+     * @param {{border: string, background: string}} colors - Color config
+     * @returns {Object} Chart.js dataset configuration
+     */
+    createReferenceLine(label, value, count, colors) {
+      return {
+        label: `${label} (¥${formatNumber(value)})`,
+        data: Array(count).fill(value),
+        borderColor: colors.border,
+        backgroundColor: colors.background,
+        borderWidth: 2,
+        borderDash: [5, 5],
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+      };
+    },
+
     showChart(idx) {
       const group = this.filteredGroups[idx];
       const records = group.filteredRecords;
@@ -329,74 +379,17 @@ function appData() {
         const ctx = this.$refs.netPriceChart.getContext("2d");
         if (this.chartInstance) this.chartInstance.destroy();
 
-        const weekData = {};
-        records.forEach((r) => {
-          if (!weekData[r.orderWeek])
-            weekData[r.orderWeek] = {
-              prices: [],
-              weekStart: r.orderWeekStart,
-            };
-          weekData[r.orderWeek].prices.push(r.price);
-        });
-
-        const allWeeks = Object.keys(weekData).sort();
-        const weekLabels = allWeeks.map((w) => weekData[w].weekStart);
-
-        const actualData = allWeeks.map((w) => {
-          const prices = weekData[w].prices;
-          return prices.reduce((a, b) => a + b, 0) / prices.length;
-        });
-
-        const allPrices = records.map((r) => r.price);
-        const globalMin = Math.min(...allPrices);
-        const globalMax = Math.max(...allPrices);
-        const globalAvg = Math.round(
-          allPrices.reduce((a, b) => a + b, 0) / allPrices.length
-        );
-
-        const minLine = allWeeks.map(() => globalMin);
-        const maxLine = allWeeks.map(() => globalMax);
-        const avgLine = allWeeks.map(() => globalAvg);
+        const { weekLabels, actualData, stats, weekCount } = this.prepareChartData(records);
 
         const datasets = [
-          {
-            label: `最小値 (¥${fmt(globalMin)})`,
-            data: minLine,
-            borderColor: "#198754",
-            backgroundColor: "#19875422",
-            borderWidth: 2,
-            borderDash: [5, 5],
-            pointRadius: 0,
-            fill: false,
-            tension: 0,
-          },
-          {
-            label: `平均値 (¥${fmt(globalAvg)})`,
-            data: avgLine,
-            borderColor: "#0d6efd",
-            backgroundColor: "#0d6efd22",
-            borderWidth: 2,
-            borderDash: [5, 5],
-            pointRadius: 0,
-            fill: false,
-            tension: 0,
-          },
-          {
-            label: `最大値 (¥${fmt(globalMax)})`,
-            data: maxLine,
-            borderColor: "#dc3545",
-            backgroundColor: "#dc354522",
-            borderWidth: 2,
-            borderDash: [5, 5],
-            pointRadius: 0,
-            fill: false,
-            tension: 0,
-          },
+          this.createReferenceLine("最小値", stats.min, weekCount, CHART_COLORS.min),
+          this.createReferenceLine("平均値", stats.avg, weekCount, CHART_COLORS.avg),
+          this.createReferenceLine("最大値", stats.max, weekCount, CHART_COLORS.max),
           {
             label: "実行単価",
             data: actualData,
-            borderColor: "#6f42c1",
-            backgroundColor: "#6f42c1",
+            borderColor: CHART_COLORS.actual.border,
+            backgroundColor: CHART_COLORS.actual.background,
             borderWidth: 2,
             pointRadius: 8,
             pointHoverRadius: 10,
@@ -421,7 +414,7 @@ function appData() {
               },
               tooltip: {
                 callbacks: {
-                  label: (ctx) => `${ctx.dataset.label}: ¥${fmt(ctx.raw)}`,
+                  label: (context) => `${context.dataset.label}: ¥${formatNumber(context.raw)}`,
                 },
               },
             },
@@ -435,7 +428,7 @@ function appData() {
                   display: true,
                   text: `実行単価 (円/${group.unit})`,
                 },
-                ticks: { callback: (v) => "¥" + fmt(v) },
+                ticks: { callback: (value) => "¥" + formatNumber(value) },
               },
             },
           },

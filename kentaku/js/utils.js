@@ -12,69 +12,163 @@
  * =============================================================================
  */
 
+// =============================================================================
+// Constants
+// =============================================================================
+
+/** Milliseconds in one day (24 * 60 * 60 * 1000) */
+const MILLISECONDS_PER_DAY = 86400000;
+
+// =============================================================================
+// Number Formatting
+// =============================================================================
+
 /**
- * Format number with locale string
- * @param {number} n - Number to format
+ * Format number with locale string (comma-separated)
+ * @param {number} value - Number to format
  * @returns {string} Formatted number string
  */
-const fmt = (n) => (n ? n.toLocaleString() : "0");
+function formatNumber(value) {
+  return value ? value.toLocaleString() : "0";
+}
 
 /**
- * Parse date string from YYYYMMDD to YYYY-MM-DD
- * @param {string} d - Date string in YYYYMMDD format
- * @returns {string} Formatted date string
- */
-const parseDate = (d) =>
-  d ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : "";
-
-/**
- * Parse numeric string to float
- * @param {string|number} s - String or number to parse
+ * Parse numeric string to float, removing commas
+ * @param {string|number} value - String or number to parse
  * @returns {number} Parsed float value
  */
-const parseNum = (s) => parseFloat(String(s).replace(/,/g, "")) || 0;
+function parseNumber(value) {
+  return parseFloat(String(value).replace(/,/g, "")) || 0;
+}
+
+// =============================================================================
+// Date Parsing
+// =============================================================================
+
+/**
+ * Parse YYYYMMDD string to Date object
+ * @param {string} dateStr - Date string in YYYYMMDD format
+ * @returns {Date|null} Parsed Date object or null if invalid
+ */
+function parseDateString(dateStr) {
+  if (!dateStr || dateStr.length !== 8) {
+    return null;
+  }
+  const year = parseInt(dateStr.slice(0, 4), 10);
+  const month = parseInt(dateStr.slice(4, 6), 10) - 1;
+  const day = parseInt(dateStr.slice(6, 8), 10);
+
+  const date = new Date(year, month, day);
+  date.setHours(0, 0, 0, 0);
+
+  // Validate the date is real (e.g., not Feb 30)
+  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+    return null;
+  }
+  return date;
+}
+
+/**
+ * Format date string from YYYYMMDD to YYYY-MM-DD
+ * @param {string} dateStr - Date string in YYYYMMDD format
+ * @returns {string} Formatted date string or empty string if invalid
+ */
+function formatDateHyphen(dateStr) {
+  if (!dateStr || dateStr.length !== 8) {
+    return "";
+  }
+  return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
+}
+
+// =============================================================================
+// Week Calculations
+// =============================================================================
 
 /**
  * Get ISO week number from date string
  * @param {string} dateStr - Date string in YYYYMMDD format
- * @returns {string} Week number in YYYY-Wxx format
+ * @returns {string} Week number in YYYY-Wxx format or empty string if invalid
  */
 function getWeekNumber(dateStr) {
-  const d = new Date(
-    dateStr.slice(0, 4),
-    parseInt(dateStr.slice(4, 6)) - 1,
-    dateStr.slice(6, 8)
-  );
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
-  const week1 = new Date(d.getFullYear(), 0, 4);
+  const date = parseDateString(dateStr);
+  if (!date) {
+    return "";
+  }
+
+  // Adjust to Thursday of the current week (ISO week definition)
+  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+
+  // January 4th is always in week 1
+  const week1 = new Date(date.getFullYear(), 0, 4);
+
   const weekNum =
     1 +
     Math.round(
-      ((d.getTime() - week1.getTime()) / 86400000 -
+      ((date.getTime() - week1.getTime()) / MILLISECONDS_PER_DAY -
         3 +
         ((week1.getDay() + 6) % 7)) /
         7
     );
-  return `${d.getFullYear()}-W${String(weekNum).padStart(2, "0")}`;
+
+  return `${date.getFullYear()}-W${String(weekNum).padStart(2, "0")}`;
 }
 
 /**
  * Get week start date (Monday) from date string
  * @param {string} dateStr - Date string in YYYYMMDD format
- * @returns {string} Week start date in YYYY/MM/DD format
+ * @returns {string} Week start date in YYYY/MM/DD format or empty string if invalid
  */
 function getWeekStartDate(dateStr) {
-  const d = new Date(
-    dateStr.slice(0, 4),
-    parseInt(dateStr.slice(4, 6)) - 1,
-    dateStr.slice(6, 8)
-  );
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  d.setDate(diff);
-  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(
-    2,
-    "0"
-  )}/${String(d.getDate()).padStart(2, "0")}`;
+  const date = parseDateString(dateStr);
+  if (!date) {
+    return "";
+  }
+
+  const dayOfWeek = date.getDay();
+  // Calculate offset to Monday (Sunday = 0, so offset by -6; other days offset by 1 - dayOfWeek)
+  const offsetToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  date.setDate(date.getDate() + offsetToMonday);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}/${month}/${day}`;
 }
+
+// =============================================================================
+// Statistics
+// =============================================================================
+
+/**
+ * Calculate price statistics from an array of prices
+ * @param {number[]} prices - Array of price values
+ * @returns {{min: number, max: number, avg: number}} Statistics object
+ */
+function calcPriceStats(prices) {
+  if (!prices || prices.length === 0) {
+    return { min: 0, max: 0, avg: 0 };
+  }
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const avg = Math.round(prices.reduce((sum, price) => sum + price, 0) / prices.length);
+  return { min, max, avg };
+}
+
+// =============================================================================
+// Range Checking
+// =============================================================================
+
+/**
+ * Check if a value is within a specified range (inclusive)
+ * @param {number} value - Value to check
+ * @param {number|null} min - Minimum bound (null means no lower bound)
+ * @param {number|null} max - Maximum bound (null means no upper bound)
+ * @returns {boolean} True if value is within range
+ */
+function isInRange(value, min, max) {
+  const lowerBound = min ?? -Infinity;
+  const upperBound = max ?? Infinity;
+  return value >= lowerBound && value <= upperBound;
+}
+
