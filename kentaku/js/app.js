@@ -200,7 +200,8 @@ function appData() {
       if (this.filters.region) filters.push(`支店名: ${this.filters.region}`);
       if (this.filters.majorCodes.length)
         filters.push(`大工事項目: ${this.filters.majorCodes.join(", ")}`);
-      if (this.filters.item) filters.push(`品目: ${this.filters.item}`);
+      if (this.filters.item)
+        filters.push(`小工事項目名称: ${this.filters.item}`);
       if (this.filters.vendor) filters.push(`業者: ${this.filters.vendor}`);
       return filters;
     },
