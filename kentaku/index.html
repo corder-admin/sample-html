@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>業者見積データベース</title>
+    <title>単価ダッシュボード</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/css/bootstrap.min.css"
@@ -34,7 +34,7 @@
           <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
           <line x1="12" y1="22.08" x2="12" y2="12" />
         </svg>
-        <span class="fw-bold">業者見積データベース</span>
+        <span class="fw-bold">単価ダッシュボード</span>
       </a>
     </nav>
 
@@ -418,10 +418,11 @@
                       <small class="text-muted d-block mb-1"
                         >実行単価レンジ</small
                       >
-                      <div
-                        class="fw-bold text-primary fs-5 tabular-nums"
-                        x-text="`¥${formatNumber(group.minPrice)} ~ ¥${formatNumber(group.maxPrice)}`"
-                      ></div>
+                      <div class="d-flex align-items-center justify-content-end gap-2">
+                        <span class="fw-bold tabular-nums text-success" x-text="`¥${formatNumber(group.minPrice)}`"></span>
+                        <span class="text-muted">～</span>
+                        <span class="fw-bold tabular-nums text-danger" x-text="`¥${formatNumber(group.maxPrice)}`"></span>
+                      </div>
                     </div>
                   </div>
 
@@ -515,7 +516,7 @@
                         <path d="M3 9h18" />
                         <path d="M9 21V9" />
                       </svg>
-                      実績詳細
+                      時系列一覧
                     </button>
                     <button
                       class="btn btn-sm btn-outline-secondary"
@@ -534,7 +535,7 @@
                         <line x1="12" y1="20" x2="12" y2="4" />
                         <line x1="6" y1="20" x2="6" y2="14" />
                       </svg>
-                      単価チャート
+                      単価推移
                     </button>
                     <button
                       class="btn btn-sm btn-outline-secondary"
@@ -552,7 +553,7 @@
                         <circle cx="11" cy="11" r="8" />
                         <path d="m21 21-4.35-4.35" />
                       </svg>
-                      詳細分析
+                      多角分析
                     </button>
                   </div>
                 </div>
@@ -654,7 +655,7 @@
                                 ></div>
                               </div>
                               <div class="detail-item">
-                                <div class="detail-label">数量</div>
+                                <div class="detail-label">実行数量</div>
                                 <div
                                   class="detail-value tabular-nums"
                                   x-text="`${formatNumber(record.qty)} ${record.unit}`"
@@ -675,7 +676,7 @@
                                 ></div>
                               </div>
                               <div class="detail-item">
-                                <div class="detail-label">金額</div>
+                                <div class="detail-label">実行金額</div>
                                 <div
                                   class="detail-value tabular-nums highlight"
                                   x-text="`¥${formatNumber(record.amount)}`"
@@ -721,9 +722,25 @@
         >
           <div class="modal-dialog modal-fullscreen">
             <div class="modal-content">
+              <!-- Header -->
               <div class="modal-header">
-                <h5 class="modal-title fw-bold" x-text="chartData.title">
-                  実行単価実績チャート
+                <h5 class="modal-title fw-bold">
+                  <svg
+                    class="icon-inline me-2"
+                    width="20"
+                    height="20"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                  </svg>
+                  単価推移 -
+                  <span x-text="chartData.item"></span>
+                  <small class="text-muted ms-2" x-text="`(${chartData.unit})`"></small>
                 </h5>
                 <button
                   type="button"
@@ -731,39 +748,145 @@
                   data-bs-dismiss="modal"
                 ></button>
               </div>
+
+              <!-- Control Bar -->
+              <div class="bg-light border-bottom p-3">
+                <div class="row g-3">
+                  <!-- Chart View Card -->
+                  <div class="col-12 col-md-6 col-lg-4">
+                    <div
+                      class="card h-100 cursor-pointer"
+                      :class="chartData.displayMode === 'chart' ? 'border-primary shadow-sm' : 'border-secondary'"
+                      @click="setChartDisplayMode('chart')"
+                    >
+                      <div class="card-body py-2 px-3">
+                        <div class="d-flex align-items-center gap-2">
+                          <div
+                            class="rounded-circle d-flex align-items-center justify-content-center"
+                            :class="chartData.displayMode === 'chart' ? 'bg-primary text-white' : 'bg-secondary text-white'"
+                            style="width: 28px; height: 28px"
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <line x1="18" y1="20" x2="18" y2="10" />
+                              <line x1="12" y1="20" x2="12" y2="4" />
+                              <line x1="6" y1="20" x2="6" y2="14" />
+                            </svg>
+                          </div>
+                          <span
+                            class="fw-semibold"
+                            :class="chartData.displayMode === 'chart' ? 'text-primary' : 'text-secondary'"
+                          >チャート表示</span>
+                          <span
+                            x-show="chartData.displayMode === 'chart'"
+                            class="badge bg-primary ms-auto"
+                          >選択中</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Table View Card -->
+                  <div class="col-12 col-md-6 col-lg-4">
+                    <div
+                      class="card h-100 cursor-pointer"
+                      :class="chartData.displayMode === 'table' ? 'border-primary shadow-sm' : 'border-secondary'"
+                      @click="setChartDisplayMode('table')"
+                    >
+                      <div class="card-body py-2 px-3">
+                        <div class="d-flex align-items-center gap-2">
+                          <div
+                            class="rounded-circle d-flex align-items-center justify-content-center"
+                            :class="chartData.displayMode === 'table' ? 'bg-primary text-white' : 'bg-secondary text-white'"
+                            style="width: 28px; height: 28px"
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <line x1="8" y1="6" x2="21" y2="6" />
+                              <line x1="8" y1="12" x2="21" y2="12" />
+                              <line x1="8" y1="18" x2="21" y2="18" />
+                              <line x1="3" y1="6" x2="3.01" y2="6" />
+                              <line x1="3" y1="12" x2="3.01" y2="12" />
+                              <line x1="3" y1="18" x2="3.01" y2="18" />
+                            </svg>
+                          </div>
+                          <span
+                            class="fw-semibold"
+                            :class="chartData.displayMode === 'table' ? 'text-primary' : 'text-secondary'"
+                          >テーブル表示</span>
+                          <span
+                            x-show="chartData.displayMode === 'table'"
+                            class="badge bg-primary ms-auto"
+                          >選択中</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Summary Stats -->
+                  <div class="col-12 col-lg-4 d-flex align-items-center justify-content-lg-end">
+                    <div class="d-flex gap-3 align-items-center flex-wrap">
+                      <span class="badge bg-info fs-6" x-text="chartData.records.length + '件'"></span>
+                      <div class="d-flex gap-2 align-items-center">
+                        <small class="text-muted">最小:</small>
+                        <span class="fw-semibold text-success" x-text="`¥${formatNumber(chartData.minPrice)}`"></span>
+                      </div>
+                      <div class="d-flex gap-2 align-items-center">
+                        <small class="text-muted">平均:</small>
+                        <span class="fw-semibold text-primary" x-text="`¥${formatNumber(chartData.avgPrice)}`"></span>
+                      </div>
+                      <div class="d-flex gap-2 align-items-center">
+                        <small class="text-muted">最大:</small>
+                        <span class="fw-semibold text-danger" x-text="`¥${formatNumber(chartData.maxPrice)}`"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Modal Body -->
               <div class="modal-body">
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <div class="card bg-light border-0">
-                      <div class="card-body py-2">
-                        <small class="text-muted">品目</small>
-                        <div class="fw-bold" x-text="chartData.item">-</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="card bg-light border-0">
-                      <div class="card-body py-2">
-                        <small class="text-muted">単位</small>
-                        <div class="fw-bold" x-text="chartData.unit">-</div>
-                      </div>
+                <!-- Chart View -->
+                <div x-show="chartData.displayMode === 'chart'">
+                  <div class="chart-scroll-container">
+                    <div class="chart-wrapper" x-ref="chartWrapper">
+                      <canvas x-ref="netPriceChart"></canvas>
                     </div>
                   </div>
                 </div>
-                <div class="chart-scroll-container">
-                  <div class="chart-wrapper" x-ref="chartWrapper">
-                    <canvas x-ref="netPriceChart"></canvas>
-                  </div>
-                </div>
-                <div class="mt-3">
-                  <div class="table-responsive">
-                    <table class="table table-sm table-bordered mb-0">
-                      <thead class="table-light">
+
+                <!-- Table View -->
+                <div x-show="chartData.displayMode === 'table'">
+                  <div class="table-responsive" style="max-height: calc(100vh - 280px); overflow: auto;">
+                    <table class="table table-sm table-bordered table-hover mb-0" style="min-width: 1400px; table-layout: fixed;">
+                      <thead class="table-light sticky-top">
                         <tr>
-                          <th>発注日</th>
-                          <th>工事名称</th>
-                          <th>業者</th>
-                          <th class="text-end">実行単価</th>
+                          <th style="width: 100px;">発注日</th>
+                          <th style="width: 70px;">支店</th>
+                          <th style="width: 60px;">大工事</th>
+                          <th style="width: 220px;">工事名称</th>
+                          <th style="width: 150px;">仕様</th>
+                          <th style="width: 180px;">業者</th>
+                          <th style="width: 55px;" class="text-center">階数</th>
+                          <th style="width: 55px;" class="text-center">戸並</th>
+                          <th style="width: 55px;" class="text-center">戸数</th>
+                          <th style="width: 100px;" class="text-end">施工面積</th>
+                          <th style="width: 100px;" class="text-end">延床面積</th>
+                          <th style="width: 85px;" class="text-end">実行数量</th>
+                          <th style="width: 100px;" class="text-end">実行単価</th>
+                          <th style="width: 110px;" class="text-end">実行金額</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -772,13 +895,20 @@
                           :key="record.orderDate + record.vendor"
                         >
                           <tr>
-                            <td x-text="record.orderDateFormatted"></td>
-                            <td x-text="record.projectName"></td>
-                            <td x-text="record.vendor"></td>
-                            <td
-                              class="text-end tabular-nums"
-                              x-text="`¥${formatNumber(record.price)}`"
-                            ></td>
+                            <td class="text-nowrap" x-text="record.orderDateFormatted"></td>
+                            <td><span class="badge bg-info" x-text="record.region"></span></td>
+                            <td><span class="badge bg-secondary" x-text="record.majorCode"></span></td>
+                            <td class="text-truncate" style="max-width: 220px;" x-text="record.projectName" :title="record.projectName"></td>
+                            <td class="text-muted small text-truncate" style="max-width: 150px;" x-text="record.spec || '-'" :title="record.spec"></td>
+                            <td class="text-truncate" style="max-width: 180px;" x-text="record.vendor" :title="record.vendor"></td>
+                            <td class="text-center tabular-nums" x-text="record.floors + '階'"></td>
+                            <td class="text-center tabular-nums" x-text="record.unitRow + '戸'"></td>
+                            <td class="text-center tabular-nums" x-text="record.resUnits + '戸'"></td>
+                            <td class="text-end tabular-nums text-nowrap" x-text="`${formatNumber(record.constArea)} ㎡`"></td>
+                            <td class="text-end tabular-nums text-nowrap" x-text="`${formatNumber(record.totalArea)} ㎡`"></td>
+                            <td class="text-end tabular-nums" x-text="formatNumber(record.qty)"></td>
+                            <td class="text-end tabular-nums text-nowrap" x-text="`¥${formatNumber(record.price)}`"></td>
+                            <td class="text-end tabular-nums text-nowrap fw-semibold" x-text="`¥${formatNumber(record.amount)}`"></td>
                           </tr>
                         </template>
                       </tbody>
@@ -786,6 +916,7 @@
                   </div>
                 </div>
               </div>
+
               <div class="modal-footer">
                 <button
                   type="button"
@@ -824,7 +955,7 @@
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.35-4.35" />
                   </svg>
-                  詳細分析 -
+                  多角分析 -
                   <span x-text="detailModal.currentGroup?.item"></span>
                 </h5>
                 <button

@@ -66,6 +66,10 @@ function appData() {
       item: "",
       unit: "",
       records: [],
+      displayMode: "chart", // 'chart' or 'table'
+      minPrice: 0,
+      maxPrice: 0,
+      avgPrice: 0,
     },
     chartInstance: null,
 
@@ -378,92 +382,86 @@ function appData() {
       };
     },
 
+    setChartDisplayMode(mode) {
+      this.chartData.displayMode = mode;
+      if (mode === "chart") {
+        this.$nextTick(() => {
+          this.renderPriceChart();
+        });
+      }
+    },
+
+    renderPriceChart() {
+      const ctx = this.$refs.netPriceChart.getContext("2d");
+      if (this.chartInstance) this.chartInstance.destroy();
+
+      const { weekLabels, actualData, stats, weekCount } = this.prepareChartData(
+        this.chartData.records
+      );
+
+      const datasets = [
+        this.createReferenceLine("最小値", stats.min, weekCount, CHART_COLORS.min),
+        this.createReferenceLine("平均値", stats.avg, weekCount, CHART_COLORS.avg),
+        this.createReferenceLine("最大値", stats.max, weekCount, CHART_COLORS.max),
+        {
+          label: "実行単価",
+          data: actualData,
+          borderColor: CHART_COLORS.actual.border,
+          backgroundColor: CHART_COLORS.actual.background,
+          borderWidth: 2,
+          pointRadius: 8,
+          pointHoverRadius: 10,
+          fill: false,
+          tension: 0.1,
+        },
+      ];
+
+      this.$refs.chartWrapper.style.width = "100%";
+
+      this.chartInstance = new Chart(ctx, {
+        type: "line",
+        data: { labels: weekLabels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "top" },
+            tooltip: {
+              callbacks: {
+                label: (context) =>
+                  `${context.dataset.label}: ¥${formatNumber(context.parsed.y)}`,
+              },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              ticks: {
+                callback: (value) => `¥${formatNumber(value)}`,
+              },
+            },
+          },
+        },
+      });
+    },
+
     showChart(idx) {
       const group = this.filteredGroups[idx];
       const records = group.filteredRecords;
+      const prices = records.map((r) => r.price);
       this.chartData = {
-        title: `実行単価実績チャート - ${group.item}`,
+        title: `単価推移 - ${group.item}`,
         item: group.item,
         unit: group.unit,
         records: records,
+        displayMode: "chart",
+        minPrice: Math.min(...prices),
+        maxPrice: Math.max(...prices),
+        avgPrice: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
       };
 
       this.$nextTick(() => {
-        const ctx = this.$refs.netPriceChart.getContext("2d");
-        if (this.chartInstance) this.chartInstance.destroy();
-
-        const { weekLabels, actualData, stats, weekCount } =
-          this.prepareChartData(records);
-
-        const datasets = [
-          this.createReferenceLine(
-            "最小値",
-            stats.min,
-            weekCount,
-            CHART_COLORS.min
-          ),
-          this.createReferenceLine(
-            "平均値",
-            stats.avg,
-            weekCount,
-            CHART_COLORS.avg
-          ),
-          this.createReferenceLine(
-            "最大値",
-            stats.max,
-            weekCount,
-            CHART_COLORS.max
-          ),
-          {
-            label: "実行単価",
-            data: actualData,
-            borderColor: CHART_COLORS.actual.border,
-            backgroundColor: CHART_COLORS.actual.background,
-            borderWidth: 2,
-            pointRadius: 8,
-            pointHoverRadius: 10,
-            fill: false,
-            tension: 0.1,
-          },
-        ];
-
-        this.$refs.chartWrapper.style.width = "100%";
-
-        this.chartInstance = new Chart(ctx, {
-          type: "line",
-          data: { labels: weekLabels, datasets },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { intersect: false, mode: "index" },
-            plugins: {
-              legend: {
-                position: "top",
-                labels: { usePointStyle: true, padding: 20 },
-              },
-              tooltip: {
-                callbacks: {
-                  label: (context) =>
-                    `${context.dataset.label}: ¥${formatNumber(context.raw)}`,
-                },
-              },
-            },
-            scales: {
-              x: {
-                title: { display: true, text: "発注週（週初め日付）" },
-                grid: { display: false },
-              },
-              y: {
-                title: {
-                  display: true,
-                  text: `実行単価 (円/${group.unit})`,
-                },
-                ticks: { callback: (value) => "¥" + formatNumber(value) },
-              },
-            },
-          },
-        });
-
+        this.renderPriceChart();
         new bootstrap.Modal(this.$refs.chartModal).show();
       });
     },
