@@ -1,0 +1,2670 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>業者見積データベース</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      [x-cloak] {
+        display: none !important;
+      }
+      .transition-collapse {
+        transition: all 0.3s ease;
+        overflow: hidden;
+      }
+      .collapse-hidden {
+        max-height: 0;
+        opacity: 0;
+      }
+      .collapse-shown {
+        max-height: 2000px;
+        opacity: 1;
+      }
+      :root {
+        --sidebar-width: 300px;
+        --header-height: 56px;
+      }
+      body {
+        background: #f8f9fa;
+      }
+      .icon {
+        width: 16px;
+        height: 16px;
+        vertical-align: -2px;
+      }
+      .icon-lg {
+        width: 20px;
+        height: 20px;
+      }
+      .sidebar {
+        width: var(--sidebar-width);
+        height: calc(100vh - var(--header-height));
+        overflow-y: auto;
+        border-right: 1px solid #dee2e6;
+      }
+      @media (max-width: 991.98px) {
+        .sidebar {
+          width: 100%;
+          height: auto;
+          max-height: none;
+          border-right: none;
+          border-bottom: 1px solid #dee2e6;
+        }
+        .sidebar .flex-grow-1 {
+          max-height: 60vh;
+          overflow-y: auto;
+        }
+      }
+      .main-content {
+        height: calc(100vh - var(--header-height));
+        overflow-y: auto;
+        flex: 1;
+      }
+      @media (max-width: 991.98px) {
+        .main-content {
+          height: auto;
+          min-height: calc(100vh - var(--header-height));
+        }
+      }
+      .results-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        align-items: start;
+      }
+      @media (min-width: 1200px) {
+        .results-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (min-width: 1800px) {
+        .results-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      .tabular-nums {
+        font-variant-numeric: tabular-nums;
+      }
+      .form-label-sm {
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+      .item-group-card {
+        transition: all 0.2s;
+        cursor: pointer;
+        border-left: 4px solid #0d6efd;
+        border-radius: 8px;
+      }
+      .item-group-card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+      }
+      .item-group-card.expanded {
+        background: #fafbfc;
+        border-left-color: #198754;
+      }
+      .filter-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+      }
+      .tag-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+      }
+      .tag-cloud .badge {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.6rem;
+      }
+      .summary-stats {
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        overflow: hidden;
+      }
+      .summary-section {
+        padding: 1rem;
+      }
+      .summary-section:not(:last-child) {
+        border-bottom: 1px solid #e9ecef;
+      }
+      .summary-section-title {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.625rem;
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+      }
+      .company-summary-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .company-summary-item {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+        padding: 0.5rem 0.75rem;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+      }
+      .company-name {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #212529;
+        min-width: 60px;
+      }
+      .company-count {
+        font-size: 0.7rem;
+        color: #6c757d;
+        background: #e9ecef;
+        padding: 0.125rem 0.5rem;
+        border-radius: 10px;
+      }
+      .company-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .company-prices {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-left: auto;
+      }
+      .company-price-item {
+        display: flex;
+        align-items: baseline;
+        gap: 0.25rem;
+      }
+      .company-price-label {
+        font-size: 0.65rem;
+        color: #6c757d;
+      }
+      .company-price-value {
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .company-price-value.min {
+        color: #198754;
+      }
+      .company-price-value.avg {
+        color: #212529;
+      }
+      .company-price-value.max {
+        color: #dc3545;
+      }
+      @media (max-width: 576px) {
+        .company-summary-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.5rem;
+        }
+        .company-header {
+          width: 100%;
+        }
+        .company-prices {
+          margin-left: 0;
+          width: 100%;
+          justify-content: space-between;
+          padding-top: 0.25rem;
+          border-top: 1px dashed #dee2e6;
+        }
+      }
+      .timeline-container {
+        position: relative;
+        padding-left: 90px;
+      }
+      .timeline-container::before {
+        content: "";
+        position: absolute;
+        left: 70px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, #0d6efd, #6c757d);
+        border-radius: 1px;
+      }
+      .timeline-item {
+        position: relative;
+        margin-bottom: 1rem;
+      }
+      .timeline-item:last-child {
+        margin-bottom: 0;
+      }
+      .timeline-date {
+        position: absolute;
+        left: -90px;
+        top: 12px;
+        width: 65px;
+        text-align: right;
+        padding-right: 15px;
+      }
+      .timeline-date .year {
+        display: block;
+        font-size: 0.7rem;
+        color: #6c757d;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+      .timeline-date .month {
+        display: block;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0d6efd;
+        line-height: 1.3;
+      }
+      .timeline-dot {
+        position: absolute;
+        left: -24px;
+        top: 16px;
+        width: 12px;
+        height: 12px;
+        background: #0d6efd;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        box-shadow: 0 0 0 2px #0d6efd;
+      }
+      .timeline-content {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        transition: all 0.15s;
+      }
+      .timeline-content:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.1);
+      }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.5rem 0.75rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e9ecef;
+      }
+      .detail-item {
+        text-align: left;
+        min-width: 0;
+      }
+      .detail-label {
+        font-size: 0.65rem;
+        color: #6c757d;
+        margin-bottom: 0.125rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+      }
+      .detail-value {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #212529;
+        word-break: break-word;
+        overflow-wrap: break-word;
+      }
+      .detail-value.highlight {
+        color: #0d6efd;
+        font-size: 0.9rem;
+      }
+      .price-display {
+        text-align: right;
+      }
+      .price-main {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0d6efd;
+        line-height: 1.2;
+      }
+      .price-sub {
+        font-size: 0.75rem;
+        color: #6c757d;
+      }
+      .project-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .project-badges {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+      }
+      .project-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #212529;
+        line-height: 1.4;
+      }
+      @media (max-width: 768px) {
+        .detail-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .timeline-container {
+          padding-left: 70px;
+        }
+        .timeline-container::before {
+          left: 50px;
+        }
+        .timeline-date {
+          left: -70px;
+          width: 45px;
+        }
+      }
+      .section-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #0d6efd;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.25rem;
+        border-bottom: 1px solid #e9ecef;
+      }
+      .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-radius: 0 0 6px 6px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1050;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .autocomplete-item {
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+        font-size: 0.85rem;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .autocomplete-item:last-child {
+        border-bottom: none;
+      }
+      .autocomplete-item:hover,
+      .autocomplete-item.active {
+        background: #e7f1ff;
+        color: #0d6efd;
+      }
+    </style>
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-dark bg-dark px-3"
+      style="height: var(--header-height)"
+    >
+      <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+        <svg
+          class="icon-lg"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+          />
+          <polyline points="7.5 4.21 12 6.81 16.5 4.21" />
+          <polyline points="7.5 19.79 7.5 14.6 3 12" />
+          <polyline points="21 12 16.5 14.6 16.5 19.79" />
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+          <line x1="12" y1="22.08" x2="12" y2="12" />
+        </svg>
+        <span class="fw-bold">業者見積データベース</span>
+      </a>
+    </nav>
+
+    <div class="d-flex flex-column flex-lg-row" x-data="appData()" x-cloak>
+      <aside class="sidebar d-flex flex-column bg-white">
+        <div class="p-3 border-bottom">
+          <h6
+            class="mb-0 fw-bold text-secondary d-flex align-items-center gap-1"
+          >
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            検索条件
+          </h6>
+        </div>
+        <div class="p-3 flex-grow-1" @keydown.enter="applyFilters()">
+          <div class="section-title">工事情報</div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >工事名称</label
+            >
+            <div class="position-relative">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="選択または入力"
+                x-model="filters.project"
+                @focus="autocomplete.show = true; filterProjectNames()"
+                @input="filterProjectNames()"
+                @blur="setTimeout(() => autocomplete.show = false, 150)"
+                @keydown.arrow-down.prevent="moveAutocompleteDown()"
+                @keydown.arrow-up.prevent="moveAutocompleteUp()"
+                @keydown.enter.prevent="selectAutocomplete()"
+                @keydown.escape="autocomplete.show = false"
+                autocomplete="off"
+              />
+              <div
+                class="autocomplete-dropdown"
+                x-show="autocomplete.show && autocomplete.items.length > 0"
+                @click="selectProject($event)"
+              >
+                <template x-for="(item, idx) in autocomplete.items" :key="item">
+                  <div
+                    class="autocomplete-item"
+                    :class="{ 'active': idx === autocomplete.activeIndex }"
+                    :data-value="item"
+                    x-text="item"
+                  ></div>
+                </template>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >支店名</label
+            >
+            <select class="form-select form-select-sm" x-model="filters.region">
+              <option value="">すべて</option>
+              <option>厚木</option>
+              <option>横浜</option>
+              <option>高崎</option>
+              <option>春日部</option>
+              <option>つくば</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >大工事項目コード</label
+            >
+            <div class="d-flex flex-wrap gap-2">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="026"
+                  id="code026"
+                  x-model="filters.majorCodes"
+                /><label class="form-check-label small" for="code026"
+                  >026</label
+                >
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >発注日</label
+            >
+            <div class="input-group input-group-sm">
+              <input type="date" class="form-control" x-model="filters.dateFrom" />
+              <span class="input-group-text">~</span>
+              <input type="date" class="form-control" x-model="filters.dateTo" />
+            </div>
+          </div>
+
+          <div class="section-title mt-3">建物情報</div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >地上階数</label
+            >
+            <div class="input-group input-group-sm">
+              <input
+                type="number"
+                class="form-control"
+                placeholder="1"
+                min="1"
+                max="3"
+                x-model.number="filters.floorMin"
+              />
+              <span class="input-group-text">~</span>
+              <input
+                type="number"
+                class="form-control"
+                placeholder="3"
+                min="1"
+                max="3"
+                x-model.number="filters.floorMax"
+              />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >戸並び</label
+            >
+            <div class="input-group input-group-sm">
+              <input
+                type="number"
+                class="form-control"
+                placeholder="1"
+                min="1"
+                max="55"
+                x-model.number="filters.unitRowMin"
+              />
+              <span class="input-group-text">~</span>
+              <input
+                type="number"
+                class="form-control"
+                placeholder="55"
+                min="1"
+                max="55"
+                x-model.number="filters.unitRowMax"
+              />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >居住用戸数</label
+            >
+            <div class="input-group input-group-sm">
+              <input
+                type="number"
+                class="form-control"
+                placeholder="1"
+                min="1"
+                max="12"
+                x-model.number="filters.resUnitMin"
+              />
+              <span class="input-group-text">~</span>
+              <input
+                type="number"
+                class="form-control"
+                placeholder="12"
+                min="1"
+                max="12"
+                x-model.number="filters.resUnitMax"
+              />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >施工面積 (㎡)</label
+            >
+            <div class="input-group input-group-sm">
+              <input
+                type="number"
+                class="form-control"
+                placeholder="50"
+                x-model.number="filters.constAreaMin"
+              />
+              <span class="input-group-text">~</span>
+              <input
+                type="number"
+                class="form-control"
+                placeholder="1000"
+                x-model.number="filters.constAreaMax"
+              />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >延床面積 (㎡)</label
+            >
+            <div class="input-group input-group-sm">
+              <input
+                type="number"
+                class="form-control"
+                placeholder="50"
+                x-model.number="filters.totalAreaMin"
+              />
+              <span class="input-group-text">~</span>
+              <input
+                type="number"
+                class="form-control"
+                placeholder="1000"
+                x-model.number="filters.totalAreaMax"
+              />
+            </div>
+          </div>
+
+          <div class="section-title mt-3">見積情報</div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary">品目</label>
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="キーワード検索"
+              x-model="filters.item"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-sm text-secondary"
+              >業者名</label
+            >
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="業者名"
+              x-model="filters.vendor"
+            />
+          </div>
+        </div>
+        <div class="p-3 border-top bg-light">
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary" @click="applyFilters()">
+              検索実行
+            </button>
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              @click="clearFilters()"
+            >
+              条件クリア
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content p-4">
+        <div class="mb-4">
+          <h4 class="fw-bold mb-3">検索結果一覧</h4>
+          <div class="d-flex gap-2 align-items-center flex-wrap mb-3">
+            <template x-if="activeFiltersDisplay.length > 0">
+              <small class="text-muted me-2">適用中:</small>
+            </template>
+            <template x-for="filter in activeFiltersDisplay" :key="filter">
+              <span class="badge filter-badge bg-secondary" x-text="filter"></span>
+            </template>
+            <template x-if="activeFiltersDisplay.length === 0">
+              <small class="text-muted">絞り込み条件なし（全品目表示）</small>
+            </template>
+          </div>
+        </div>
+
+        <div>
+          <template x-if="filteredGroups.length === 0">
+            <div class="text-center py-5">
+              <svg
+                width="64"
+                height="64"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+                class="text-muted mb-3"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <p class="text-muted">検索条件に該当する品目がありません</p>
+              <button class="btn btn-sm btn-outline-primary" @click="clearFilters()">
+                条件をクリア
+              </button>
+            </div>
+          </template>
+
+          <div class="results-grid">
+            <template x-for="(group, idx) in filteredGroups" :key="idx">
+              <div
+                class="card item-group-card shadow-sm"
+                :class="{ 'expanded': expandedGroups[idx] }"
+              >
+                <div class="card-body" @click="toggleGroup(idx)">
+                  <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                      <h5 class="fw-bold mb-2" x-text="group.item"></h5>
+                      <div class="tag-cloud">
+                        <span class="badge bg-secondary" x-text="group.unit"></span>
+                        <span class="badge bg-info" x-text="group.filteredRecords.length + '件'"></span>
+                      </div>
+                    </div>
+                    <div class="text-end">
+                      <small class="text-muted d-block mb-1">実行単価レンジ</small>
+                      <div class="fw-bold text-primary fs-5 tabular-nums" x-text="`¥${fmt(group.minPrice)} ~ ¥${fmt(group.maxPrice)}`"></div>
+                    </div>
+                  </div>
+
+                  <div class="summary-stats mb-3">
+                    <div class="summary-section">
+                      <div class="summary-section-title">
+                        <svg
+                          width="14"
+                          height="14"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                        </svg>
+                        業者別 実行単価レンジ（/<span x-text="group.unit"></span>）
+                      </div>
+                      <div class="company-summary-list">
+                        <template x-for="vendor in getVendorSummary(group.filteredRecords)" :key="vendor.name">
+                          <div class="company-summary-item">
+                            <div class="company-header">
+                              <span class="company-name" x-text="vendor.name"></span>
+                              <span class="company-count" x-text="vendor.count + '件'"></span>
+                            </div>
+                            <div class="company-prices">
+                              <div class="company-price-item">
+                                <span class="company-price-label">最小</span>
+                                <span class="company-price-value min" x-text="`¥${fmt(vendor.min)}`"></span>
+                              </div>
+                              <div class="company-price-item">
+                                <span class="company-price-label">平均</span>
+                                <span class="company-price-value avg" x-text="`¥${fmt(vendor.avg)}`"></span>
+                              </div>
+                              <div class="company-price-item">
+                                <span class="company-price-label">最大</span>
+                                <span class="company-price-value max" x-text="`¥${fmt(vendor.max)}`"></span>
+                              </div>
+                            </div>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex justify-content-center gap-3 align-items-center flex-wrap">
+                    <small class="text-muted">
+                      <svg
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        style="vertical-align: -3px"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                      クリックして実績詳細を表示
+                    </small>
+                    <button
+                      class="btn btn-sm btn-outline-primary"
+                      @click.stop="showChart(idx)"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        style="vertical-align: -2px"
+                      >
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                      </svg>
+                      実行単価チャート
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="border-top"
+                  x-show="expandedGroups[idx]"
+                  x-transition:enter="transition-collapse"
+                  x-transition:enter-start="collapse-hidden"
+                  x-transition:enter-end="collapse-shown"
+                  x-transition:leave="transition-collapse"
+                  x-transition:leave-start="collapse-shown"
+                  x-transition:leave-end="collapse-hidden"
+                >
+                  <div class="card-body bg-light">
+                    <h6 class="fw-bold text-secondary mb-3">
+                      <svg
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        style="vertical-align: -2px"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                      見積詳細（発注日の時系列）
+                    </h6>
+                    <div class="timeline-container">
+                      <template x-for="record in group.filteredRecords" :key="record.orderDate + record.item + record.vendor">
+                        <div class="timeline-item">
+                          <div class="timeline-date">
+                            <span class="year" x-text="record.orderMonth.split('-')[0]"></span>
+                            <span class="month" x-text="parseInt(record.orderMonth.split('-')[1]) + '月'"></span>
+                          </div>
+                          <div class="timeline-dot"></div>
+                          <div class="timeline-content">
+                            <div class="project-header">
+                              <div class="flex-grow-1">
+                                <div class="project-badges">
+                                  <span class="badge bg-info" x-text="record.region"></span>
+                                  <span class="badge bg-secondary" x-text="record.majorCode"></span>
+                                  <span class="badge bg-light text-dark" x-text="record.floors + '階'"></span>
+                                  <span class="badge bg-light text-dark" x-text="record.unitRow + '戸並'"></span>
+                                  <span class="badge bg-light text-dark" x-text="record.resUnits + '戸'"></span>
+                                </div>
+                                <div class="project-name" x-text="record.projectName"></div>
+                              </div>
+                              <div class="price-display">
+                                <div class="price-main tabular-nums" x-text="`¥${fmt(record.price)}`"></div>
+                                <div class="price-sub" x-text="`/${record.unit}`"></div>
+                              </div>
+                            </div>
+                            <div class="detail-grid">
+                              <div class="detail-item">
+                                <div class="detail-label">業者</div>
+                                <div class="detail-value" x-text="record.vendor"></div>
+                              </div>
+                              <div class="detail-item">
+                                <div class="detail-label">数量</div>
+                                <div class="detail-value tabular-nums" x-text="`${fmt(record.qty)} ${record.unit}`"></div>
+                              </div>
+                              <div class="detail-item">
+                                <div class="detail-label">施工面積</div>
+                                <div class="detail-value tabular-nums" x-text="`${fmt(record.constArea)} ㎡`"></div>
+                              </div>
+                              <div class="detail-item">
+                                <div class="detail-label">延床面積</div>
+                                <div class="detail-value tabular-nums" x-text="`${fmt(record.totalArea)} ㎡`"></div>
+                              </div>
+                              <div class="detail-item">
+                                <div class="detail-label">金額</div>
+                                <div class="detail-value tabular-nums highlight" x-text="`¥${fmt(record.amount)}`"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                    <div
+                      class="text-center mt-3 pt-3 border-top"
+                      @click.stop="toggleGroup(idx)"
+                      style="cursor: pointer"
+                    >
+                      <small class="text-muted">
+                        <svg
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                          style="vertical-align: -3px"
+                        >
+                          <polyline points="18 15 12 9 6 15" />
+                        </svg>
+                        クリックして閉じる
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Chart Modal (inside x-data scope) -->
+        <div class="modal fade" id="chartModal" tabindex="-1" x-ref="chartModal">
+          <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title fw-bold" x-text="chartData.title">
+                  実行単価実績チャート
+                </h5>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                ></button>
+              </div>
+              <div class="modal-body">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="card bg-light border-0">
+                      <div class="card-body py-2">
+                        <small class="text-muted">品目</small>
+                        <div class="fw-bold" x-text="chartData.item">-</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="card bg-light border-0">
+                      <div class="card-body py-2">
+                        <small class="text-muted">単位</small>
+                        <div class="fw-bold" x-text="chartData.unit">-</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="chart-scroll-container"
+                  style="overflow-x: auto; overflow-y: hidden; padding-bottom: 10px"
+                >
+                  <div style="height: 400px; position: relative" x-ref="chartWrapper">
+                    <canvas x-ref="netPriceChart"></canvas>
+                  </div>
+                </div>
+                <div class="mt-3">
+                  <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0">
+                      <thead class="table-light">
+                        <tr>
+                          <th>発注日</th>
+                          <th>工事名称</th>
+                          <th>業者</th>
+                          <th class="text-end">実行単価</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template x-for="record in chartData.records" :key="record.orderDate + record.vendor">
+                          <tr>
+                            <td x-text="record.orderDateFormatted"></td>
+                            <td x-text="record.projectName"></td>
+                            <td x-text="record.vendor"></td>
+                            <td class="text-end tabular-nums" x-text="`¥${fmt(record.price)}`"></td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.3/dist/cdn.min.js"></script>
+
+    <script>
+      const fmt = (n) => (n ? n.toLocaleString() : "0");
+      const parseDate = (d) =>
+        d ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : "";
+      const parseNum = (s) => parseFloat(String(s).replace(/,/g, "")) || 0;
+
+      function getWeekNumber(dateStr) {
+        const d = new Date(
+          dateStr.slice(0, 4),
+          parseInt(dateStr.slice(4, 6)) - 1,
+          dateStr.slice(6, 8)
+        );
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+        const week1 = new Date(d.getFullYear(), 0, 4);
+        const weekNum =
+          1 +
+          Math.round(
+            ((d.getTime() - week1.getTime()) / 86400000 -
+              3 +
+              ((week1.getDay() + 6) % 7)) /
+              7
+          );
+        return `${d.getFullYear()}-W${String(weekNum).padStart(2, "0")}`;
+      }
+
+      function getWeekStartDate(dateStr) {
+        const d = new Date(
+          dateStr.slice(0, 4),
+          parseInt(dateStr.slice(4, 6)) - 1,
+          dateStr.slice(6, 8)
+        );
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        d.setDate(diff);
+        return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}/${String(d.getDate()).padStart(2, "0")}`;
+      }
+
+      const rawRecords = [
+        {
+          region: "厚木",
+          projectName: "１０９様集合住宅新築工事",
+          majorCode: "026",
+          item: "パネル運搬費",
+          spec: "",
+          unit: "台",
+          qty: 14.0,
+          price: 23000,
+          vendor: "株式会社　サンウッド",
+          orderDate: "20231124",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 460.14,
+          totalArea: 435.44,
+        },
+        {
+          region: "厚木",
+          projectName: "１０９様集合住宅新築工事",
+          majorCode: "026",
+          item: "パネル加工費",
+          spec: "",
+          unit: "㎡",
+          qty: 411.3,
+          price: 2400,
+          vendor: "株式会社　サンウッド",
+          orderDate: "20231124",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 460.14,
+          totalArea: 435.44,
+        },
+        {
+          region: "厚木",
+          projectName: "１０９様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＳ構造用金物",
+          spec: "大東スチール",
+          unit: "㎡",
+          qty: 411.3,
+          price: 84,
+          vendor: "株式会社　サンウッド",
+          orderDate: "20231124",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 460.14,
+          totalArea: 435.44,
+        },
+        {
+          region: "厚木",
+          projectName: "１０９様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＳ構造用くぎ",
+          spec: "大東スチール",
+          unit: "㎡",
+          qty: 411.3,
+          price: 348,
+          vendor: "株式会社　サンウッド",
+          orderDate: "20231124",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 460.14,
+          totalArea: 435.44,
+        },
+        {
+          region: "厚木",
+          projectName: "１１５様集合住宅新築工事",
+          majorCode: "026",
+          item: "パネル運搬費",
+          spec: "２１で１台",
+          unit: "台",
+          qty: 15.0,
+          price: 31100,
+          vendor: "株式会社　サンウッド",
+          orderDate: "20231024",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 358.12,
+          totalArea: 335.01,
+        },
+        {
+          region: "厚木",
+          projectName: "１１５様集合住宅新築工事",
+          majorCode: "026",
+          item: "レッカー損料（２×４）",
+          spec: "界床ＡＬＣ用",
+          unit: "台",
+          qty: 1.0,
+          price: 75000,
+          vendor: "有限会社　サガミクレーン",
+          orderDate: "20231117",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 358.12,
+          totalArea: 335.01,
+        },
+        {
+          region: "厚木",
+          projectName: "１１５様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＫ天井ＰＢ厚１２．５　材ノミ",
+          spec: "２階天井",
+          unit: "㎡",
+          qty: 163.8,
+          price: 330,
+          vendor: "有限会社　エーケー建設",
+          orderDate: "20231202",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 358.12,
+          totalArea: 335.01,
+        },
+        {
+          region: "厚木",
+          projectName: "１１５様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＫ天井ＰＢ厚１２．５　材ノミ",
+          spec: "下がり天井",
+          unit: "㎡",
+          qty: 23.2,
+          price: 330,
+          vendor: "有限会社　エーケー建設",
+          orderDate: "20231202",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 358.12,
+          totalArea: 335.01,
+        },
+        {
+          region: "厚木",
+          projectName: "１１５様集合住宅新築工事",
+          majorCode: "026",
+          item: "外部軒天野縁格子組（材ノミ）",
+          spec: "２階バルコニー下",
+          unit: "㎡",
+          qty: 11.2,
+          price: 1500,
+          vendor: "有限会社　エーケー建設",
+          orderDate: "20231202",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 358.12,
+          totalArea: 335.01,
+        },
+        {
+          region: "厚木",
+          projectName: "１１５様集合住宅新築工事",
+          majorCode: "026",
+          item: "外部軒天野縁格子組（材ノミ）",
+          spec: "ポーチ天井下・室外機置場下",
+          unit: "㎡",
+          qty: 15.9,
+          price: 1500,
+          vendor: "有限会社　エーケー建設",
+          orderDate: "20231202",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 358.12,
+          totalArea: 335.01,
+        },
+        {
+          region: "厚木",
+          projectName: "１１５様集合住宅新築工事",
+          majorCode: "026",
+          item: "外部軒天野縁格子組（材ノミ）",
+          spec: "軒天",
+          unit: "㎡",
+          qty: 31.5,
+          price: 1500,
+          vendor: "有限会社　エーケー建設",
+          orderDate: "20231202",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 358.12,
+          totalArea: 335.01,
+        },
+        {
+          region: "厚木",
+          projectName: "１１５様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚４（材ノミ）",
+          spec: "１階　洗面・便所",
+          unit: "枚",
+          qty: 12.0,
+          price: 657,
+          vendor: "有限会社　エーケー建設",
+          orderDate: "20231202",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 358.12,
+          totalArea: 335.01,
+        },
+        {
+          region: "厚木",
+          projectName: "１１５様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚１２（材ノミ）",
+          spec: "アートパネル枠廻り",
+          unit: "枚",
+          qty: 8.0,
+          price: 1374,
+          vendor: "有限会社　エーケー建設",
+          orderDate: "20231202",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 358.12,
+          totalArea: 335.01,
+        },
+        {
+          region: "厚木",
+          projectName: "１１５様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚１５（材ノミ）",
+          spec: "２階　洗面・便所",
+          unit: "枚",
+          qty: 12.0,
+          price: 1970,
+          vendor: "有限会社　エーケー建設",
+          orderDate: "20231202",
+          floors: 2,
+          unitRow: 4,
+          resUnits: 8,
+          constArea: 358.12,
+          totalArea: 335.01,
+        },
+        {
+          region: "横浜",
+          projectName: "１３１様集合住宅新築工事",
+          majorCode: "026",
+          item: "パネル運搬費",
+          spec: "",
+          unit: "台",
+          qty: 3.0,
+          price: 31000,
+          vendor: "有限会社　誠建社",
+          orderDate: "20231116",
+          floors: 1,
+          unitRow: 1,
+          resUnits: 1,
+          constArea: 76.08,
+          totalArea: 68.31,
+        },
+        {
+          region: "横浜",
+          projectName: "１３１様集合住宅新築工事",
+          majorCode: "026",
+          item: "パネル加工費",
+          spec: "",
+          unit: "㎡",
+          qty: 68.3,
+          price: 2550,
+          vendor: "有限会社　誠建社",
+          orderDate: "20231116",
+          floors: 1,
+          unitRow: 1,
+          resUnits: 1,
+          constArea: 76.08,
+          totalArea: 68.31,
+        },
+        {
+          region: "横浜",
+          projectName: "１３１様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＳ構造用金物",
+          spec: "大東スチール",
+          unit: "㎡",
+          qty: 68.3,
+          price: 349,
+          vendor: "有限会社　誠建社",
+          orderDate: "20231116",
+          floors: 1,
+          unitRow: 1,
+          resUnits: 1,
+          constArea: 76.08,
+          totalArea: 68.31,
+        },
+        {
+          region: "横浜",
+          projectName: "１３１様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＳ構造用くぎ",
+          spec: "大東スチール",
+          unit: "㎡",
+          qty: 68.3,
+          price: 910,
+          vendor: "有限会社　誠建社",
+          orderDate: "20231116",
+          floors: 1,
+          unitRow: 1,
+          resUnits: 1,
+          constArea: 76.08,
+          totalArea: 68.31,
+        },
+        {
+          region: "横浜",
+          projectName: "１３１様集合住宅新築工事",
+          majorCode: "026",
+          item: "フレーミング手間（壁パネル）",
+          spec: "",
+          unit: "㎡",
+          qty: 68.3,
+          price: 4500,
+          vendor: "有限会社　佐俣工務店",
+          orderDate: "20231116",
+          floors: 1,
+          unitRow: 1,
+          resUnits: 1,
+          constArea: 76.08,
+          totalArea: 68.31,
+        },
+        {
+          region: "横浜",
+          projectName: "１３１様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＫ天井ＰＢ厚１２．５　材ノミ",
+          spec: "購買部",
+          unit: "㎡",
+          qty: 68.3,
+          price: 330,
+          vendor: "創建コンストラクション　株式会社",
+          orderDate: "20231116",
+          floors: 1,
+          unitRow: 1,
+          resUnits: 1,
+          constArea: 76.08,
+          totalArea: 68.31,
+        },
+        {
+          region: "横浜",
+          projectName: "１３１様集合住宅新築工事",
+          majorCode: "026",
+          item: "外部軒天野縁格子組（材ノミ）",
+          spec: "軒裏",
+          unit: "㎡",
+          qty: 18.0,
+          price: 1000,
+          vendor: "創建コンストラクション　株式会社",
+          orderDate: "20231116",
+          floors: 1,
+          unitRow: 1,
+          resUnits: 1,
+          constArea: 76.08,
+          totalArea: 68.31,
+        },
+        {
+          region: "横浜",
+          projectName: "１３１様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚４（材ノミ）",
+          spec: "",
+          unit: "枚",
+          qty: 4.0,
+          price: 657,
+          vendor: "創建コンストラクション　株式会社",
+          orderDate: "20231116",
+          floors: 1,
+          unitRow: 1,
+          resUnits: 1,
+          constArea: 76.08,
+          totalArea: 68.31,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "パネル運搬費",
+          spec: "",
+          unit: "台",
+          qty: 8.0,
+          price: 32000,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231031",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "パネル加工費",
+          spec: "",
+          unit: "㎡",
+          qty: 222.4,
+          price: 2750,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231206",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＳ構造用金物",
+          spec: "大東スチール",
+          unit: "㎡",
+          qty: 222.4,
+          price: 255,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231031",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＳ構造用くぎ",
+          spec: "大東スチール",
+          unit: "㎡",
+          qty: 222.4,
+          price: 636,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231031",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "レッカー損料（２×４）",
+          spec: "界床ＡＬＣ用",
+          unit: "台",
+          qty: 2.0,
+          price: 50000,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231031",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "フレーミング手間（壁パネル）",
+          spec: "",
+          unit: "㎡",
+          qty: 222.4,
+          price: 3000,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231031",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＫ天井ＰＢ厚１２．５　材ノミ",
+          spec: "２階天井",
+          unit: "㎡",
+          qty: 111.2,
+          price: 330,
+          vendor: "山田工務店",
+          orderDate: "20231121",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＫ天井ＰＢ厚１２．５　材ノミ",
+          spec: "カーテンＢＯＸ",
+          unit: "㎡",
+          qty: 7.7,
+          price: 330,
+          vendor: "山田工務店",
+          orderDate: "20231121",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚４（材ノミ）",
+          spec: "１階　洗面室・便所",
+          unit: "枚",
+          qty: 6.0,
+          price: 1500,
+          vendor: "当山建築",
+          orderDate: "20240227",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚１２（材ノミ）",
+          spec: "ＰＷ枠廻り",
+          unit: "枚",
+          qty: 1.0,
+          price: 2400,
+          vendor: "当山建築",
+          orderDate: "20240227",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚１５（材ノミ）",
+          spec: "２階　洗面室",
+          unit: "枚",
+          qty: 4.0,
+          price: 2900,
+          vendor: "当山建築",
+          orderDate: "20240227",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "内部天井野縁（材ノミ）",
+          spec: "カーテンＢＯＸ",
+          unit: "㎡",
+          qty: 7.0,
+          price: 299,
+          vendor: "当山建築",
+          orderDate: "20240227",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２０７様集合住宅新築工事",
+          majorCode: "026",
+          item: "内部天井野縁組手間",
+          spec: "カーテンＢＯＸ",
+          unit: "㎡",
+          qty: 7.0,
+          price: 469,
+          vendor: "当山建築",
+          orderDate: "20240227",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 238.89,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２１０様集合住宅新築工事",
+          majorCode: "026",
+          item: "レッカー損料（２×４）",
+          spec: "界床ＡＬＣ用",
+          unit: "台",
+          qty: 2.0,
+          price: 50000,
+          vendor: "有限会社　石崎重機",
+          orderDate: "20231208",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 240,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２１０様集合住宅新築工事",
+          majorCode: "026",
+          item: "フレーミング手間（壁パネル）",
+          spec: "",
+          unit: "㎡",
+          qty: 222.5,
+          price: 3000,
+          vendor: "株式会社　カオルフレーミング",
+          orderDate: "20231106",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 240,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２１０様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＫ天井ＰＢ厚１２．５　材ノミ",
+          spec: "カーテンＢＯＸ・下がり天井",
+          unit: "㎡",
+          qty: 22.4,
+          price: 330,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231106",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 240,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２１０様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＫ天井ＰＢ厚１２．５　材ノミ",
+          spec: "２階天井",
+          unit: "㎡",
+          qty: 111.3,
+          price: 330,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231106",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 240,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２１０様集合住宅新築工事",
+          majorCode: "026",
+          item: "外部軒天野縁格子組（材ノミ）",
+          spec: "ポーチ天井",
+          unit: "㎡",
+          qty: 6.9,
+          price: 350,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231106",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 240,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２１０様集合住宅新築工事",
+          majorCode: "026",
+          item: "外部軒天野縁格子組（材ノミ）",
+          spec: "屋根軒天",
+          unit: "㎡",
+          qty: 8.4,
+          price: 350,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231106",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 240,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２１０様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚４（材ノミ）",
+          spec: "１階　洗面室・便所",
+          unit: "枚",
+          qty: 6.0,
+          price: 1500,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231106",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 240,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２１０様集合住宅新築工事",
+          majorCode: "026",
+          item: "パネル加工費",
+          spec: "",
+          unit: "㎡",
+          qty: 222.5,
+          price: 2750,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231106",
+          floors: 2,
+          unitRow: 2,
+          resUnits: 4,
+          constArea: 240,
+          totalArea: 229.39,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "パネル運搬費",
+          spec: "",
+          unit: "台",
+          qty: 11.0,
+          price: 32000,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231004",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "パネル加工費",
+          spec: "",
+          unit: "㎡",
+          qty: 333.7,
+          price: 2750,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231004",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＳ構造用金物",
+          spec: "大東スチール",
+          unit: "㎡",
+          qty: 333.7,
+          price: 255,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231004",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＳ構造用くぎ",
+          spec: "大東スチール",
+          unit: "㎡",
+          qty: 333.7,
+          price: 636,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231004",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "レッカー損料（２×４）",
+          spec: "界床ＡＬＣ用",
+          unit: "台",
+          qty: 2.0,
+          price: 50000,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231004",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "フレーミング手間（壁パネル）",
+          spec: "",
+          unit: "㎡",
+          qty: 333.7,
+          price: 3000,
+          vendor: "株式会社　ビルダー",
+          orderDate: "20231004",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＫ天井ＰＢ厚１２．５　材ノミ",
+          spec: "２階天井",
+          unit: "㎡",
+          qty: 166.9,
+          price: 330,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231017",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＫ天井ＰＢ厚１２．５　材ノミ",
+          spec: "カーテンＢＯＸ・下がり天井",
+          unit: "㎡",
+          qty: 33.5,
+          price: 330,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231017",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "外部軒天野縁格子組（材ノミ）",
+          spec: "屋根軒天",
+          unit: "㎡",
+          qty: 12.5,
+          price: 350,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231017",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "外部軒天野縁格子組（材ノミ）",
+          spec: "ポーチ天井",
+          unit: "㎡",
+          qty: 10.4,
+          price: 350,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231017",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚４（材ノミ）",
+          spec: "１階　洗面室・便所",
+          unit: "枚",
+          qty: 9.0,
+          price: 1500,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231017",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚１２（材ノミ）",
+          spec: "ＰＷ枠廻り",
+          unit: "枚",
+          qty: 2.0,
+          price: 2400,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231017",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚１５（材ノミ）",
+          spec: "２階　洗面室・便所",
+          unit: "枚",
+          qty: 9.0,
+          price: 2900,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231017",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "内部天井野縁（材ノミ）",
+          spec: "カーテンＢＯＸ・下がり天井",
+          unit: "㎡",
+          qty: 33.5,
+          price: 299,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231017",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "高崎",
+          projectName: "２１１様集合住宅新築工事",
+          majorCode: "026",
+          item: "内部天井野縁組手間",
+          spec: "カーテンＢＯＸ・下がり天井",
+          unit: "㎡",
+          qty: 33.5,
+          price: 469,
+          vendor: "有限会社　住建のハタノ",
+          orderDate: "20231017",
+          floors: 2,
+          unitRow: 3,
+          resUnits: 6,
+          constArea: 360.01,
+          totalArea: 344.13,
+        },
+        {
+          region: "春日部",
+          projectName: "２４０様集合住宅新築工事",
+          majorCode: "026",
+          item: "パネル運搬費",
+          spec: "",
+          unit: "台",
+          qty: 6.0,
+          price: 26000,
+          vendor: "三井ホームコンポーネント　株式会社",
+          orderDate: "20230828",
+          floors: 3,
+          unitRow: 1,
+          resUnits: 3,
+          constArea: 171.16,
+          totalArea: 156.06,
+        },
+        {
+          region: "春日部",
+          projectName: "２４０様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＳ構造用くぎ",
+          spec: "大東スチール",
+          unit: "㎡",
+          qty: 153.9,
+          price: 248,
+          vendor: "伸晃ホーム　株式会社",
+          orderDate: "20230829",
+          floors: 3,
+          unitRow: 1,
+          resUnits: 3,
+          constArea: 171.16,
+          totalArea: 156.06,
+        },
+        {
+          region: "春日部",
+          projectName: "２４０様集合住宅新築工事",
+          majorCode: "026",
+          item: "レッカー損料（２×４）",
+          spec: "建て方",
+          unit: "台",
+          qty: 3.0,
+          price: 45000,
+          vendor: "有限会社　吉田重機工事",
+          orderDate: "20230824",
+          floors: 3,
+          unitRow: 1,
+          resUnits: 3,
+          constArea: 171.16,
+          totalArea: 156.06,
+        },
+        {
+          region: "つくば",
+          projectName: "２８０様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＫ天井ＰＢ厚１２．５　材ノミ",
+          spec: "カーテンＢＯＸ・下がり天井",
+          unit: "㎡",
+          qty: 55.9,
+          price: 330,
+          vendor: "Ｋ／Ｂｕｉｌｄｅｒ",
+          orderDate: "20231102",
+          floors: 2,
+          unitRow: 5,
+          resUnits: 10,
+          constArea: 600.03,
+          totalArea: 573.59,
+        },
+        {
+          region: "つくば",
+          projectName: "２８０様集合住宅新築工事",
+          majorCode: "026",
+          item: "ＤＫ天井ＰＢ厚１２．５　材ノミ",
+          spec: "２階天井",
+          unit: "㎡",
+          qty: 278.1,
+          price: 330,
+          vendor: "Ｋ／Ｂｕｉｌｄｅｒ",
+          orderDate: "20231102",
+          floors: 2,
+          unitRow: 5,
+          resUnits: 10,
+          constArea: 600.03,
+          totalArea: 573.59,
+        },
+        {
+          region: "つくば",
+          projectName: "２８０様集合住宅新築工事",
+          majorCode: "026",
+          item: "外部軒天野縁格子組（材ノミ）",
+          spec: "ポーチ天井",
+          unit: "㎡",
+          qty: 17.3,
+          price: 369,
+          vendor: "Ｋ／Ｂｕｉｌｄｅｒ",
+          orderDate: "20231102",
+          floors: 2,
+          unitRow: 5,
+          resUnits: 10,
+          constArea: 600.03,
+          totalArea: 573.59,
+        },
+        {
+          region: "つくば",
+          projectName: "２８０様集合住宅新築工事",
+          majorCode: "026",
+          item: "外部軒天野縁格子組（材ノミ）",
+          spec: "屋根軒天",
+          unit: "㎡",
+          qty: 20.9,
+          price: 369,
+          vendor: "Ｋ／Ｂｕｉｌｄｅｒ",
+          orderDate: "20231102",
+          floors: 2,
+          unitRow: 5,
+          resUnits: 10,
+          constArea: 600.03,
+          totalArea: 573.59,
+        },
+        {
+          region: "つくば",
+          projectName: "２８０様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚４（材ノミ）",
+          spec: "１階　洗面室・便所",
+          unit: "枚",
+          qty: 15.0,
+          price: 657,
+          vendor: "Ｋ／Ｂｕｉｌｄｅｒ",
+          orderDate: "20231102",
+          floors: 2,
+          unitRow: 5,
+          resUnits: 10,
+          constArea: 600.03,
+          totalArea: 573.59,
+        },
+        {
+          region: "つくば",
+          projectName: "２８０様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚１２（材ノミ）",
+          spec: "ＰＷ枠廻り",
+          unit: "枚",
+          qty: 3.0,
+          price: 1374,
+          vendor: "Ｋ／Ｂｕｉｌｄｅｒ",
+          orderDate: "20231102",
+          floors: 2,
+          unitRow: 5,
+          resUnits: 10,
+          constArea: 600.03,
+          totalArea: 573.59,
+        },
+        {
+          region: "つくば",
+          projectName: "２８０様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚１２（材ノミ）",
+          spec: "カーテンボックス",
+          unit: "枚",
+          qty: 3.0,
+          price: 1374,
+          vendor: "Ｋ／Ｂｕｉｌｄｅｒ",
+          orderDate: "20231102",
+          floors: 2,
+          unitRow: 5,
+          resUnits: 10,
+          constArea: 600.03,
+          totalArea: 573.59,
+        },
+        {
+          region: "つくば",
+          projectName: "２８０様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚１５（材ノミ）",
+          spec: "２階　物入・ＷＩＣ",
+          unit: "枚",
+          qty: 10.0,
+          price: 1970,
+          vendor: "Ｋ／Ｂｕｉｌｄｅｒ",
+          orderDate: "20231102",
+          floors: 2,
+          unitRow: 5,
+          resUnits: 10,
+          constArea: 600.03,
+          totalArea: 573.59,
+        },
+        {
+          region: "つくば",
+          projectName: "２８０様集合住宅新築工事",
+          majorCode: "026",
+          item: "ラワン合板　厚１５（材ノミ）",
+          spec: "２階　洗面室・便所",
+          unit: "枚",
+          qty: 15.0,
+          price: 1970,
+          vendor: "Ｋ／Ｂｕｉｌｄｅｒ",
+          orderDate: "20231102",
+          floors: 2,
+          unitRow: 5,
+          resUnits: 10,
+          constArea: 600.03,
+          totalArea: 573.59,
+        },
+        {
+          region: "つくば",
+          projectName: "２８０様集合住宅新築工事",
+          majorCode: "026",
+          item: "内部天井野縁（材ノミ）",
+          spec: "カーテンＢＯＸ・下がり天井",
+          unit: "㎡",
+          qty: 55.9,
+          price: 323,
+          vendor: "Ｋ／Ｂｕｉｌｄｅｒ",
+          orderDate: "20231102",
+          floors: 2,
+          unitRow: 5,
+          resUnits: 10,
+          constArea: 600.03,
+          totalArea: 573.59,
+        },
+        {
+          region: "つくば",
+          projectName: "２８０様集合住宅新築工事",
+          majorCode: "026",
+          item: "内部天井野縁組手間",
+          spec: "カーテンＢＯＸ・下がり天井",
+          unit: "㎡",
+          qty: 55.9,
+          price: 494,
+          vendor: "Ｋ／Ｂｕｉｌｄｅｒ",
+          orderDate: "20231102",
+          floors: 2,
+          unitRow: 5,
+          resUnits: 10,
+          constArea: 600.03,
+          totalArea: 573.59,
+        },
+      ];
+
+      function appData() {
+        return {
+          filters: {
+            project: "",
+            region: "",
+            majorCodes: [],
+            dateFrom: "",
+            dateTo: "",
+            floorMin: null,
+            floorMax: null,
+            unitRowMin: null,
+            unitRowMax: null,
+            resUnitMin: null,
+            resUnitMax: null,
+            constAreaMin: null,
+            constAreaMax: null,
+            totalAreaMin: null,
+            totalAreaMax: null,
+            item: "",
+            vendor: "",
+          },
+          rawRecords: rawRecords,
+          records: [],
+          itemGroups: [],
+          filteredGroups: [],
+          expandedGroups: {},
+          autocomplete: {
+            show: false,
+            items: [],
+            activeIndex: -1,
+          },
+          projectNames: [],
+          chartData: {
+            title: "",
+            item: "",
+            unit: "",
+            records: [],
+          },
+          chartInstance: null,
+
+          init() {
+            this.processData();
+            this.groupByItem();
+            this.clearFilters();
+            this.projectNames = [
+              ...new Set(this.rawRecords.map((r) => r.projectName)),
+            ].sort();
+          },
+
+          processData() {
+            this.records = this.rawRecords.map((r) => ({
+              ...r,
+              orderDateFormatted: parseDate(r.orderDate),
+              orderMonth: r.orderDate
+                ? r.orderDate.slice(0, 4) + "-" + r.orderDate.slice(4, 6)
+                : "",
+              orderWeek: r.orderDate ? getWeekNumber(r.orderDate) : "",
+              orderWeekStart: r.orderDate ? getWeekStartDate(r.orderDate) : "",
+              amount: r.qty * r.price,
+            }));
+          },
+
+          groupByItem() {
+            const groups = {};
+            this.records.forEach((item) => {
+              const key = `${item.item}|${item.spec}`;
+              if (!groups[key])
+                groups[key] = {
+                  item: item.item,
+                  spec: item.spec,
+                  unit: item.unit,
+                  records: [],
+                };
+              groups[key].records.push(item);
+            });
+            this.itemGroups = Object.values(groups).map((g) => {
+              g.records.sort((a, b) => a.orderDate.localeCompare(b.orderDate));
+              const prices = g.records.map((r) => r.price);
+              return {
+                ...g,
+                recordCount: g.records.length,
+                minPrice: Math.min(...prices),
+                maxPrice: Math.max(...prices),
+                avgPrice: prices.reduce((a, b) => a + b, 0) / prices.length,
+              };
+            });
+          },
+
+          applyFilters() {
+            const projectKw = this.filters.project.toLowerCase();
+            const itemKw = this.filters.item.toLowerCase();
+            const region = this.filters.region;
+            const majorCodes = this.filters.majorCodes;
+            const vendor = this.filters.vendor.toLowerCase();
+            const dateFrom = this.filters.dateFrom.replace(/-/g, "");
+            const dateTo = this.filters.dateTo.replace(/-/g, "");
+            const floorMin = this.filters.floorMin || 0;
+            const floorMax = this.filters.floorMax || Infinity;
+            const unitRowMin = this.filters.unitRowMin || 0;
+            const unitRowMax = this.filters.unitRowMax || Infinity;
+            const resUnitMin = this.filters.resUnitMin || 0;
+            const resUnitMax = this.filters.resUnitMax || Infinity;
+            const constAreaMin = this.filters.constAreaMin || 0;
+            const constAreaMax = this.filters.constAreaMax || Infinity;
+            const totalAreaMin = this.filters.totalAreaMin || 0;
+            const totalAreaMax = this.filters.totalAreaMax || Infinity;
+
+            this.filteredGroups = this.itemGroups
+              .map((g) => {
+                const matchingRecords = g.records.filter((r) => {
+                  if (projectKw && !r.projectName.toLowerCase().includes(projectKw))
+                    return false;
+                  if (region && r.region !== region) return false;
+                  if (majorCodes.length && !majorCodes.includes(r.majorCode))
+                    return false;
+                  if (vendor && !r.vendor.toLowerCase().includes(vendor))
+                    return false;
+                  if (dateFrom && r.orderDate < dateFrom) return false;
+                  if (dateTo && r.orderDate > dateTo) return false;
+                  if (r.floors < floorMin || r.floors > floorMax) return false;
+                  if (r.unitRow < unitRowMin || r.unitRow > unitRowMax)
+                    return false;
+                  if (r.resUnits < resUnitMin || r.resUnits > resUnitMax)
+                    return false;
+                  if (r.constArea < constAreaMin || r.constArea > constAreaMax)
+                    return false;
+                  if (r.totalArea < totalAreaMin || r.totalArea > totalAreaMax)
+                    return false;
+                  return true;
+                });
+                const prices = matchingRecords.map((r) => r.price);
+                return {
+                  ...g,
+                  filteredRecords: matchingRecords,
+                  minPrice: prices.length ? Math.min(...prices) : 0,
+                  maxPrice: prices.length ? Math.max(...prices) : 0,
+                };
+              })
+              .filter((g) => {
+                if (
+                  itemKw &&
+                  !g.item.toLowerCase().includes(itemKw) &&
+                  !g.spec.toLowerCase().includes(itemKw)
+                )
+                  return false;
+                return g.filteredRecords.length > 0;
+              });
+          },
+
+          clearFilters() {
+            this.filters = {
+              project: "",
+              region: "",
+              majorCodes: [],
+              dateFrom: "",
+              dateTo: "",
+              floorMin: null,
+              floorMax: null,
+              unitRowMin: null,
+              unitRowMax: null,
+              resUnitMin: null,
+              resUnitMax: null,
+              constAreaMin: null,
+              constAreaMax: null,
+              totalAreaMin: null,
+              totalAreaMax: null,
+              item: "",
+              vendor: "",
+            };
+            this.filteredGroups = this.itemGroups.map((g) => ({
+              ...g,
+              filteredRecords: g.records,
+            }));
+          },
+
+          get activeFiltersDisplay() {
+            const filters = [];
+            if (this.filters.project) filters.push(`工事名称: ${this.filters.project}`);
+            if (this.filters.region) filters.push(`支店名: ${this.filters.region}`);
+            if (this.filters.majorCodes.length)
+              filters.push(`大工事項目: ${this.filters.majorCodes.join(", ")}`);
+            if (this.filters.item) filters.push(`品目: ${this.filters.item}`);
+            if (this.filters.vendor) filters.push(`業者: ${this.filters.vendor}`);
+            return filters;
+          },
+
+          toggleGroup(idx) {
+            this.expandedGroups[idx] = !this.expandedGroups[idx];
+          },
+
+          getVendorSummary(records) {
+            const vd = {};
+            records.forEach((r) => {
+              const n = r.vendor;
+              if (!vd[n]) vd[n] = { prices: [], count: 0 };
+              vd[n].prices.push(r.price);
+              vd[n].count++;
+            });
+            return Object.entries(vd).map(([name, data]) => {
+              const mn = Math.min(...data.prices);
+              const mx = Math.max(...data.prices);
+              const av = Math.round(
+                data.prices.reduce((a, b) => a + b, 0) / data.prices.length
+              );
+              return {
+                name: name.replace(/株式会社|有限会社/g, "").trim(),
+                count: data.count,
+                min: mn,
+                avg: av,
+                max: mx,
+              };
+            });
+          },
+
+          filterProjectNames() {
+            const filter = this.filters.project;
+            this.autocomplete.items = filter
+              ? this.projectNames.filter((p) =>
+                  p.toLowerCase().includes(filter.toLowerCase())
+                )
+              : this.projectNames;
+            this.autocomplete.activeIndex = -1;
+          },
+
+          moveAutocompleteDown() {
+            if (!this.autocomplete.show) return;
+            this.autocomplete.activeIndex = Math.min(
+              this.autocomplete.activeIndex + 1,
+              this.autocomplete.items.length - 1
+            );
+          },
+
+          moveAutocompleteUp() {
+            if (!this.autocomplete.show) return;
+            this.autocomplete.activeIndex = Math.max(
+              this.autocomplete.activeIndex - 1,
+              0
+            );
+          },
+
+          selectAutocomplete() {
+            if (
+              this.autocomplete.show &&
+              this.autocomplete.activeIndex >= 0 &&
+              this.autocomplete.items[this.autocomplete.activeIndex]
+            ) {
+              this.filters.project =
+                this.autocomplete.items[this.autocomplete.activeIndex];
+              this.autocomplete.show = false;
+            }
+          },
+
+          selectProject(event) {
+            if (event.target.classList.contains("autocomplete-item")) {
+              this.filters.project = event.target.dataset.value;
+              this.autocomplete.show = false;
+            }
+          },
+
+          showChart(idx) {
+            const group = this.filteredGroups[idx];
+            const records = group.filteredRecords;
+            this.chartData = {
+              title: `実行単価実績チャート - ${group.item}`,
+              item: group.item,
+              unit: group.unit,
+              records: records,
+            };
+
+            this.$nextTick(() => {
+              const ctx = this.$refs.netPriceChart.getContext("2d");
+              if (this.chartInstance) this.chartInstance.destroy();
+
+              const weekData = {};
+              records.forEach((r) => {
+                if (!weekData[r.orderWeek])
+                  weekData[r.orderWeek] = {
+                    prices: [],
+                    weekStart: r.orderWeekStart,
+                  };
+                weekData[r.orderWeek].prices.push(r.price);
+              });
+
+              const allWeeks = Object.keys(weekData).sort();
+              const weekLabels = allWeeks.map((w) => weekData[w].weekStart);
+
+              const actualData = allWeeks.map((w) => {
+                const prices = weekData[w].prices;
+                return prices.reduce((a, b) => a + b, 0) / prices.length;
+              });
+
+              const allPrices = records.map((r) => r.price);
+              const globalMin = Math.min(...allPrices);
+              const globalMax = Math.max(...allPrices);
+              const globalAvg = Math.round(
+                allPrices.reduce((a, b) => a + b, 0) / allPrices.length
+              );
+
+              const minLine = allWeeks.map(() => globalMin);
+              const maxLine = allWeeks.map(() => globalMax);
+              const avgLine = allWeeks.map(() => globalAvg);
+
+              const datasets = [
+                {
+                  label: `最小値 (¥${fmt(globalMin)})`,
+                  data: minLine,
+                  borderColor: "#198754",
+                  backgroundColor: "#19875422",
+                  borderWidth: 2,
+                  borderDash: [5, 5],
+                  pointRadius: 0,
+                  fill: false,
+                  tension: 0,
+                },
+                {
+                  label: `平均値 (¥${fmt(globalAvg)})`,
+                  data: avgLine,
+                  borderColor: "#0d6efd",
+                  backgroundColor: "#0d6efd22",
+                  borderWidth: 2,
+                  borderDash: [5, 5],
+                  pointRadius: 0,
+                  fill: false,
+                  tension: 0,
+                },
+                {
+                  label: `最大値 (¥${fmt(globalMax)})`,
+                  data: maxLine,
+                  borderColor: "#dc3545",
+                  backgroundColor: "#dc354522",
+                  borderWidth: 2,
+                  borderDash: [5, 5],
+                  pointRadius: 0,
+                  fill: false,
+                  tension: 0,
+                },
+                {
+                  label: "実行単価",
+                  data: actualData,
+                  borderColor: "#6f42c1",
+                  backgroundColor: "#6f42c1",
+                  borderWidth: 2,
+                  pointRadius: 8,
+                  pointHoverRadius: 10,
+                  fill: false,
+                  tension: 0.1,
+                },
+              ];
+
+              const chartWidth = Math.max(600, allWeeks.length * 80);
+              this.$refs.chartWrapper.style.width = chartWidth + "px";
+
+              this.chartInstance = new Chart(ctx, {
+                type: "line",
+                data: { labels: weekLabels, datasets },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  interaction: { intersect: false, mode: "index" },
+                  plugins: {
+                    legend: {
+                      position: "top",
+                      labels: { usePointStyle: true, padding: 20 },
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: (ctx) => `${ctx.dataset.label}: ¥${fmt(ctx.raw)}`,
+                      },
+                    },
+                  },
+                  scales: {
+                    x: {
+                      title: { display: true, text: "発注週（週初め日付）" },
+                      grid: { display: false },
+                    },
+                    y: {
+                      title: {
+                        display: true,
+                        text: `実行単価 (円/${group.unit})`,
+                      },
+                      ticks: { callback: (v) => "¥" + fmt(v) },
+                    },
+                  },
+                },
+              });
+
+              new bootstrap.Modal(this.$refs.chartModal).show();
+            });
+          },
+        };
+      }
+    </script>
+  </body>
+</html>
