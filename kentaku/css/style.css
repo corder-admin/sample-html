@@ -36,6 +36,37 @@
   height: 20px;
 }
 
+/* Inline icon alignment variants */
+.icon-inline {
+  vertical-align: -2px;
+}
+
+.icon-inline-sm {
+  vertical-align: -3px;
+}
+
+/* Utility classes extracted from inline styles */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.dropdown-scroll {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Chart modal components */
+.chart-scroll-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 10px;
+}
+
+.chart-wrapper {
+  height: 400px;
+  position: relative;
+}
+
 .sidebar {
   width: var(--sidebar-width);
   height: calc(100vh - var(--header-height));

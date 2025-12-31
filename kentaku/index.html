@@ -112,7 +112,7 @@
                 :class="{ 'show': regionDropdownOpen }"
                 @click.stop
               >
-                <div style="max-height: 200px; overflow-y: auto">
+                <div class="dropdown-scroll">
                   <template x-for="region in regionNames" :key="region">
                     <div class="form-check">
                       <input
@@ -420,7 +420,7 @@
                       >
                       <div
                         class="fw-bold text-primary fs-5 tabular-nums"
-                        x-text="`¥${fmt(group.minPrice)} ~ ¥${fmt(group.maxPrice)}`"
+                        x-text="`¥${formatNumber(group.minPrice)} ~ ¥${formatNumber(group.maxPrice)}`"
                       ></div>
                     </div>
                   </div>
@@ -471,21 +471,21 @@
                                 <span class="small text-secondary">最小</span>
                                 <span
                                   class="small fw-semibold tabular-nums company-price-value min"
-                                  x-text="`¥${fmt(vendor.min)}`"
+                                  x-text="`¥${formatNumber(vendor.min)}`"
                                 ></span>
                               </div>
                               <div class="d-flex align-items-baseline gap-1">
                                 <span class="small text-secondary">平均</span>
                                 <span
                                   class="small fw-semibold tabular-nums text-dark"
-                                  x-text="`¥${fmt(vendor.avg)}`"
+                                  x-text="`¥${formatNumber(vendor.avg)}`"
                                 ></span>
                               </div>
                               <div class="d-flex align-items-baseline gap-1">
                                 <span class="small text-secondary">最大</span>
                                 <span
                                   class="small fw-semibold tabular-nums company-price-value max"
-                                  x-text="`¥${fmt(vendor.max)}`"
+                                  x-text="`¥${formatNumber(vendor.max)}`"
                                 ></span>
                               </div>
                             </div>
@@ -500,13 +500,13 @@
                   >
                     <small class="text-muted">
                       <svg
+                        class="icon-inline-sm"
                         width="16"
                         height="16"
                         fill="none"
                         stroke="currentColor"
                         stroke-width="2"
                         viewBox="0 0 24 24"
-                        style="vertical-align: -3px"
                       >
                         <polyline points="6 9 12 15 18 9" />
                       </svg>
@@ -517,13 +517,13 @@
                       @click.stop="showChart(idx)"
                     >
                       <svg
+                        class="icon-inline"
                         width="14"
                         height="14"
                         fill="none"
                         stroke="currentColor"
                         stroke-width="2"
                         viewBox="0 0 24 24"
-                        style="vertical-align: -2px"
                       >
                         <line x1="18" y1="20" x2="18" y2="10" />
                         <line x1="12" y1="20" x2="12" y2="4" />
@@ -547,13 +547,13 @@
                   <div class="card-body bg-light">
                     <h6 class="fw-bold text-secondary mb-3">
                       <svg
+                        class="icon-inline"
                         width="16"
                         height="16"
                         fill="none"
                         stroke="currentColor"
                         stroke-width="2"
                         viewBox="0 0 24 24"
-                        style="vertical-align: -2px"
                       >
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
@@ -614,7 +614,7 @@
                               <div class="text-end">
                                 <div
                                   class="fs-6 fw-bold text-primary tabular-nums"
-                                  x-text="`¥${fmt(record.price)}`"
+                                  x-text="`¥${formatNumber(record.price)}`"
                                 ></div>
                                 <div
                                   class="small text-secondary"
@@ -634,28 +634,28 @@
                                 <div class="detail-label">数量</div>
                                 <div
                                   class="detail-value tabular-nums"
-                                  x-text="`${fmt(record.qty)} ${record.unit}`"
+                                  x-text="`${formatNumber(record.qty)} ${record.unit}`"
                                 ></div>
                               </div>
                               <div class="detail-item">
                                 <div class="detail-label">施工面積</div>
                                 <div
                                   class="detail-value tabular-nums"
-                                  x-text="`${fmt(record.constArea)} ㎡`"
+                                  x-text="`${formatNumber(record.constArea)} ㎡`"
                                 ></div>
                               </div>
                               <div class="detail-item">
                                 <div class="detail-label">延床面積</div>
                                 <div
                                   class="detail-value tabular-nums"
-                                  x-text="`${fmt(record.totalArea)} ㎡`"
+                                  x-text="`${formatNumber(record.totalArea)} ㎡`"
                                 ></div>
                               </div>
                               <div class="detail-item">
                                 <div class="detail-label">金額</div>
                                 <div
                                   class="detail-value tabular-nums highlight"
-                                  x-text="`¥${fmt(record.amount)}`"
+                                  x-text="`¥${formatNumber(record.amount)}`"
                                 ></div>
                               </div>
                             </div>
@@ -664,19 +664,18 @@
                       </template>
                     </div>
                     <div
-                      class="text-center mt-3 pt-3 border-top"
+                      class="text-center mt-3 pt-3 border-top cursor-pointer"
                       @click.stop="toggleGroup(idx)"
-                      style="cursor: pointer"
                     >
                       <small class="text-muted">
                         <svg
+                          class="icon-inline-sm"
                           width="16"
                           height="16"
                           fill="none"
                           stroke="currentColor"
                           stroke-width="2"
                           viewBox="0 0 24 24"
-                          style="vertical-align: -3px"
                         >
                           <polyline points="18 15 12 9 6 15" />
                         </svg>
@@ -728,18 +727,8 @@
                     </div>
                   </div>
                 </div>
-                <div
-                  class="chart-scroll-container"
-                  style="
-                    overflow-x: auto;
-                    overflow-y: hidden;
-                    padding-bottom: 10px;
-                  "
-                >
-                  <div
-                    style="height: 400px; position: relative"
-                    x-ref="chartWrapper"
-                  >
+                <div class="chart-scroll-container">
+                  <div class="chart-wrapper" x-ref="chartWrapper">
                     <canvas x-ref="netPriceChart"></canvas>
                   </div>
                 </div>
@@ -765,7 +754,7 @@
                             <td x-text="record.vendor"></td>
                             <td
                               class="text-end tabular-nums"
-                              x-text="`¥${fmt(record.price)}`"
+                              x-text="`¥${formatNumber(record.price)}`"
                             ></td>
                           </tr>
                         </template>

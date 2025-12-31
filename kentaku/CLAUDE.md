@@ -98,7 +98,7 @@ NEVER:
 | app.js     | appData()              | Main Alpine component            |
 | app.js     | applyFilters()         | Filter records by criteria       |
 | app.js     | showChart(idx)         | Display Chart.js price trend     |
-| utils.js   | fmt(n)                 | Format number with locale        |
+| utils.js   | formatNumber(n)        | Format number with locale        |
 | utils.js   | getWeekNumber(dateStr) | Convert YYYYMMDD to ISO week     |
 
 ## §7 Modification Procedures
