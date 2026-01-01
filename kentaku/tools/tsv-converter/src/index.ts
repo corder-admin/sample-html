@@ -10,22 +10,22 @@
  *   npm run convert -- ~/Downloads/data.tsv ./output
  */
 
-import { resolve, dirname, basename } from "node:path";
-import { mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
+import { basename, dirname, resolve } from "node:path";
 
-import { readTsvFileWithProgress } from "./pipeline/reader.js";
 import { cleanRecords } from "./pipeline/cleaner.js";
+import { readTsvFileWithProgress } from "./pipeline/reader.js";
 import {
-  transformToOutput,
   deduplicateRecords,
   sortByOrderDate,
+  transformToOutput,
 } from "./pipeline/transformer.js";
 import { writeDataJs, writeRejectedRecords } from "./pipeline/writer.js";
 import { createSummary, printSummary } from "./reports/summary.js";
 
-/** デフォルトの出力先 */
-const DEFAULT_OUTPUT_DIR = "../../js";
+/** デフォルトの出力先（dist/index.js からの相対パス） */
+const DEFAULT_OUTPUT_DIR = "../output";
 
 /**
  * メイン処理
