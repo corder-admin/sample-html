@@ -1636,6 +1636,22 @@ function appData() {
         this.renderHeatmapChart(ctx, heatmapData, xRanges, priceRanges, xAxisLabel, unit);
       } else {
         // Scatter or bubble chart
+        // Calculate correlation coefficient
+        const xValues = scatterData.map((d) => d.x);
+        const yValues = scatterData.map((d) => d.y);
+        const correlation = calcCorrelation(xValues, yValues);
+        const correlationText = correlation !== null
+          ? `相関係数: ${correlation.toFixed(3)}`
+          : '';
+
+        const bubbleText = chartType === "bubble"
+          ? `円の大きさは${this.detailModal.trend.bubbleSize === "qty" ? "数量" : "合計金額（数量×単価）"}を表示。`
+          : '';
+
+        const subtitleText = correlationText
+          ? `※ ${bubbleText}${correlationText} (右上ほど単価が高く${xAxisLabel}が多い傾向、外れ値や標準的な価格帯の分布を確認)`
+          : `※ ${bubbleText}右上ほど単価が高く${xAxisLabel}が多い傾向、外れ値や標準的な価格帯の分布を確認`;
+
         this.detailChartInstance = new Chart(ctx, {
           type: chartType === "bubble" ? "bubble" : "scatter",
           data: {
@@ -1659,8 +1675,8 @@ function appData() {
             plugins: {
               legend: { display: false },
               subtitle: {
-                display: chartType === "bubble",
-                text: `※ 円の大きさは${this.detailModal.trend.bubbleSize === "qty" ? "数量" : "合計金額（数量×単価）"}を表示。右上ほど単価が高く${xAxisLabel}が多い傾向、外れ値や標準的な価格帯の分布を確認`,
+                display: true,
+                text: subtitleText,
                 font: { size: 11 },
                 color: "#6c757d",
                 padding: { bottom: 10 }
@@ -1753,8 +1769,24 @@ function appData() {
           responsive: true,
           maintainAspectRatio: false,
           animation: false,
+          layout: {
+            padding: {
+              bottom: 5
+            }
+          },
           plugins: {
-            legend: { display: false },
+            legend: {
+              display: true,
+              position: 'bottom',
+              align: 'center',
+              labels: {
+                boxWidth: 30,
+                boxHeight: 8,
+                padding: 3,
+                font: { size: 9 },
+                usePointStyle: false
+              }
+            },
             tooltip: {
               callbacks: {
                 label: (context) => {

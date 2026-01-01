@@ -269,6 +269,45 @@ function calcBoxplotStats(values) {
   return { min, q1, median, q3, max, outliers };
 }
 
+/**
+ * Calculate Pearson correlation coefficient between two arrays
+ * @param {number[]} x - First array of values
+ * @param {number[]} y - Second array of values
+ * @returns {number|null} Correlation coefficient (-1 to 1), or null if calculation fails
+ */
+function calcCorrelation(x, y) {
+  if (!x || !y || x.length === 0 || y.length !== x.length) {
+    return null;
+  }
+
+  const n = x.length;
+
+  // Calculate means
+  const meanX = x.reduce((sum, val) => sum + val, 0) / n;
+  const meanY = y.reduce((sum, val) => sum + val, 0) / n;
+
+  // Calculate numerator and denominators
+  let numerator = 0;
+  let sumSquaredX = 0;
+  let sumSquaredY = 0;
+
+  for (let i = 0; i < n; i++) {
+    const dx = x[i] - meanX;
+    const dy = y[i] - meanY;
+    numerator += dx * dy;
+    sumSquaredX += dx * dx;
+    sumSquaredY += dy * dy;
+  }
+
+  // Avoid division by zero
+  const denominator = Math.sqrt(sumSquaredX * sumSquaredY);
+  if (denominator === 0) {
+    return null;
+  }
+
+  return numerator / denominator;
+}
+
 // =============================================================================
 // Range Checking
 // =============================================================================
