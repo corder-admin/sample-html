@@ -25,18 +25,45 @@ const DataLoader = (function () {
     LAST_UPDATED: "lastUpdated",
   };
 
+  // パフォーマンス設定
+  const CONFIG = {
+    DEBUG:
+      location.hostname === "localhost" || location.hostname === "127.0.0.1",
+  };
+
+  // バージョンキャッシュ
+  let cachedVersion = null;
+  let cachedRecordsLength = 0;
+
   /**
-   * データバージョンを計算（レコードのハッシュ）
+   * デバッグログ（本番環境では出力しない）
+   */
+  function log(...args) {
+    if (CONFIG.DEBUG) console.log("DataLoader:", ...args);
+  }
+
+  /**
+   * データバージョンを計算（キャッシュ対応）
    * @param {Array} records - レコード配列
    * @returns {string} バージョン文字列
    */
   function calculateVersion(records) {
+    // キャッシュが有効な場合は再計算をスキップ
+    if (cachedVersion && records.length === cachedRecordsLength) {
+      return cachedVersion;
+    }
+
     const count = records.length;
-    const latestDate = records.reduce(
-      (max, r) => (r.orderDate > max ? r.orderDate : max),
-      "00000000"
-    );
-    return `v${count}_${latestDate}`;
+    // 最大日付を効率的に取得（ループ1回）
+    let latestDate = "00000000";
+    for (let i = 0; i < count; i++) {
+      const date = records[i].orderDate;
+      if (date > latestDate) latestDate = date;
+    }
+
+    cachedVersion = `v${count}_${latestDate}`;
+    cachedRecordsLength = count;
+    return cachedVersion;
   }
 
   /**
@@ -86,7 +113,7 @@ const DataLoader = (function () {
       throw new Error("rawRecords is not available");
     }
 
-    console.log(`DataLoader: Populating ${rawRecords.length} records...`);
+    log(`Populating ${rawRecords.length} records...`);
 
     // 既存データをクリア
     await VendorQuoteDB.clearRecords();
@@ -94,15 +121,17 @@ const DataLoader = (function () {
     // データ投入
     await VendorQuoteDB.bulkAdd(rawRecords);
 
-    // メタデータ更新
+    // バージョン計算
     const version = calculateVersion(rawRecords);
+
+    // メタデータ更新
     await Promise.all([
       VendorQuoteDB.setMeta(META_KEYS.DATA_VERSION, version),
       VendorQuoteDB.setMeta(META_KEYS.RECORD_COUNT, rawRecords.length),
       VendorQuoteDB.setMeta(META_KEYS.LAST_UPDATED, new Date().toISOString()),
     ]);
 
-    console.log(`DataLoader: Population complete. Version: ${version}`);
+    log(`Population complete. Version: ${version}`);
   }
 
   /**
@@ -115,7 +144,7 @@ const DataLoader = (function () {
     try {
       // IndexedDB対応チェック
       if (!window.indexedDB) {
-        console.warn("DataLoader: IndexedDB not supported, using rawRecords");
+        log("IndexedDB not supported, using rawRecords");
         return rawRecords;
       }
 
@@ -124,7 +153,7 @@ const DataLoader = (function () {
 
       // データ状態チェック
       const status = await checkDataStatus();
-      console.log(`DataLoader: Status check - ${status.reason}`);
+      log(`Status check - ${status.reason}`);
 
       // 必要に応じてデータ投入
       if (status.needsUpdate) {
@@ -134,9 +163,10 @@ const DataLoader = (function () {
       // IndexedDBからデータ取得
       const records = await VendorQuoteDB.getAll();
 
-      const elapsed = (performance.now() - startTime).toFixed(2);
-      console.log(
-        `DataLoader: Loaded ${records.length} records in ${elapsed}ms`
+      log(
+        `Loaded ${records.length} records in ${(
+          performance.now() - startTime
+        ).toFixed(2)}ms`
       );
 
       return records;
