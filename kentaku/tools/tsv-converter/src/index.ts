@@ -24,7 +24,7 @@ import {
 } from "./pipeline/transformer.js";
 import {
   writeDataJs,
-  writeDataJson,
+  writeDataJsonGz,
   writeRejectedRecords,
 } from "./pipeline/writer.js";
 import {
@@ -68,7 +68,7 @@ async function main(): Promise<void> {
   await mkdir(outputDir, { recursive: true });
 
   const outputFile = resolve(outputDir, "data.js");
-  const outputJsonFile = resolve(outputDir, "data.json");
+  const outputJsonGzFile = resolve(outputDir, "data.json.gz");
   const rejectedFile = resolve(outputDir, "rejected_records.json");
   const reportFile = resolve(outputDir, "conversion_report.md");
 
@@ -118,8 +118,8 @@ async function main(): Promise<void> {
   await writeDataJs(outputFile, sorted);
   console.log(`  data.js を出力しました`);
 
-  await writeDataJson(outputJsonFile, sorted);
-  console.log(`  data.json を出力しました (高速読み込み用)`);
+  await writeDataJsonGz(outputJsonGzFile, sorted);
+  console.log(`  data.json.gz を出力しました (gzip圧縮・高速読み込み用)`);
 
   if (rejected.length > 0) {
     await writeRejectedRecords(rejectedFile, rejected);
