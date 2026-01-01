@@ -29,7 +29,18 @@
       "Bash(git config:*)",
       "mcp__sequential-thinking__sequentialthinking",
       "mcp__serena__check_onboarding_performed",
-      "mcp__serena__think_about_collected_information"
+      "mcp__serena__think_about_collected_information",
+      "Bash(npm install)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run convert:*)",
+      "mcp__chrome-devtools__performance_start_trace",
+      "Bash(git checkout:*)",
+      "mcp__serena__replace_symbol_body",
+      "Skill(debug-ui)",
+      "mcp__chrome-devtools__close_page",
+      "mcp__chrome-devtools__select_page",
+      "mcp__chrome-devtools__performance_analyze_insight",
+      "mcp__chrome-devtools__list_network_requests"
     ]
   }
 }

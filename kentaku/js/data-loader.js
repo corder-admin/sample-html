@@ -24,6 +24,21 @@ const DataLoader = (function () {
       location.hostname === "localhost" || location.hostname === "127.0.0.1",
   };
 
+  // ==========================================================================
+  // [開発用] データ削減フィルタ - 本番では ACTIVE_REGIONS を null に設定
+  // 復元方法: ACTIVE_REGIONS = null; に変更するだけ
+  // ==========================================================================
+  const ACTIVE_REGIONS = [
+    "千葉",
+    "さいたま",
+    "高松",
+    "名古屋",
+    "岐阜",
+    "大分",
+    "長野",
+  ]; // 7地域 約17,000件 (26.6%)
+  // const ACTIVE_REGIONS = null; // ← 本番用: 全データ使用
+
   // メモリキャッシュ
   let cachedRecords = null;
 
@@ -32,6 +47,23 @@ const DataLoader = (function () {
    */
   function log(...args) {
     if (CONFIG.DEBUG) console.log("DataLoader:", ...args);
+  }
+
+  /**
+   * 地域フィルタを適用
+   * @param {Array} records - 元のレコード配列
+   * @returns {Array} フィルタ後のレコード配列
+   */
+  function applyRegionFilter(records) {
+    if (!ACTIVE_REGIONS) {
+      return records; // フィルタなし（本番モード）
+    }
+    const regionSet = new Set(ACTIVE_REGIONS);
+    const filtered = records.filter((r) => regionSet.has(r.region));
+    log(
+      `Region filter applied: ${records.length} → ${filtered.length} records`
+    );
+    return filtered;
   }
 
   /**
@@ -47,12 +79,15 @@ const DataLoader = (function () {
       throw new Error(`Failed to fetch data.json: ${response.status}`);
     }
 
-    const records = await response.json();
+    let records = await response.json();
     log(
       `Fetched ${records.length} records in ${(
         performance.now() - startTime
       ).toFixed(0)}ms`
     );
+
+    // 地域フィルタを適用
+    records = applyRegionFilter(records);
 
     return records;
   }
