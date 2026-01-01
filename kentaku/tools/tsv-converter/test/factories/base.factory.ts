@@ -5,7 +5,7 @@
  * - 型安全なRowValues変換
  * - ファクトリ管理のオブジェクトリテラルパターン
  */
-import type { RecPartial } from 'factory.ts/lib/shared';
+import type { RecPartial } from "factory.ts/lib/shared";
 
 /**
  * 全フィールドにデフォルト値があるファクトリのインターフェース
@@ -30,7 +30,7 @@ export type FieldOrder<T> = ReadonlyArray<keyof T>;
  * @param fieldOrder フィールド順序
  */
 export const toRowValues = <T>(data: T, fieldOrder: FieldOrder<T>): unknown[] =>
-  fieldOrder.map(key => data[key]);
+  fieldOrder.map((key) => data[key]);
 
 /**
  * ファクトリラッパー作成
@@ -73,7 +73,7 @@ export const createFactoryWrapper = <T, R = T>(
 export const createRowValuesWrapper = <T>(
   factory: CompleteFactory<T>,
   fieldOrder: FieldOrder<T>
-) => createFactoryWrapper(factory, data => toRowValues(data, fieldOrder));
+) => createFactoryWrapper(factory, (data) => toRowValues(data, fieldOrder));
 
 /**
  * 複数ファクトリのシーケンスリセット
@@ -81,7 +81,7 @@ export const createRowValuesWrapper = <T>(
 export const resetAllFactories = (
   ...wrappers: Array<{ resetSequenceNumber: () => void }>
 ): void => {
-  wrappers.forEach(w => w.resetSequenceNumber());
+  wrappers.forEach((w) => w.resetSequenceNumber());
 };
 
 /**

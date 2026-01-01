@@ -26,8 +26,8 @@ const rawTsvRecordBaseFactory = Factory.Sync.makeFactory<RawTsvRecord>({
   工事名称: "テスト工事",
   予算区分: "本体",
   予算入力区分: "通常",
-  "大工事項目ｺｰﾄﾞ": "026",
-  "小工事項目ｺｰﾄﾞ": "001",
+  大工事項目ｺｰﾄﾞ: "026",
+  小工事項目ｺｰﾄﾞ: "001",
   工事細目連番: "001",
   小工事項目名称: "外壁工事",
   摘要: "サイディング",
@@ -72,7 +72,9 @@ const rawTsvRecordBaseFactory = Factory.Sync.makeFactory<RawTsvRecord>({
 /**
  * RawTsvRecord ファクトリ（標準）
  */
-export const RawTsvRecordFactory = createFactoryWrapper(rawTsvRecordBaseFactory);
+export const RawTsvRecordFactory = createFactoryWrapper(
+  rawTsvRecordBaseFactory
+);
 
 /**
  * 派生ファクトリ: 数量ゼロのレコード（除外対象）
@@ -80,7 +82,8 @@ export const RawTsvRecordFactory = createFactoryWrapper(rawTsvRecordBaseFactory)
 const zeroQuantityFactory = rawTsvRecordBaseFactory.extend({
   実行数量: "0",
 });
-export const ZeroQuantityRecordFactory = createFactoryWrapper(zeroQuantityFactory);
+export const ZeroQuantityRecordFactory =
+  createFactoryWrapper(zeroQuantityFactory);
 
 /**
  * 派生ファクトリ: 業者なしのレコード（除外対象）
@@ -97,7 +100,8 @@ export const NoVendorRecordFactory = createFactoryWrapper(noVendorFactory);
 const invalidDateFactory = rawTsvRecordBaseFactory.extend({
   発注日: "invalid",
 });
-export const InvalidDateRecordFactory = createFactoryWrapper(invalidDateFactory);
+export const InvalidDateRecordFactory =
+  createFactoryWrapper(invalidDateFactory);
 
 /**
  * 派生ファクトリ: 発注日がゼロのレコード（除外対象）
@@ -121,7 +125,9 @@ export const ZeroPriceRecordFactory = createFactoryWrapper(zeroPriceFactory);
 const nullVendorCodeFactory = rawTsvRecordBaseFactory.extend({
   業者基本コード: "NULL",
 });
-export const NullVendorCodeRecordFactory = createFactoryWrapper(nullVendorCodeFactory);
+export const NullVendorCodeRecordFactory = createFactoryWrapper(
+  nullVendorCodeFactory
+);
 
 // ============================================
 // CleanedRecord Factory
@@ -151,4 +157,6 @@ const cleanedRecordBaseFactory = Factory.Sync.makeFactory<CleanedRecord>({
 /**
  * CleanedRecord ファクトリ（標準）
  */
-export const CleanedRecordFactory = createFactoryWrapper(cleanedRecordBaseFactory);
+export const CleanedRecordFactory = createFactoryWrapper(
+  cleanedRecordBaseFactory
+);

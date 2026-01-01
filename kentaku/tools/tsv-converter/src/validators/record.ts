@@ -2,7 +2,7 @@
  * レコードバリデーション
  */
 
-import { z } from "zod";
+import { z, type ZodSafeParseResult } from "zod";
 import type { CleanedRecord } from "../types/clean.js";
 
 /** クレンジング済みレコードのスキーマ */
@@ -24,21 +24,22 @@ export const CleanedRecordSchema = z.object({
   totalArea: z.number().nonnegative(),
 });
 
+/** バリデーション結果の型 */
+export type ValidationResult = ZodSafeParseResult<CleanedRecord>;
+
 /**
  * レコードをバリデート
  */
-export function validateRecord(
-  record: CleanedRecord
-): z.SafeParseReturnType<CleanedRecord, CleanedRecord> {
+export function validateRecord(record: CleanedRecord): ValidationResult {
   return CleanedRecordSchema.safeParse(record);
 }
 
 /**
  * バリデーションエラーを整形
  */
-export function formatValidationErrors(
-  result: z.SafeParseReturnType<CleanedRecord, CleanedRecord>
-): string[] {
+export function formatValidationErrors(result: ValidationResult): string[] {
   if (result.success) return [];
-  return result.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`);
+  return result.error.issues.map(
+    (issue: z.core.$ZodIssue) => `${issue.path.join(".")}: ${issue.message}`
+  );
 }
