@@ -19,6 +19,9 @@
 /** Milliseconds in one day (24 * 60 * 60 * 1000) */
 const MILLISECONDS_PER_DAY = 86400000;
 
+/** Regular expression for YYYYMMDD date format validation */
+const DATE_YYYYMMDD_REGEX = /^\d{8}$/;
+
 // =============================================================================
 // Number Formatting
 // =============================================================================
@@ -29,7 +32,10 @@ const MILLISECONDS_PER_DAY = 86400000;
  * @returns {string} Formatted number string
  */
 function formatNumber(value) {
-  return value ? value.toLocaleString() : "0";
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return "0";
+  }
+  return value.toLocaleString();
 }
 
 /**
@@ -51,9 +57,11 @@ function parseNumber(value) {
  * @returns {Date|null} Parsed Date object or null if invalid
  */
 function parseDateString(dateStr) {
-  if (!dateStr || dateStr.length !== 8) {
+  // Validate format: must be exactly 8 digits
+  if (!dateStr || !DATE_YYYYMMDD_REGEX.test(dateStr)) {
     return null;
   }
+
   const year = parseInt(dateStr.slice(0, 4), 10);
   const month = parseInt(dateStr.slice(4, 6), 10) - 1;
   const day = parseInt(dateStr.slice(6, 8), 10);
@@ -153,12 +161,20 @@ function calcPriceStats(prices) {
   if (!prices || prices.length === 0) {
     return { min: 0, max: 0, avg: 0 };
   }
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  const avg = Math.round(
-    prices.reduce((sum, price) => sum + price, 0) / prices.length
-  );
-  return { min, max, avg };
+
+  // Single-pass calculation for O(n) instead of O(3n)
+  let min = prices[0];
+  let max = prices[0];
+  let sum = prices[0];
+
+  for (let i = 1; i < prices.length; i++) {
+    const price = prices[i];
+    if (price < min) min = price;
+    if (price > max) max = price;
+    sum += price;
+  }
+
+  return { min, max, avg: Math.round(sum / prices.length) };
 }
 
 // =============================================================================
@@ -218,8 +234,15 @@ function createDistribution(values, bucketCount = 10) {
     return { labels: [], counts: [] };
   }
 
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  // Single-pass to find min/max: O(n) instead of O(2n)
+  let min = values[0];
+  let max = values[0];
+  for (let i = 1; i < values.length; i++) {
+    const v = values[i];
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+
   const range = max - min;
   const step = range / bucketCount || 1;
 
@@ -231,11 +254,12 @@ function createDistribution(values, bucketCount = 10) {
     labels.push(`¥${formatNumber(Math.round(low))}~`);
   }
 
-  values.forEach((v) => {
+  // Bucket assignment pass
+  for (let i = 0; i < values.length; i++) {
     const idx =
-      range === 0 ? 0 : Math.min(Math.floor((v - min) / step), bucketCount - 1);
+      range === 0 ? 0 : Math.min(Math.floor((values[i] - min) / step), bucketCount - 1);
     buckets[idx]++;
-  });
+  }
 
   return { labels, counts: buckets };
 }
