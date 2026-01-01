@@ -4,12 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>単価ダッシュボード</title>
+
+    <!-- DNS prefetch and preconnect for faster CDN loading -->
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+
+    <!-- Critical CSS: x-cloak to prevent FOUC -->
+    <style>
+      [x-cloak] {
+        display: none !important;
+      }
+    </style>
+
+    <!-- Bootstrap CSS with preload for non-blocking -->
     <link
-      rel="stylesheet"
+      rel="preload"
+      as="style"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/css/bootstrap.min.css"
       integrity="sha256-2FMn2Zx6PuH5tdBQDRNwrOo60ts5wWPC9R8jK67b3t4="
       crossorigin="anonymous"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/css/bootstrap.min.css"
+        integrity="sha256-2FMn2Zx6PuH5tdBQDRNwrOo60ts5wWPC9R8jK67b3t4="
+        crossorigin="anonymous"
+      />
+    </noscript>
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body class="bg-body-secondary">
@@ -39,7 +64,35 @@
     </nav>
 
     <div class="d-flex flex-column flex-lg-row" x-data="appData()" x-cloak>
-      <aside class="sidebar d-flex flex-column bg-white">
+      <!-- ローディングオーバーレイ -->
+      <template x-if="isLoading">
+        <div
+          class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white"
+          style="z-index: 9999"
+        >
+          <div class="text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted mb-0">データを読み込み中...</p>
+          </div>
+        </div>
+      </template>
+
+      <!-- エラー表示 -->
+      <template x-if="!isLoading && loadError">
+        <div class="container py-5">
+          <div class="alert alert-danger" role="alert">
+            <h5 class="alert-heading">読み込みエラー</h5>
+            <p class="mb-0" x-text="loadError"></p>
+          </div>
+        </div>
+      </template>
+
+      <aside
+        class="sidebar d-flex flex-column bg-white"
+        x-show="!isLoading && !loadError"
+      >
         <div class="p-3 border-bottom">
           <h6
             class="mb-0 fw-bold text-secondary d-flex align-items-center gap-1"
@@ -347,7 +400,7 @@
         </div>
       </aside>
 
-      <main class="main-content p-4">
+      <main class="main-content p-4" x-show="!isLoading && !loadError">
         <div class="mb-4">
           <h4 class="fw-bold mb-3">検索結果一覧</h4>
           <div class="d-flex gap-2 align-items-center flex-wrap mb-3">
@@ -367,7 +420,7 @@
         </div>
 
         <div>
-          <template x-if="filteredGroups.length === 0">
+          <template x-if="displayedGroups.length === 0">
             <div class="text-center py-5">
               <svg
                 width="64"
@@ -392,7 +445,7 @@
           </template>
 
           <div class="results-grid">
-            <template x-for="(group, idx) in filteredGroups" :key="idx">
+            <template x-for="(group, idx) in displayedGroups" :key="idx">
               <div
                 class="card item-group-card shadow-sm"
                 :class="{ 'expanded': expandedGroups[idx] }"
@@ -418,36 +471,68 @@
                       <small class="text-muted d-block mb-1"
                         >実行単価レンジ</small
                       >
-                      <div class="d-flex align-items-center justify-content-end gap-2">
-                        <span class="fw-bold tabular-nums text-success" x-text="`¥${formatNumber(group.minPrice)}`"></span>
+                      <div
+                        class="d-flex align-items-center justify-content-end gap-2"
+                      >
+                        <span
+                          class="fw-bold tabular-nums text-success"
+                          x-text="`¥${formatNumber(group.minPrice)}`"
+                        ></span>
                         <span class="text-muted">～</span>
-                        <span class="fw-bold tabular-nums text-danger" x-text="`¥${formatNumber(group.maxPrice)}`"></span>
+                        <span
+                          class="fw-bold tabular-nums text-danger"
+                          x-text="`¥${formatNumber(group.maxPrice)}`"
+                        ></span>
                       </div>
                     </div>
                   </div>
 
                   <div class="bg-white rounded-3 border overflow-hidden mb-3">
-                    <div class="p-3">
-                      <div
-                        class="small fw-semibold text-secondary d-flex align-items-center gap-1 mb-2"
+                    <div
+                      class="p-2 d-flex align-items-center gap-2 cursor-pointer border-bottom"
+                      @click.stop="vendorSectionExpanded[idx] = !vendorSectionExpanded[idx]"
+                      style="cursor: pointer"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        class="transition-transform"
+                        :class="vendorSectionExpanded[idx] ? 'rotate-90' : ''"
+                        style="transition: transform 0.2s"
                       >
-                        <svg
-                          width="14"
-                          height="14"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                          <circle cx="9" cy="7" r="4" />
-                        </svg>
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                      <svg
+                        width="14"
+                        height="14"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                      </svg>
+                      <span class="small fw-semibold text-secondary">
                         業者別 実行単価レンジ（/<span x-text="group.unit"></span
                         >）
-                      </div>
+                      </span>
+                      <span
+                        class="badge bg-secondary rounded-pill small ms-auto"
+                        x-text="getVendorCount(group) + '社'"
+                      ></span>
+                    </div>
+                    <div
+                      class="p-3 transition-collapse"
+                      :class="vendorSectionExpanded[idx] ? 'collapse-shown' : 'collapse-hidden'"
+                    >
                       <div class="d-flex flex-column gap-2">
                         <template
-                          x-for="(vendor, vendorIdx) in getVendorSummary(group.filteredRecords)"
+                          x-for="(vendor, vendorIdx) in getVendorSummary(group)"
                           :key="idx + '-vendor-' + vendorIdx"
                         >
                           <div
@@ -711,6 +796,37 @@
               </div>
             </template>
           </div>
+
+          <!-- Load More Button -->
+          <template x-if="hasMoreGroups">
+            <div class="text-center py-4">
+              <button
+                class="btn btn-outline-primary btn-lg"
+                @click="loadMoreGroups()"
+              >
+                <svg
+                  class="icon-inline me-2"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+                さらに表示
+                <span
+                  class="badge bg-primary ms-2"
+                  x-text="Math.min(displayLimit, remainingGroupsCount) + '件'"
+                ></span>
+              </button>
+              <p class="text-muted small mt-2">
+                <span x-text="displayedCount"></span> /
+                <span x-text="filteredGroups.length"></span> 件表示中
+              </p>
+            </div>
+          </template>
         </div>
 
         <!-- Chart Modal (inside x-data scope) -->
@@ -740,7 +856,10 @@
                   </svg>
                   単価推移 -
                   <span x-text="chartData.item"></span>
-                  <small class="text-muted ms-2" x-text="`(${chartData.unit})`"></small>
+                  <small
+                    class="text-muted ms-2"
+                    x-text="`(${chartData.unit})`"
+                  ></small>
                 </h5>
                 <button
                   type="button"
@@ -782,11 +901,13 @@
                           <span
                             class="fw-semibold"
                             :class="chartData.displayMode === 'chart' ? 'text-primary' : 'text-secondary'"
-                          >チャート表示</span>
+                            >チャート表示</span
+                          >
                           <span
                             x-show="chartData.displayMode === 'chart'"
                             class="badge bg-primary ms-auto"
-                          >選択中</span>
+                            >選択中</span
+                          >
                         </div>
                       </div>
                     </div>
@@ -825,31 +946,47 @@
                           <span
                             class="fw-semibold"
                             :class="chartData.displayMode === 'table' ? 'text-primary' : 'text-secondary'"
-                          >テーブル表示</span>
+                            >テーブル表示</span
+                          >
                           <span
                             x-show="chartData.displayMode === 'table'"
                             class="badge bg-primary ms-auto"
-                          >選択中</span>
+                            >選択中</span
+                          >
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <!-- Summary Stats -->
-                  <div class="col-12 col-lg-4 d-flex align-items-center justify-content-lg-end">
+                  <div
+                    class="col-12 col-lg-4 d-flex align-items-center justify-content-lg-end"
+                  >
                     <div class="d-flex gap-3 align-items-center flex-wrap">
-                      <span class="badge bg-info fs-6" x-text="chartData.records.length + '件'"></span>
+                      <span
+                        class="badge bg-info fs-6"
+                        x-text="chartData.records.length + '件'"
+                      ></span>
                       <div class="d-flex gap-2 align-items-center">
                         <small class="text-muted">最小:</small>
-                        <span class="fw-semibold text-success" x-text="`¥${formatNumber(chartData.minPrice)}`"></span>
+                        <span
+                          class="fw-semibold text-success"
+                          x-text="`¥${formatNumber(chartData.minPrice)}`"
+                        ></span>
                       </div>
                       <div class="d-flex gap-2 align-items-center">
                         <small class="text-muted">平均:</small>
-                        <span class="fw-semibold text-primary" x-text="`¥${formatNumber(chartData.avgPrice)}`"></span>
+                        <span
+                          class="fw-semibold text-primary"
+                          x-text="`¥${formatNumber(chartData.avgPrice)}`"
+                        ></span>
                       </div>
                       <div class="d-flex gap-2 align-items-center">
                         <small class="text-muted">最大:</small>
-                        <span class="fw-semibold text-danger" x-text="`¥${formatNumber(chartData.maxPrice)}`"></span>
+                        <span
+                          class="fw-semibold text-danger"
+                          x-text="`¥${formatNumber(chartData.maxPrice)}`"
+                        ></span>
                       </div>
                     </div>
                   </div>
@@ -869,46 +1006,112 @@
 
                 <!-- Table View -->
                 <div x-show="chartData.displayMode === 'table'">
-                  <div class="table-responsive" style="max-height: calc(100vh - 280px); overflow: auto;">
-                    <table class="table table-sm table-bordered table-hover mb-0" style="min-width: 1400px; table-layout: fixed;">
+                  <div
+                    class="table-responsive"
+                    style="max-height: calc(100vh - 280px); overflow: auto"
+                  >
+                    <table
+                      class="table table-sm table-bordered table-hover mb-0"
+                      style="min-width: 1400px; table-layout: fixed"
+                    >
                       <thead class="table-light sticky-top">
                         <tr>
-                          <th style="width: 100px;">発注日</th>
-                          <th style="width: 70px;">支店</th>
-                          <th style="width: 60px;">大工事</th>
-                          <th style="width: 220px;">工事名称</th>
-                          <th style="width: 150px;">仕様</th>
-                          <th style="width: 180px;">業者</th>
-                          <th style="width: 55px;" class="text-center">階数</th>
-                          <th style="width: 55px;" class="text-center">戸並</th>
-                          <th style="width: 55px;" class="text-center">戸数</th>
-                          <th style="width: 100px;" class="text-end">施工面積</th>
-                          <th style="width: 100px;" class="text-end">延床面積</th>
-                          <th style="width: 85px;" class="text-end">実行数量</th>
-                          <th style="width: 100px;" class="text-end">実行単価</th>
-                          <th style="width: 110px;" class="text-end">実行金額</th>
+                          <th style="width: 100px">発注日</th>
+                          <th style="width: 70px">支店</th>
+                          <th style="width: 60px">大工事</th>
+                          <th style="width: 220px">工事名称</th>
+                          <th style="width: 150px">仕様</th>
+                          <th style="width: 180px">業者</th>
+                          <th style="width: 55px" class="text-center">階数</th>
+                          <th style="width: 55px" class="text-center">戸並</th>
+                          <th style="width: 55px" class="text-center">戸数</th>
+                          <th style="width: 100px" class="text-end">
+                            施工面積
+                          </th>
+                          <th style="width: 100px" class="text-end">
+                            延床面積
+                          </th>
+                          <th style="width: 85px" class="text-end">実行数量</th>
+                          <th style="width: 100px" class="text-end">
+                            実行単価
+                          </th>
+                          <th style="width: 110px" class="text-end">
+                            実行金額
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         <template
                           x-for="record in chartData.records"
-                          :key="record.orderDate + record.vendor"
+                          :key="record.id"
                         >
                           <tr>
-                            <td class="text-nowrap" x-text="record.orderDateFormatted"></td>
-                            <td><span class="badge bg-info" x-text="record.region"></span></td>
-                            <td><span class="badge bg-secondary" x-text="record.majorCode"></span></td>
-                            <td class="text-truncate" style="max-width: 220px;" x-text="record.projectName" :title="record.projectName"></td>
-                            <td class="text-muted small text-truncate" style="max-width: 150px;" x-text="record.spec || '-'" :title="record.spec"></td>
-                            <td class="text-truncate" style="max-width: 180px;" x-text="record.vendor" :title="record.vendor"></td>
-                            <td class="text-center tabular-nums" x-text="record.floors + '階'"></td>
-                            <td class="text-center tabular-nums" x-text="record.unitRow + '戸'"></td>
-                            <td class="text-center tabular-nums" x-text="record.resUnits + '戸'"></td>
-                            <td class="text-end tabular-nums text-nowrap" x-text="`${formatNumber(record.constArea)} ㎡`"></td>
-                            <td class="text-end tabular-nums text-nowrap" x-text="`${formatNumber(record.totalArea)} ㎡`"></td>
-                            <td class="text-end tabular-nums" x-text="formatNumber(record.qty)"></td>
-                            <td class="text-end tabular-nums text-nowrap" x-text="`¥${formatNumber(record.price)}`"></td>
-                            <td class="text-end tabular-nums text-nowrap fw-semibold" x-text="`¥${formatNumber(record.amount)}`"></td>
+                            <td
+                              class="text-nowrap"
+                              x-text="record.orderDateFormatted"
+                            ></td>
+                            <td>
+                              <span
+                                class="badge bg-info"
+                                x-text="record.region"
+                              ></span>
+                            </td>
+                            <td>
+                              <span
+                                class="badge bg-secondary"
+                                x-text="record.majorCode"
+                              ></span>
+                            </td>
+                            <td
+                              class="text-truncate"
+                              style="max-width: 220px"
+                              x-text="record.projectName"
+                              :title="record.projectName"
+                            ></td>
+                            <td
+                              class="text-muted small text-truncate"
+                              style="max-width: 150px"
+                              x-text="record.spec || '-'"
+                              :title="record.spec"
+                            ></td>
+                            <td
+                              class="text-truncate"
+                              style="max-width: 180px"
+                              x-text="record.vendor"
+                              :title="record.vendor"
+                            ></td>
+                            <td
+                              class="text-center tabular-nums"
+                              x-text="record.floors + '階'"
+                            ></td>
+                            <td
+                              class="text-center tabular-nums"
+                              x-text="record.unitRow + '戸'"
+                            ></td>
+                            <td
+                              class="text-center tabular-nums"
+                              x-text="record.resUnits + '戸'"
+                            ></td>
+                            <td
+                              class="text-end tabular-nums text-nowrap"
+                              x-text="`${formatNumber(record.constArea)} ㎡`"
+                            ></td>
+                            <td
+                              class="text-end tabular-nums text-nowrap"
+                              x-text="`${formatNumber(record.totalArea)} ㎡`"
+                            ></td>
+                            <td
+                              class="text-end tabular-nums"
+                              x-text="formatNumber(record.qty)"
+                            ></td>
+                            <td
+                              class="text-end tabular-nums text-nowrap"
+                              x-text="`¥${formatNumber(record.price)}`"
+                            ></td>
+                            <td
+                              class="text-end tabular-nums text-nowrap fw-semibold"
+                              x-text="`¥${formatNumber(record.amount)}`"
+                            ></td>
                           </tr>
                         </template>
                       </tbody>
@@ -1041,7 +1244,11 @@
                       @click="setDetailDisplayMode('chart')"
                     >
                       <div class="card-body py-2 px-3">
-                        <div class="d-flex align-items-center gap-2 mb-2">
+                        <div
+                          class="d-flex align-items-center gap-2 mb-2"
+                          @click="setDetailDisplayMode('chart')"
+                          style="cursor: pointer"
+                        >
                           <div
                             class="rounded-circle d-flex align-items-center justify-content-center"
                             :class="detailModal.displayMode === 'chart' ? 'bg-primary text-white' : 'bg-secondary text-white'"
@@ -1215,6 +1422,37 @@
                       </div>
                     </div>
                   </template>
+
+                  <!-- Load More Button for Detail List -->
+                  <template x-if="hasMoreDetailRecords">
+                    <div class="text-center py-4">
+                      <button
+                        class="btn btn-outline-primary"
+                        @click="loadMoreDetailRecords()"
+                      >
+                        <svg
+                          class="icon-inline me-2"
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                        さらに表示
+                        <span
+                          class="badge bg-primary ms-2"
+                          x-text="Math.min(detailModal.listLimit, remainingDetailRecords) + '件'"
+                        ></span>
+                      </button>
+                      <p class="text-muted small mt-2">
+                        <span x-text="detailModal.listDisplayed"></span> /
+                        <span x-text="detailTotalRecords"></span> 件表示中
+                      </p>
+                    </div>
+                  </template>
                 </div>
 
                 <!-- Chart View -->
@@ -1245,18 +1483,27 @@
       </main>
     </div>
 
-    <!-- External Libraries -->
+    <!-- External Libraries with defer for non-blocking -->
     <script
+      defer
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/js/bootstrap.min.js"
       integrity="sha256-ew8UiV1pJH/YjpOEBInP1HxVvT/SfrCmwSoUzF9JIgc="
       crossorigin="anonymous"
     ></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script
+      defer
+      src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+    ></script>
+    <script
+      defer
+      src="https://unpkg.com/dexie@4/dist/dexie.min.js"
+    ></script>
 
     <!-- Application Scripts (load order matters) -->
-    <script src="js/utils.js"></script>
-    <script src="js/data.js"></script>
-    <script src="js/app.js"></script>
+    <script defer src="js/utils.js"></script>
+    <script defer src="js/db.js"></script>
+    <script defer src="js/data-loader.js"></script>
+    <script defer src="js/app.js"></script>
 
     <!-- Alpine.js (must be loaded after app scripts) -->
     <script

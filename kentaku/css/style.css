@@ -5,6 +5,10 @@
   display: none !important;
 }
 
+.rotate-90 {
+  transform: rotate(90deg);
+}
+
 .transition-collapse {
   transition: all 0.3s ease;
   overflow: hidden;

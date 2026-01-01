@@ -257,7 +257,9 @@ function createDistribution(values, bucketCount = 10) {
   // Bucket assignment pass
   for (let i = 0; i < values.length; i++) {
     const idx =
-      range === 0 ? 0 : Math.min(Math.floor((values[i] - min) / step), bucketCount - 1);
+      range === 0
+        ? 0
+        : Math.min(Math.floor((values[i] - min) / step), bucketCount - 1);
     buckets[idx]++;
   }
 

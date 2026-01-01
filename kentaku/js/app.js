@@ -10,11 +10,13 @@
  * 分類: アプリケーション層 (Application Layer)
  *
  * 依存関係:
- *   - utils.js  : ユーティリティ関数（formatNumber, formatDateHyphen, getWeekNumber, calcPriceStats, isInRange等）
- *   - data.js   : 生データ（rawRecords）
- *   - Alpine.js : リアクティブUIフレームワーク
- *   - Chart.js  : グラフ描画ライブラリ
- *   - Bootstrap : UIコンポーネント（モーダル等）
+ *   - utils.js       : ユーティリティ関数（formatNumber, formatDateHyphen, getWeekNumber, calcPriceStats, isInRange等）
+ *   - db.js          : IndexedDB操作モジュール
+ *   - data-loader.js : データ読み込み管理モジュール
+ *   - data.js        : 生データ（rawRecords）- フォールバック用
+ *   - Alpine.js      : リアクティブUIフレームワーク
+ *   - Chart.js       : グラフ描画ライブラリ
+ *   - Bootstrap      : UIコンポーネント（モーダル等）
  *
  * =============================================================================
  */
@@ -27,6 +29,9 @@ const CHART_COLORS = {
   avg: { border: "#0d6efd", background: "#0d6efd22" },
   max: { border: "#dc3545", background: "#dc354522" },
   actual: { border: "#6f42c1", background: "#6f42c1" },
+  weeklyMin: { border: "#20c997", background: "#20c997" },
+  weeklyMax: { border: "#fd7e14", background: "#fd7e14" },
+  weeklyMedian: { border: "#e83e8c", background: "#e83e8c" },
 };
 
 /**
@@ -84,12 +89,21 @@ function recordMatchesFilters(record, criteria) {
 
 function appData() {
   return {
+    // Loading state
+    isLoading: true,
+    loadError: null,
+
+    // Pagination settings
+    displayLimit: 50,
+    displayedCount: 50,
+
     filters: { ...DEFAULT_FILTERS },
-    rawRecords: rawRecords,
+    rawRecords: [],
     records: [],
     itemGroups: [],
     filteredGroups: [],
     expandedGroups: {},
+    vendorSectionExpanded: {},
     autocomplete: {
       show: false,
       items: [],
@@ -115,22 +129,55 @@ function appData() {
       groupBy: "timeline",
       displayMode: "list",
       chartType: "trend",
+      listLimit: 100,
+      listDisplayed: 100,
     },
     detailChartInstance: null,
 
     regionNames: [],
     regionDropdownOpen: false,
 
-    init() {
-      this.processData();
-      this.groupByItem();
-      this.clearFilters();
-      this.projectNames = [
-        ...new Set(this.rawRecords.map((r) => r.projectName)),
-      ].sort();
-      this.regionNames = [
-        ...new Set(this.rawRecords.map((r) => r.region)),
-      ].sort();
+    async init() {
+      this.isLoading = true;
+      this.loadError = null;
+
+      // UIレンダリングを確実に完了させるため、フレーム待機 + 短い遅延
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await new Promise((resolve) => setTimeout(resolve, 16));
+
+      try {
+        // DataLoaderからデータを読み込み（fetch + IndexedDB）
+        if (typeof DataLoader === "undefined") {
+          throw new Error("DataLoader is not available");
+        }
+
+        const records = await DataLoader.loadData();
+        if (!records || records.length === 0) {
+          throw new Error("No data available");
+        }
+
+        this.rawRecords = records;
+
+        // データ処理
+        this.processData();
+        this.groupByItem();
+        this.clearFilters();
+
+        // Single-pass extraction of unique names
+        const projectSet = {};
+        const regionSet = {};
+        for (const r of this.rawRecords) {
+          projectSet[r.projectName] = true;
+          regionSet[r.region] = true;
+        }
+        this.projectNames = Object.keys(projectSet).sort();
+        this.regionNames = Object.keys(regionSet).sort();
+      } catch (error) {
+        console.error("App initialization failed:", error);
+        this.loadError = error.message;
+      } finally {
+        this.isLoading = false;
+      }
     },
 
     toggleRegionDropdown() {
@@ -163,6 +210,9 @@ function appData() {
     },
 
     processData() {
+      // Pre-compute derived fields including cleaned vendor name
+      const vendorNameRegex = /株式会社|有限会社/g;
+
       this.records = this.rawRecords.map((r) => ({
         ...r,
         orderDateFormatted: formatDateHyphen(r.orderDate),
@@ -172,6 +222,8 @@ function appData() {
         orderWeek: r.orderDate ? getWeekNumber(r.orderDate) : "",
         orderWeekStart: r.orderDate ? getWeekStartDate(r.orderDate) : "",
         amount: r.qty * r.price,
+        // Pre-compute cleaned vendor name to avoid regex in hot path
+        vendorNameClean: r.vendor.replace(vendorNameRegex, "").trim(),
       }));
     },
 
@@ -190,14 +242,26 @@ function appData() {
       });
       this.itemGroups = Object.values(groups).map((g) => {
         g.records.sort((a, b) => a.orderDate.localeCompare(b.orderDate));
-        const prices = g.records.map((r) => r.price);
-        const stats = calcPriceStats(prices);
+
+        // Inline stats computation: avoid intermediate array allocation
+        let min = Infinity;
+        let max = -Infinity;
+        let sum = 0;
+        const len = g.records.length;
+
+        for (const r of g.records) {
+          const price = r.price;
+          if (price < min) min = price;
+          if (price > max) max = price;
+          sum += price;
+        }
+
         return {
           ...g,
-          recordCount: g.records.length,
-          minPrice: stats.min,
-          maxPrice: stats.max,
-          avgPrice: stats.avg,
+          recordCount: len,
+          minPrice: len > 0 ? min : 0,
+          maxPrice: len > 0 ? max : 0,
+          avgPrice: len > 0 ? Math.round(sum / len) : 0,
         };
       });
     },
@@ -230,16 +294,25 @@ function appData() {
 
       this.filteredGroups = this.itemGroups
         .map((g) => {
-          const matchingRecords = g.records.filter((r) =>
-            recordMatchesFilters(r, criteria)
-          );
-          const prices = matchingRecords.map((r) => r.price);
-          const stats = calcPriceStats(prices);
+          // Inline stats computation: avoid intermediate array allocation
+          let min = Infinity;
+          let max = -Infinity;
+          const matchingRecords = [];
+
+          for (const r of g.records) {
+            if (recordMatchesFilters(r, criteria)) {
+              matchingRecords.push(r);
+              if (r.price < min) min = r.price;
+              if (r.price > max) max = r.price;
+            }
+          }
+
           return {
             ...g,
             filteredRecords: matchingRecords,
-            minPrice: stats.min,
-            maxPrice: stats.max,
+            minPrice: matchingRecords.length > 0 ? min : 0,
+            maxPrice: matchingRecords.length > 0 ? max : 0,
+            vendorSummary: null, // Lazy computed
           };
         })
         .filter((g) => {
@@ -250,15 +323,41 @@ function appData() {
           )
             return false;
           return g.filteredRecords.length > 0;
-        });
+        })
+        // Sort by record count (descending)
+        .sort((a, b) => b.filteredRecords.length - a.filteredRecords.length);
+
+      // Reset pagination when filters change
+      this.displayedCount = this.displayLimit;
     },
 
     clearFilters() {
       this.filters = { ...DEFAULT_FILTERS };
-      this.filteredGroups = this.itemGroups.map((g) => ({
-        ...g,
-        filteredRecords: g.records,
-      }));
+      this.filteredGroups = this.itemGroups
+        .map((g) => ({
+          ...g,
+          filteredRecords: g.records,
+        }))
+        // Sort by record count (descending)
+        .sort((a, b) => b.filteredRecords.length - a.filteredRecords.length);
+      this.displayedCount = this.displayLimit;
+    },
+
+    // Pagination: displayed subset of filtered groups
+    get displayedGroups() {
+      return this.filteredGroups.slice(0, this.displayedCount);
+    },
+
+    get hasMoreGroups() {
+      return this.displayedCount < this.filteredGroups.length;
+    },
+
+    get remainingGroupsCount() {
+      return this.filteredGroups.length - this.displayedCount;
+    },
+
+    loadMoreGroups() {
+      this.displayedCount += this.displayLimit;
     },
 
     get activeFiltersDisplay() {
@@ -279,26 +378,67 @@ function appData() {
       this.expandedGroups[idx] = !this.expandedGroups[idx];
     },
 
-    getVendorSummary(records) {
+    computeVendorSummary(records) {
       const vendorData = {};
-      records.forEach((record) => {
+
+      // Single-pass aggregation with inline stats computation
+      for (const record of records) {
         const vendorName = record.vendor;
-        if (!vendorData[vendorName]) {
-          vendorData[vendorName] = { prices: [], count: 0 };
+        let entry = vendorData[vendorName];
+
+        if (!entry) {
+          entry = {
+            name: record.vendorNameClean, // Use pre-computed clean name
+            count: 0,
+            min: Infinity,
+            max: -Infinity,
+            sum: 0,
+          };
+          vendorData[vendorName] = entry;
         }
-        vendorData[vendorName].prices.push(record.price);
-        vendorData[vendorName].count++;
-      });
-      return Object.entries(vendorData).map(([name, data]) => {
-        const stats = calcPriceStats(data.prices);
-        return {
-          name: name.replace(/株式会社|有限会社/g, "").trim(),
-          count: data.count,
-          min: stats.min,
-          avg: stats.avg,
-          max: stats.max,
-        };
-      });
+
+        const price = record.price;
+        entry.count++;
+        if (price < entry.min) entry.min = price;
+        if (price > entry.max) entry.max = price;
+        entry.sum += price;
+      }
+
+      // Convert to array with computed average
+      return Object.values(vendorData).map((entry) => ({
+        name: entry.name,
+        count: entry.count,
+        min: entry.min,
+        avg: Math.round(entry.sum / entry.count),
+        max: entry.max,
+      }));
+    },
+
+    // Cached vendor summary getter
+    getVendorSummary(group) {
+      if (!group.vendorSummary) {
+        group.vendorSummary = this.computeVendorSummary(group.filteredRecords);
+      }
+      return group.vendorSummary;
+    },
+
+    // Get vendor count without computing full summary
+    getVendorCount(group) {
+      if (group.vendorSummary) {
+        return group.vendorSummary.length;
+      }
+      // Quick count using object (faster than Set + map)
+      const seen = {};
+      let count = 0;
+      const records = group.filteredRecords;
+      for (let i = 0, len = records.length; i < len; i++) {
+        const v = records[i].vendor;
+        if (!seen[v]) {
+          seen[v] = true;
+          count++;
+        }
+      }
+      return count;
     },
 
     filterProjectNames() {
@@ -347,33 +487,82 @@ function appData() {
     },
 
     /**
-     * Prepare chart data by grouping records by week
+     * Prepare chart data by grouping records by week (optimized single-pass)
      * @param {Array} records - Filtered records to chart
      * @returns {{weekLabels: string[], actualData: number[], stats: {min: number, max: number, avg: number}}}
      */
     prepareChartData(records) {
       const weekData = {};
-      records.forEach((record) => {
-        if (!weekData[record.orderWeek]) {
-          weekData[record.orderWeek] = {
-            prices: [],
-            weekStart: record.orderWeekStart,
-          };
+      let globalMin = Infinity;
+      let globalMax = -Infinity;
+      let globalSum = 0;
+
+      // Single pass: group by week and compute global stats
+      for (const record of records) {
+        const week = record.orderWeek;
+        const price = record.price;
+
+        if (!weekData[week]) {
+          weekData[week] = { prices: [], weekStart: record.orderWeekStart };
         }
-        weekData[record.orderWeek].prices.push(record.price);
-      });
+        weekData[week].prices.push(price);
+
+        if (price < globalMin) globalMin = price;
+        if (price > globalMax) globalMax = price;
+        globalSum += price;
+      }
 
       const allWeeks = Object.keys(weekData).sort();
-      const weekLabels = allWeeks.map((week) => weekData[week].weekStart);
-      const actualData = allWeeks.map((week) => {
-        const prices = weekData[week].prices;
-        return prices.reduce((a, b) => a + b, 0) / prices.length;
-      });
+      const weekCount = allWeeks.length;
+      const weekLabels = new Array(weekCount);
+      const actualData = new Array(weekCount);
+      const weeklyMinData = new Array(weekCount);
+      const weeklyMaxData = new Array(weekCount);
+      const weeklyMedianData = new Array(weekCount);
 
-      const allPrices = records.map((r) => r.price);
-      const stats = calcPriceStats(allPrices);
+      // Single pass: compute all weekly stats
+      for (let i = 0; i < weekCount; i++) {
+        const entry = weekData[allWeeks[i]];
+        const prices = entry.prices;
+        const len = prices.length;
 
-      return { weekLabels, actualData, stats, weekCount: allWeeks.length };
+        weekLabels[i] = entry.weekStart;
+
+        // Compute min/max/avg in one pass
+        let min = Infinity;
+        let max = -Infinity;
+        let sum = 0;
+        for (let j = 0; j < len; j++) {
+          const p = prices[j];
+          if (p < min) min = p;
+          if (p > max) max = p;
+          sum += p;
+        }
+
+        weeklyMinData[i] = min;
+        weeklyMaxData[i] = max;
+        actualData[i] = sum / len;
+
+        // Median calculation (requires sort)
+        prices.sort((a, b) => a - b);
+        const mid = len >> 1;
+        weeklyMedianData[i] =
+          len & 1 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
+      }
+
+      return {
+        weekLabels,
+        actualData,
+        weeklyMinData,
+        weeklyMaxData,
+        weeklyMedianData,
+        stats: {
+          min: globalMin === Infinity ? 0 : globalMin,
+          max: globalMax === -Infinity ? 0 : globalMax,
+          avg: records.length > 0 ? Math.round(globalSum / records.length) : 0,
+        },
+        weekCount,
+      };
     },
 
     /**
@@ -404,7 +593,14 @@ function appData() {
      * @returns {Array} Chart.js datasets
      */
     buildTrendDatasets(data) {
-      const { actualData, stats, weekCount } = data;
+      const {
+        actualData,
+        weeklyMinData,
+        weeklyMaxData,
+        weeklyMedianData,
+        stats,
+        weekCount,
+      } = data;
       return [
         this.createReferenceLine(
           "最小値",
@@ -425,13 +621,46 @@ function appData() {
           CHART_COLORS.max
         ),
         {
-          label: "実行単価",
+          label: "実行単価(週最小)",
+          data: weeklyMinData,
+          borderColor: CHART_COLORS.weeklyMin.border,
+          backgroundColor: CHART_COLORS.weeklyMin.background,
+          borderWidth: 1,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: false,
+          tension: 0.1,
+        },
+        {
+          label: "実行単価(週中央値)",
+          data: weeklyMedianData,
+          borderColor: CHART_COLORS.weeklyMedian.border,
+          backgroundColor: CHART_COLORS.weeklyMedian.background,
+          borderWidth: 1,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          fill: false,
+          tension: 0.1,
+        },
+        {
+          label: "実行単価(週平均)",
           data: actualData,
           borderColor: CHART_COLORS.actual.border,
           backgroundColor: CHART_COLORS.actual.background,
           borderWidth: 2,
           pointRadius: 8,
           pointHoverRadius: 10,
+          fill: false,
+          tension: 0.1,
+        },
+        {
+          label: "実行単価(週最大)",
+          data: weeklyMaxData,
+          borderColor: CHART_COLORS.weeklyMax.border,
+          backgroundColor: CHART_COLORS.weeklyMax.background,
+          borderWidth: 1,
+          pointRadius: 4,
+          pointHoverRadius: 6,
           fill: false,
           tension: 0.1,
         },
@@ -448,6 +677,7 @@ function appData() {
       return {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         interaction: { intersect: false, mode: "index" },
         plugins: {
           legend: {
@@ -509,16 +739,28 @@ function appData() {
     showChart(idx) {
       const group = this.filteredGroups[idx];
       const records = group.filteredRecords;
-      const prices = records.map((r) => r.price);
+
+      // Single-pass stats computation
+      let min = Infinity;
+      let max = -Infinity;
+      let sum = 0;
+      const len = records.length;
+      for (let i = 0; i < len; i++) {
+        const p = records[i].price;
+        if (p < min) min = p;
+        if (p > max) max = p;
+        sum += p;
+      }
+
       this.chartData = {
         title: `単価推移 - ${group.item}`,
         item: group.item,
         unit: group.unit,
         records: records,
         displayMode: "chart",
-        minPrice: Math.min(...prices),
-        maxPrice: Math.max(...prices),
-        avgPrice: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
+        minPrice: len > 0 ? min : 0,
+        maxPrice: len > 0 ? max : 0,
+        avgPrice: len > 0 ? Math.round(sum / len) : 0,
       };
 
       this.$nextTick(() => {
@@ -543,6 +785,8 @@ function appData() {
         groupBy: "timeline",
         displayMode: "list",
         chartType: "trend",
+        listLimit: 100,
+        listDisplayed: 100,
       };
       this.$nextTick(() => {
         new bootstrap.Modal(this.$refs.detailModal).show();
@@ -576,7 +820,9 @@ function appData() {
      * @returns {Object} Grouped records { key: records[] }
      */
     getGroupedDetailData() {
-      const records = this.detailModal.currentGroup?.filteredRecords || [];
+      const allRecords = this.detailModal.currentGroup?.filteredRecords || [];
+      // Apply pagination limit
+      const records = allRecords.slice(0, this.detailModal.listDisplayed);
       const groupBy = this.detailModal.groupBy;
 
       const keyFn = {
@@ -600,6 +846,22 @@ function appData() {
       return Object.fromEntries(
         Object.entries(groups).sort(([, a], [, b]) => b.length - a.length)
       );
+    },
+
+    get detailTotalRecords() {
+      return this.detailModal.currentGroup?.filteredRecords?.length || 0;
+    },
+
+    get hasMoreDetailRecords() {
+      return this.detailModal.listDisplayed < this.detailTotalRecords;
+    },
+
+    get remainingDetailRecords() {
+      return this.detailTotalRecords - this.detailModal.listDisplayed;
+    },
+
+    loadMoreDetailRecords() {
+      this.detailModal.listDisplayed += this.detailModal.listLimit;
     },
 
     /**
@@ -647,10 +909,26 @@ function appData() {
     /**
      * Render detail chart based on current chart type
      */
-    renderDetailChart() {
-      this.$nextTick(() => {
+    renderDetailChart(retryCount = 0) {
+      // Wait for x-show transition to complete before accessing canvas
+      const maxRetries = 5;
+      const delay = 100;
+
+      setTimeout(() => {
         const ctx = this.$refs.detailChart?.getContext("2d");
-        if (!ctx) return;
+        if (!ctx) {
+          if (retryCount < maxRetries) {
+            console.log(
+              `Detail chart canvas not ready, retrying (${
+                retryCount + 1
+              }/${maxRetries})...`
+            );
+            this.renderDetailChart(retryCount + 1);
+          } else {
+            console.warn("Detail chart canvas not available after retries");
+          }
+          return;
+        }
 
         if (this.detailChartInstance) {
           this.detailChartInstance.destroy();
@@ -666,7 +944,7 @@ function appData() {
         } else if (chartType === "distribution") {
           this.renderDistributionChart(ctx, data);
         }
-      });
+      }, delay);
     },
 
     /**
