@@ -77,7 +77,7 @@ const CHART_CONFIG = {
   HEATMAP_BUCKET_COUNT: 5,
   MAX_RENDER_RETRIES: 5,
   RENDER_RETRY_DELAY: 100,
-  BUBBLE_SIZE_QTY_FACTOR: 2,
+  BUBBLE_SIZE_QTY_FACTOR: 5, // 対数スケール用係数（log10(qty + 1) * factor）
   BUBBLE_SIZE_AMOUNT_DIVISOR: 10000,
   BUBBLE_SIZE_AMOUNT_FACTOR: 2,
 };
@@ -1238,8 +1238,8 @@ function appData() {
         x: r[xAxis],
         y: r.price,
         r: bubbleSize === "qty"
-          ? Math.sqrt(r.qty) * CHART_CONFIG.BUBBLE_SIZE_QTY_FACTOR
-          : Math.sqrt(r.amount / CHART_CONFIG.BUBBLE_SIZE_AMOUNT_DIVISOR) * CHART_CONFIG.BUBBLE_SIZE_AMOUNT_FACTOR,
+          ? Math.log10(Math.abs(r.qty) + 1) * CHART_CONFIG.BUBBLE_SIZE_QTY_FACTOR
+          : Math.sqrt(Math.abs(r.amount) / CHART_CONFIG.BUBBLE_SIZE_AMOUNT_DIVISOR) * CHART_CONFIG.BUBBLE_SIZE_AMOUNT_FACTOR,
         record: r,
       }));
 
@@ -1504,7 +1504,16 @@ function appData() {
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
-            plugins: { legend: { position: "top" } },
+            plugins: { 
+              legend: { position: "top" },
+              subtitle: {
+                display: true,
+                text: "※ データを4等分した位置（25%, 50%, 75%）を正確に計算",
+                font: { size: 11 },
+                color: "#6c757d",
+                padding: { bottom: 10 }
+              }
+            },
             scales: {
               y: {
                 title: { display: true, text: `実行単価 (円/${unit})` },
@@ -1535,6 +1544,13 @@ function appData() {
           animation: false,
           plugins: {
             legend: { display: false },
+            subtitle: {
+              display: true,
+              text: "※ 箱はデータの中央50%の範囲、ひげは通常範囲（箱の1.5倍まで）、灰色の点は各データ、赤い点は外れ値を表示",
+              font: { size: 11 },
+              color: "#6c757d",
+              padding: { bottom: 10 }
+            },
             tooltip: {
               callbacks: {
                 label: (context) => {
@@ -1635,8 +1651,20 @@ function appData() {
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
+            interaction: {
+              mode: 'point',
+              intersect: true,
+              axis: 'xy',
+            },
             plugins: {
               legend: { display: false },
+              subtitle: {
+                display: chartType === "bubble",
+                text: `※ 円の大きさは${this.detailModal.trend.bubbleSize === "qty" ? "数量" : "合計金額（数量×単価）"}を表示。右上ほど単価が高く${xAxisLabel}が多い傾向、外れ値や標準的な価格帯の分布を確認`,
+                font: { size: 11 },
+                color: "#6c757d",
+                padding: { bottom: 10 }
+              },
               tooltip: {
                 callbacks: {
                   label: (context) => {

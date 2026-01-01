@@ -245,14 +245,18 @@ function calcBoxplotStats(values) {
   const sorted = [...values].sort((a, b) => a - b);
   const n = sorted.length;
 
-  const q1Idx = Math.floor(n * 0.25);
-  const medianIdx = Math.floor(n * 0.5);
-  const q3Idx = Math.floor(n * 0.75);
+  // 線形補間法による四分位数計算（NumPy, R, Pandas標準）
+  const calcPercentile = (p) => {
+    const pos = (n - 1) * p;
+    const lower = Math.floor(pos);
+    const upper = Math.ceil(pos);
+    const weight = pos - lower;
+    return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+  };
 
-  const q1 = sorted[q1Idx];
-  const median =
-    n % 2 ? sorted[medianIdx] : (sorted[medianIdx - 1] + sorted[medianIdx]) / 2;
-  const q3 = sorted[q3Idx];
+  const q1 = calcPercentile(0.25);
+  const median = calcPercentile(0.5);
+  const q3 = calcPercentile(0.75);
   const iqr = q3 - q1;
 
   const lowerFence = q1 - 1.5 * iqr;
