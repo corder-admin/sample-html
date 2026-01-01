@@ -138,38 +138,35 @@ function appData() {
     regionDropdownOpen: false,
 
     async init() {
-      try {
-        this.isLoading = true;
-        this.loadError = null;
-
-        // DataLoaderからデータを非同期読み込み
-        this.rawRecords = await DataLoader.loadData();
-
-        // 既存の初期化処理を実行
+      // Common initialization logic
+      const initializeData = () => {
         this.processData();
         this.groupByItem();
         this.clearFilters();
-        this.projectNames = [
-          ...new Set(this.rawRecords.map((r) => r.projectName)),
-        ].sort();
-        this.regionNames = [
-          ...new Set(this.rawRecords.map((r) => r.region)),
-        ].sort();
+
+        // Single-pass extraction of unique names
+        const projectSet = {};
+        const regionSet = {};
+        for (const r of this.rawRecords) {
+          projectSet[r.projectName] = true;
+          regionSet[r.region] = true;
+        }
+        this.projectNames = Object.keys(projectSet).sort();
+        this.regionNames = Object.keys(regionSet).sort();
+      };
+
+      try {
+        this.isLoading = true;
+        this.loadError = null;
+        this.rawRecords = await DataLoader.loadData();
+        initializeData();
       } catch (error) {
         console.error("App initialization failed:", error);
         this.loadError = error.message;
         // フォールバック: rawRecordsが存在すれば使用
         if (typeof rawRecords !== "undefined" && rawRecords.length > 0) {
           this.rawRecords = rawRecords;
-          this.processData();
-          this.groupByItem();
-          this.clearFilters();
-          this.projectNames = [
-            ...new Set(this.rawRecords.map((r) => r.projectName)),
-          ].sort();
-          this.regionNames = [
-            ...new Set(this.rawRecords.map((r) => r.region)),
-          ].sort();
+          initializeData();
         }
       } finally {
         this.isLoading = false;
@@ -423,9 +420,18 @@ function appData() {
       if (group.vendorSummary) {
         return group.vendorSummary.length;
       }
-      // Quick count without full computation
-      const vendors = new Set(group.filteredRecords.map((r) => r.vendor));
-      return vendors.size;
+      // Quick count using object (faster than Set + map)
+      const seen = {};
+      let count = 0;
+      const records = group.filteredRecords;
+      for (let i = 0, len = records.length; i < len; i++) {
+        const v = records[i].vendor;
+        if (!seen[v]) {
+          seen[v] = true;
+          count++;
+        }
+      }
+      return count;
     },
 
     filterProjectNames() {
@@ -474,44 +480,68 @@ function appData() {
     },
 
     /**
-     * Prepare chart data by grouping records by week
+     * Prepare chart data by grouping records by week (optimized single-pass)
      * @param {Array} records - Filtered records to chart
      * @returns {{weekLabels: string[], actualData: number[], stats: {min: number, max: number, avg: number}}}
      */
     prepareChartData(records) {
       const weekData = {};
-      records.forEach((record) => {
-        if (!weekData[record.orderWeek]) {
-          weekData[record.orderWeek] = {
-            prices: [],
-            weekStart: record.orderWeekStart,
-          };
+      let globalMin = Infinity;
+      let globalMax = -Infinity;
+      let globalSum = 0;
+
+      // Single pass: group by week and compute global stats
+      for (const record of records) {
+        const week = record.orderWeek;
+        const price = record.price;
+
+        if (!weekData[week]) {
+          weekData[week] = { prices: [], weekStart: record.orderWeekStart };
         }
-        weekData[record.orderWeek].prices.push(record.price);
-      });
+        weekData[week].prices.push(price);
+
+        if (price < globalMin) globalMin = price;
+        if (price > globalMax) globalMax = price;
+        globalSum += price;
+      }
 
       const allWeeks = Object.keys(weekData).sort();
-      const weekLabels = allWeeks.map((week) => weekData[week].weekStart);
-      const actualData = allWeeks.map((week) => {
-        const prices = weekData[week].prices;
-        return prices.reduce((a, b) => a + b, 0) / prices.length;
-      });
-      const weeklyMinData = allWeeks.map((week) =>
-        Math.min(...weekData[week].prices)
-      );
-      const weeklyMaxData = allWeeks.map((week) =>
-        Math.max(...weekData[week].prices)
-      );
-      const weeklyMedianData = allWeeks.map((week) => {
-        const sorted = [...weekData[week].prices].sort((a, b) => a - b);
-        const mid = Math.floor(sorted.length / 2);
-        return sorted.length % 2
-          ? sorted[mid]
-          : (sorted[mid - 1] + sorted[mid]) / 2;
-      });
+      const weekCount = allWeeks.length;
+      const weekLabels = new Array(weekCount);
+      const actualData = new Array(weekCount);
+      const weeklyMinData = new Array(weekCount);
+      const weeklyMaxData = new Array(weekCount);
+      const weeklyMedianData = new Array(weekCount);
 
-      const allPrices = records.map((r) => r.price);
-      const stats = calcPriceStats(allPrices);
+      // Single pass: compute all weekly stats
+      for (let i = 0; i < weekCount; i++) {
+        const entry = weekData[allWeeks[i]];
+        const prices = entry.prices;
+        const len = prices.length;
+
+        weekLabels[i] = entry.weekStart;
+
+        // Compute min/max/avg in one pass
+        let min = Infinity;
+        let max = -Infinity;
+        let sum = 0;
+        for (let j = 0; j < len; j++) {
+          const p = prices[j];
+          if (p < min) min = p;
+          if (p > max) max = p;
+          sum += p;
+        }
+
+        weeklyMinData[i] = min;
+        weeklyMaxData[i] = max;
+        actualData[i] = sum / len;
+
+        // Median calculation (requires sort)
+        prices.sort((a, b) => a - b);
+        const mid = len >> 1;
+        weeklyMedianData[i] =
+          len & 1 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
+      }
 
       return {
         weekLabels,
@@ -519,8 +549,12 @@ function appData() {
         weeklyMinData,
         weeklyMaxData,
         weeklyMedianData,
-        stats,
-        weekCount: allWeeks.length,
+        stats: {
+          min: globalMin === Infinity ? 0 : globalMin,
+          max: globalMax === -Infinity ? 0 : globalMax,
+          avg: records.length > 0 ? Math.round(globalSum / records.length) : 0,
+        },
+        weekCount,
       };
     },
 
@@ -698,16 +732,28 @@ function appData() {
     showChart(idx) {
       const group = this.filteredGroups[idx];
       const records = group.filteredRecords;
-      const prices = records.map((r) => r.price);
+
+      // Single-pass stats computation
+      let min = Infinity;
+      let max = -Infinity;
+      let sum = 0;
+      const len = records.length;
+      for (let i = 0; i < len; i++) {
+        const p = records[i].price;
+        if (p < min) min = p;
+        if (p > max) max = p;
+        sum += p;
+      }
+
       this.chartData = {
         title: `単価推移 - ${group.item}`,
         item: group.item,
         unit: group.unit,
         records: records,
         displayMode: "chart",
-        minPrice: Math.min(...prices),
-        maxPrice: Math.max(...prices),
-        avgPrice: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
+        minPrice: len > 0 ? min : 0,
+        maxPrice: len > 0 ? max : 0,
+        avgPrice: len > 0 ? Math.round(sum / len) : 0,
       };
 
       this.$nextTick(() => {
