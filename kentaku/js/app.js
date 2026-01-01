@@ -1459,48 +1459,84 @@ function appData() {
         record: r,
       }));
 
-      // For heatmap, create a matrix
-      const xValues = [...new Set(records.map((r) => r[xAxis]))].sort((a, b) => a - b);
-      const priceRanges = this.createPriceRanges(records.map((r) => r.price), 5);
+      // For heatmap, create a matrix with ranges
+      const xAxisValues = records.map((r) => r[xAxis]);
+      const priceValues = records.map((r) => r.price);
+
+      const xRanges = this.createValueRanges(xAxisValues, 5, xAxis);
+      const priceRanges = this.createValueRanges(priceValues, 5, 'price');
 
       const heatmapData = [];
-      xValues.forEach((xVal, xi) => {
-        priceRanges.forEach((range, yi) => {
-          const count = records.filter(
-            (r) => r[xAxis] === xVal && r.price >= range.min && r.price < range.max
-          ).length;
+      xRanges.forEach((xRange) => {
+        priceRanges.forEach((yRange) => {
+          const isLastXRange = xRange === xRanges[xRanges.length - 1];
+          const isLastYRange = yRange === priceRanges[priceRanges.length - 1];
+
+          const count = records.filter((r) => {
+            const xMatch = r[xAxis] >= xRange.min && (isLastXRange ? r[xAxis] <= xRange.max : r[xAxis] < xRange.max);
+            const yMatch = r.price >= yRange.min && (isLastYRange ? r.price <= yRange.max : r.price < yRange.max);
+            return xMatch && yMatch;
+          }).length;
+
           if (count > 0) {
-            heatmapData.push({ x: xi, y: yi, v: count });
+            heatmapData.push({ x: xRange.label, y: yRange.label, v: count });
           }
         });
       });
+
+      // For scatter chart, keep original xValues
+      const xValues = [...new Set(records.map((r) => r[xAxis]))].sort((a, b) => a - b);
 
       return {
         scatterData,
         heatmapData,
         xValues,
+        xRanges,
         priceRanges,
         xAxisLabel: this.getAxisLabel(xAxis),
       };
     },
 
     /**
-     * Create price ranges for heatmap
-     * @param {Array} prices - Array of prices
+     * Create value ranges for heatmap
+     * @param {Array} values - Array of values
      * @param {number} buckets - Number of buckets
+     * @param {string} fieldType - Type of field ('price', 'totalArea', 'constArea', 'floors', 'resUnits')
      * @returns {Array} Array of {min, max, label}
      */
-    createPriceRanges(prices, buckets) {
-      if (prices.length === 0) return [];
-      const min = Math.min(...prices);
-      const max = Math.max(...prices);
+    createValueRanges(values, buckets, fieldType) {
+      if (values.length === 0) return [];
+      const min = Math.min(...values);
+      const max = Math.max(...values);
       const step = (max - min) / buckets || 1;
 
-      return Array.from({ length: buckets }, (_, i) => ({
-        min: min + step * i,
-        max: min + step * (i + 1),
-        label: `¥${formatNumber(Math.round(min + step * i))}~`,
-      }));
+      return Array.from({ length: buckets }, (_, i) => {
+        const rangeMin = min + step * i;
+        const rangeMax = min + step * (i + 1);
+        const isLastRange = i === buckets - 1;
+
+        // ラベル表示用の最小値と最大値を丸める
+        const displayMin = Math.round(rangeMin);
+        const displayMax = isLastRange ? Math.round(max) : Math.round(rangeMax - 1);
+
+        // Generate label based on field type
+        let label;
+        if (fieldType === 'price') {
+          label = `¥${formatNumber(displayMin)}~¥${formatNumber(displayMax)}`;
+        } else if (fieldType === 'totalArea' || fieldType === 'constArea') {
+          label = `${formatNumber(displayMin)}~${formatNumber(displayMax)}㎡`;
+        } else if (fieldType === 'floors' || fieldType === 'resUnits') {
+          label = `${displayMin}~${displayMax}`;
+        } else {
+          label = `${formatNumber(displayMin)}~${formatNumber(displayMax)}`;
+        }
+
+        return {
+          min: rangeMin,
+          max: isLastRange ? max : rangeMax,
+          label: label,
+        };
+      });
     },
 
     /**
@@ -1833,6 +1869,7 @@ function appData() {
           },
           scales: {
             r: {
+              beginAtZero: true,
               ticks: { callback: (value) => "¥" + formatNumber(value) },
             },
           },
@@ -1848,10 +1885,10 @@ function appData() {
     renderTrendTabChart(ctx, data) {
       const chartType = this.detailModal.trend.chartType;
       const unit = this.detailModal.currentGroup?.unit || "";
-      const { scatterData, heatmapData, xValues, priceRanges, xAxisLabel } = data;
+      const { scatterData, heatmapData, xValues, xRanges, priceRanges, xAxisLabel } = data;
 
       if (chartType === "heatmap") {
-        this.renderHeatmapChart(ctx, heatmapData, xValues, priceRanges, xAxisLabel, unit);
+        this.renderHeatmapChart(ctx, heatmapData, xRanges, priceRanges, xAxisLabel, unit);
       } else {
         // Scatter or bubble chart
         this.detailChartInstance = new Chart(ctx, {
@@ -1901,12 +1938,12 @@ function appData() {
      * Render heatmap chart
      * @param {CanvasRenderingContext2D} ctx - Canvas context
      * @param {Array} data - Heatmap data [{x, y, v}]
-     * @param {Array} xValues - X-axis values
+     * @param {Array} xRanges - X-axis ranges
      * @param {Array} priceRanges - Price range labels
      * @param {string} xAxisLabel - X-axis label
      * @param {string} unit - Unit label
      */
-    renderHeatmapChart(ctx, data, xValues, priceRanges, xAxisLabel, unit) {
+    renderHeatmapChart(ctx, data, xRanges, priceRanges, xAxisLabel, unit) {
       // Check if matrix plugin is available
       if (typeof Chart.controllers.matrix === "undefined") {
         console.warn("Matrix plugin not loaded, falling back to scatter chart");
@@ -1916,7 +1953,7 @@ function appData() {
           data: {
             datasets: [{
               label: "件数",
-              data: data.map((d) => ({ x: xValues[d.x], y: d.y, r: d.v * 3 })),
+              data: data.map((d) => ({ x: d.x, y: d.y, r: d.v * 3 })),
               backgroundColor: CHART_COLORS.avg.border + "88",
             }],
           },
@@ -1951,7 +1988,7 @@ function appData() {
             },
             borderWidth: 1,
             borderColor: "rgba(0, 0, 0, 0.1)",
-            width: ({ chart }) => (chart.chartArea?.width || 100) / xValues.length - 1,
+            width: ({ chart }) => (chart.chartArea?.width || 100) / xRanges.length - 1,
             height: ({ chart }) => (chart.chartArea?.height || 100) / priceRanges.length - 1,
           }],
         },
@@ -1965,7 +2002,7 @@ function appData() {
               callbacks: {
                 label: (context) => {
                   const d = context.raw;
-                  return `${xValues[d.x]} x ${priceRanges[d.y]?.label}: ${d.v}件`;
+                  return `${d.x} x ${d.y}: ${d.v}件`;
                 },
               },
             },
@@ -1973,7 +2010,7 @@ function appData() {
           scales: {
             x: {
               type: "category",
-              labels: xValues.map(String),
+              labels: xRanges.map((r) => r.label),
               title: { display: true, text: xAxisLabel },
             },
             y: {
