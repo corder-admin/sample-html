@@ -502,7 +502,6 @@
                         viewBox="0 0 24 24"
                         class="transition-transform"
                         :class="vendorSectionExpanded[idx] ? 'rotate-90' : ''"
-                        style="transition: transform 0.2s"
                       >
                         <polyline points="9 18 15 12 9 6"></polyline>
                       </svg>
@@ -517,10 +516,12 @@
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
                       </svg>
-                      <span class="small fw-semibold text-secondary">
-                        業者別 実行単価レンジ（/<span x-text="group.unit"></span
-                        >）
-                      </span>
+                      <span class="small fw-semibold text-secondary"
+                        >業者別 実行単価レンジ（/<span
+                          x-text="group.unit"
+                        ></span
+                        >）</span
+                      >
                       <span
                         class="badge bg-secondary rounded-pill small ms-auto"
                         x-text="getVendorCount(group) + '社'"
@@ -854,8 +855,7 @@
                     <line x1="12" y1="20" x2="12" y2="4" />
                     <line x1="6" y1="20" x2="6" y2="14" />
                   </svg>
-                  単価推移 -
-                  <span x-text="chartData.item"></span>
+                  単価推移 - <span x-text="chartData.item"></span>
                   <small
                     class="text-muted ms-2"
                     x-text="`(${chartData.unit})`"
@@ -881,7 +881,7 @@
                       <div class="card-body py-2 px-3">
                         <div class="d-flex align-items-center gap-2">
                           <div
-                            class="rounded-circle d-flex align-items-center justify-content-center"
+                            class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                             :class="chartData.displayMode === 'chart' ? 'bg-primary text-white' : 'bg-secondary text-white'"
                             style="width: 28px; height: 28px"
                           >
@@ -923,7 +923,7 @@
                       <div class="card-body py-2 px-3">
                         <div class="d-flex align-items-center gap-2">
                           <div
-                            class="rounded-circle d-flex align-items-center justify-content-center"
+                            class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                             :class="chartData.displayMode === 'table' ? 'bg-primary text-white' : 'bg-secondary text-white'"
                             style="width: 28px; height: 28px"
                           >
@@ -1007,8 +1007,8 @@
                 <!-- Table View (Weekly Grouped) -->
                 <div
                   x-show="chartData.displayMode === 'table'"
-                  class="bg-body-secondary p-3"
-                  style="max-height: calc(100vh - 160px); overflow: auto"
+                  class="bg-body-secondary p-3 overflow-auto"
+                  style="max-height: calc(100vh - 160px)"
                 >
                   <template
                     x-for="(weekGroup, weekIdx) in chartData.weeklyData"
@@ -1067,31 +1067,31 @@
                                 <th style="width: 60px">大工事</th>
                                 <th style="width: 180px">工事名称</th>
                                 <th style="width: 180px">業者</th>
-                                <th style="width: 70px" class="text-end">
+                                <th class="text-end" style="width: 70px">
                                   実行数量
                                 </th>
-                                <th style="width: 50px" class="text-center">
+                                <th class="text-center" style="width: 50px">
                                   単位
                                 </th>
-                                <th style="width: 100px" class="text-end">
+                                <th class="text-end" style="width: 100px">
                                   実行単価
                                 </th>
-                                <th style="width: 110px" class="text-end">
+                                <th class="text-end" style="width: 110px">
                                   実行金額
                                 </th>
-                                <th style="width: 55px" class="text-center">
+                                <th class="text-center" style="width: 55px">
                                   階数
                                 </th>
-                                <th style="width: 55px" class="text-center">
+                                <th class="text-center" style="width: 55px">
                                   戸並
                                 </th>
-                                <th style="width: 55px" class="text-center">
+                                <th class="text-center" style="width: 55px">
                                   戸数
                                 </th>
-                                <th style="width: 100px" class="text-end">
+                                <th class="text-end" style="width: 100px">
                                   施工面積
                                 </th>
-                                <th style="width: 100px" class="text-end">
+                                <th class="text-end" style="width: 100px">
                                   延床面積
                                 </th>
                               </tr>
@@ -1235,7 +1235,7 @@
                       <div class="card-body py-2 px-3">
                         <div class="d-flex align-items-center gap-2 mb-2">
                           <div
-                            class="rounded-circle d-flex align-items-center justify-content-center"
+                            class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                             :class="detailModal.displayMode === 'list' ? 'bg-primary text-white' : 'bg-secondary text-white'"
                             style="width: 28px; height: 28px"
                           >
@@ -1299,12 +1299,11 @@
                     >
                       <div class="card-body py-2 px-3">
                         <div
-                          class="d-flex align-items-center gap-2 mb-2"
+                          class="d-flex align-items-center gap-2 mb-2 cursor-pointer"
                           @click="setDetailDisplayMode('chart')"
-                          style="cursor: pointer"
                         >
                           <div
-                            class="rounded-circle d-flex align-items-center justify-content-center"
+                            class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                             :class="detailModal.displayMode === 'chart' ? 'bg-primary text-white' : 'bg-secondary text-white'"
                             style="width: 28px; height: 28px"
                           >
@@ -1460,31 +1459,31 @@
                                 <th style="width: 60px">大工事</th>
                                 <th style="width: 180px">工事名称</th>
                                 <th style="width: 180px">業者</th>
-                                <th style="width: 70px" class="text-end">
+                                <th class="text-end" style="width: 70px">
                                   実行数量
                                 </th>
-                                <th style="width: 50px" class="text-center">
+                                <th class="text-center" style="width: 50px">
                                   単位
                                 </th>
-                                <th style="width: 100px" class="text-end">
+                                <th class="text-end" style="width: 100px">
                                   実行単価
                                 </th>
-                                <th style="width: 110px" class="text-end">
+                                <th class="text-end" style="width: 110px">
                                   実行金額
                                 </th>
-                                <th style="width: 55px" class="text-center">
+                                <th class="text-center" style="width: 55px">
                                   階数
                                 </th>
-                                <th style="width: 55px" class="text-center">
+                                <th class="text-center" style="width: 55px">
                                   戸並
                                 </th>
-                                <th style="width: 55px" class="text-center">
+                                <th class="text-center" style="width: 55px">
                                   戸数
                                 </th>
-                                <th style="width: 100px" class="text-end">
+                                <th class="text-end" style="width: 100px">
                                   施工面積
                                 </th>
-                                <th style="width: 100px" class="text-end">
+                                <th class="text-end" style="width: 100px">
                                   延床面積
                                 </th>
                               </tr>
