@@ -39,7 +39,32 @@
     </nav>
 
     <div class="d-flex flex-column flex-lg-row" x-data="appData()" x-cloak>
-      <aside class="sidebar d-flex flex-column bg-white">
+      <!-- ローディングオーバーレイ -->
+      <template x-if="isLoading">
+        <div
+          class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white"
+          style="z-index: 9999"
+        >
+          <div class="text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted mb-0">データを読み込み中...</p>
+          </div>
+        </div>
+      </template>
+
+      <!-- エラー表示 -->
+      <template x-if="!isLoading && loadError">
+        <div class="container py-5">
+          <div class="alert alert-danger" role="alert">
+            <h5 class="alert-heading">読み込みエラー</h5>
+            <p class="mb-0" x-text="loadError"></p>
+          </div>
+        </div>
+      </template>
+
+      <aside class="sidebar d-flex flex-column bg-white" x-show="!isLoading && !loadError">
         <div class="p-3 border-bottom">
           <h6
             class="mb-0 fw-bold text-secondary d-flex align-items-center gap-1"
@@ -347,7 +372,7 @@
         </div>
       </aside>
 
-      <main class="main-content p-4">
+      <main class="main-content p-4" x-show="!isLoading && !loadError">
         <div class="mb-4">
           <h4 class="fw-bold mb-3">検索結果一覧</h4>
           <div class="d-flex gap-2 align-items-center flex-wrap mb-3">
@@ -1255,6 +1280,8 @@
 
     <!-- Application Scripts (load order matters) -->
     <script src="js/utils.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/data-loader.js"></script>
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
 

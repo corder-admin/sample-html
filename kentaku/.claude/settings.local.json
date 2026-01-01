@@ -15,7 +15,21 @@
       "mcp__serena__get_symbols_overview",
       "mcp__chrome-devtools__click",
       "mcp__chrome-devtools__take_screenshot",
-      "mcp__chrome-devtools__fill"
+      "mcp__chrome-devtools__fill",
+      "mcp__serena__find_symbol",
+      "WebSearch",
+      "Bash(head:*)",
+      "Bash(wc:*)",
+      "Bash(node /tmp/convert_tsv.js:*)",
+      "Bash(node --check:*)",
+      "Bash(pkill:*)",
+      "mcp__chrome-devtools__new_page",
+      "mcp__serena__search_for_pattern",
+      "mcp__chrome-devtools__get_console_message",
+      "Bash(git config:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__serena__check_onboarding_performed",
+      "mcp__serena__think_about_collected_information"
     ]
   }
 }

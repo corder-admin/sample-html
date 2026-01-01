@@ -10,11 +10,13 @@
  * 分類: アプリケーション層 (Application Layer)
  *
  * 依存関係:
- *   - utils.js  : ユーティリティ関数（formatNumber, formatDateHyphen, getWeekNumber, calcPriceStats, isInRange等）
- *   - data.js   : 生データ（rawRecords）
- *   - Alpine.js : リアクティブUIフレームワーク
- *   - Chart.js  : グラフ描画ライブラリ
- *   - Bootstrap : UIコンポーネント（モーダル等）
+ *   - utils.js       : ユーティリティ関数（formatNumber, formatDateHyphen, getWeekNumber, calcPriceStats, isInRange等）
+ *   - db.js          : IndexedDB操作モジュール
+ *   - data-loader.js : データ読み込み管理モジュール
+ *   - data.js        : 生データ（rawRecords）- フォールバック用
+ *   - Alpine.js      : リアクティブUIフレームワーク
+ *   - Chart.js       : グラフ描画ライブラリ
+ *   - Bootstrap      : UIコンポーネント（モーダル等）
  *
  * =============================================================================
  */
@@ -84,8 +86,12 @@ function recordMatchesFilters(record, criteria) {
 
 function appData() {
   return {
+    // Loading state
+    isLoading: true,
+    loadError: null,
+
     filters: { ...DEFAULT_FILTERS },
-    rawRecords: rawRecords,
+    rawRecords: [],
     records: [],
     itemGroups: [],
     filteredGroups: [],
@@ -121,16 +127,43 @@ function appData() {
     regionNames: [],
     regionDropdownOpen: false,
 
-    init() {
-      this.processData();
-      this.groupByItem();
-      this.clearFilters();
-      this.projectNames = [
-        ...new Set(this.rawRecords.map((r) => r.projectName)),
-      ].sort();
-      this.regionNames = [
-        ...new Set(this.rawRecords.map((r) => r.region)),
-      ].sort();
+    async init() {
+      try {
+        this.isLoading = true;
+        this.loadError = null;
+
+        // DataLoaderからデータを非同期読み込み
+        this.rawRecords = await DataLoader.loadData();
+
+        // 既存の初期化処理を実行
+        this.processData();
+        this.groupByItem();
+        this.clearFilters();
+        this.projectNames = [
+          ...new Set(this.rawRecords.map((r) => r.projectName)),
+        ].sort();
+        this.regionNames = [
+          ...new Set(this.rawRecords.map((r) => r.region)),
+        ].sort();
+      } catch (error) {
+        console.error("App initialization failed:", error);
+        this.loadError = error.message;
+        // フォールバック: rawRecordsが存在すれば使用
+        if (typeof rawRecords !== "undefined" && rawRecords.length > 0) {
+          this.rawRecords = rawRecords;
+          this.processData();
+          this.groupByItem();
+          this.clearFilters();
+          this.projectNames = [
+            ...new Set(this.rawRecords.map((r) => r.projectName)),
+          ].sort();
+          this.regionNames = [
+            ...new Set(this.rawRecords.map((r) => r.region)),
+          ].sort();
+        }
+      } finally {
+        this.isLoading = false;
+      }
     },
 
     toggleRegionDropdown() {
