@@ -64,7 +64,10 @@
         </div>
       </template>
 
-      <aside class="sidebar d-flex flex-column bg-white" x-show="!isLoading && !loadError">
+      <aside
+        class="sidebar d-flex flex-column bg-white"
+        x-show="!isLoading && !loadError"
+      >
         <div class="p-3 border-bottom">
           <h6
             class="mb-0 fw-bold text-secondary d-flex align-items-center gap-1"
@@ -443,10 +446,18 @@
                       <small class="text-muted d-block mb-1"
                         >実行単価レンジ</small
                       >
-                      <div class="d-flex align-items-center justify-content-end gap-2">
-                        <span class="fw-bold tabular-nums text-success" x-text="`¥${formatNumber(group.minPrice)}`"></span>
+                      <div
+                        class="d-flex align-items-center justify-content-end gap-2"
+                      >
+                        <span
+                          class="fw-bold tabular-nums text-success"
+                          x-text="`¥${formatNumber(group.minPrice)}`"
+                        ></span>
                         <span class="text-muted">～</span>
-                        <span class="fw-bold tabular-nums text-danger" x-text="`¥${formatNumber(group.maxPrice)}`"></span>
+                        <span
+                          class="fw-bold tabular-nums text-danger"
+                          x-text="`¥${formatNumber(group.maxPrice)}`"
+                        ></span>
                       </div>
                     </div>
                   </div>
@@ -765,7 +776,10 @@
                   </svg>
                   単価推移 -
                   <span x-text="chartData.item"></span>
-                  <small class="text-muted ms-2" x-text="`(${chartData.unit})`"></small>
+                  <small
+                    class="text-muted ms-2"
+                    x-text="`(${chartData.unit})`"
+                  ></small>
                 </h5>
                 <button
                   type="button"
@@ -807,11 +821,13 @@
                           <span
                             class="fw-semibold"
                             :class="chartData.displayMode === 'chart' ? 'text-primary' : 'text-secondary'"
-                          >チャート表示</span>
+                            >チャート表示</span
+                          >
                           <span
                             x-show="chartData.displayMode === 'chart'"
                             class="badge bg-primary ms-auto"
-                          >選択中</span>
+                            >選択中</span
+                          >
                         </div>
                       </div>
                     </div>
@@ -850,31 +866,47 @@
                           <span
                             class="fw-semibold"
                             :class="chartData.displayMode === 'table' ? 'text-primary' : 'text-secondary'"
-                          >テーブル表示</span>
+                            >テーブル表示</span
+                          >
                           <span
                             x-show="chartData.displayMode === 'table'"
                             class="badge bg-primary ms-auto"
-                          >選択中</span>
+                            >選択中</span
+                          >
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <!-- Summary Stats -->
-                  <div class="col-12 col-lg-4 d-flex align-items-center justify-content-lg-end">
+                  <div
+                    class="col-12 col-lg-4 d-flex align-items-center justify-content-lg-end"
+                  >
                     <div class="d-flex gap-3 align-items-center flex-wrap">
-                      <span class="badge bg-info fs-6" x-text="chartData.records.length + '件'"></span>
+                      <span
+                        class="badge bg-info fs-6"
+                        x-text="chartData.records.length + '件'"
+                      ></span>
                       <div class="d-flex gap-2 align-items-center">
                         <small class="text-muted">最小:</small>
-                        <span class="fw-semibold text-success" x-text="`¥${formatNumber(chartData.minPrice)}`"></span>
+                        <span
+                          class="fw-semibold text-success"
+                          x-text="`¥${formatNumber(chartData.minPrice)}`"
+                        ></span>
                       </div>
                       <div class="d-flex gap-2 align-items-center">
                         <small class="text-muted">平均:</small>
-                        <span class="fw-semibold text-primary" x-text="`¥${formatNumber(chartData.avgPrice)}`"></span>
+                        <span
+                          class="fw-semibold text-primary"
+                          x-text="`¥${formatNumber(chartData.avgPrice)}`"
+                        ></span>
                       </div>
                       <div class="d-flex gap-2 align-items-center">
                         <small class="text-muted">最大:</small>
-                        <span class="fw-semibold text-danger" x-text="`¥${formatNumber(chartData.maxPrice)}`"></span>
+                        <span
+                          class="fw-semibold text-danger"
+                          x-text="`¥${formatNumber(chartData.maxPrice)}`"
+                        ></span>
                       </div>
                     </div>
                   </div>
@@ -894,24 +926,38 @@
 
                 <!-- Table View -->
                 <div x-show="chartData.displayMode === 'table'">
-                  <div class="table-responsive" style="max-height: calc(100vh - 280px); overflow: auto;">
-                    <table class="table table-sm table-bordered table-hover mb-0" style="min-width: 1400px; table-layout: fixed;">
+                  <div
+                    class="table-responsive"
+                    style="max-height: calc(100vh - 280px); overflow: auto"
+                  >
+                    <table
+                      class="table table-sm table-bordered table-hover mb-0"
+                      style="min-width: 1400px; table-layout: fixed"
+                    >
                       <thead class="table-light sticky-top">
                         <tr>
-                          <th style="width: 100px;">発注日</th>
-                          <th style="width: 70px;">支店</th>
-                          <th style="width: 60px;">大工事</th>
-                          <th style="width: 220px;">工事名称</th>
-                          <th style="width: 150px;">仕様</th>
-                          <th style="width: 180px;">業者</th>
-                          <th style="width: 55px;" class="text-center">階数</th>
-                          <th style="width: 55px;" class="text-center">戸並</th>
-                          <th style="width: 55px;" class="text-center">戸数</th>
-                          <th style="width: 100px;" class="text-end">施工面積</th>
-                          <th style="width: 100px;" class="text-end">延床面積</th>
-                          <th style="width: 85px;" class="text-end">実行数量</th>
-                          <th style="width: 100px;" class="text-end">実行単価</th>
-                          <th style="width: 110px;" class="text-end">実行金額</th>
+                          <th style="width: 100px">発注日</th>
+                          <th style="width: 70px">支店</th>
+                          <th style="width: 60px">大工事</th>
+                          <th style="width: 220px">工事名称</th>
+                          <th style="width: 150px">仕様</th>
+                          <th style="width: 180px">業者</th>
+                          <th style="width: 55px" class="text-center">階数</th>
+                          <th style="width: 55px" class="text-center">戸並</th>
+                          <th style="width: 55px" class="text-center">戸数</th>
+                          <th style="width: 100px" class="text-end">
+                            施工面積
+                          </th>
+                          <th style="width: 100px" class="text-end">
+                            延床面積
+                          </th>
+                          <th style="width: 85px" class="text-end">実行数量</th>
+                          <th style="width: 100px" class="text-end">
+                            実行単価
+                          </th>
+                          <th style="width: 110px" class="text-end">
+                            実行金額
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -920,20 +966,72 @@
                           :key="record.orderDate + record.vendor"
                         >
                           <tr>
-                            <td class="text-nowrap" x-text="record.orderDateFormatted"></td>
-                            <td><span class="badge bg-info" x-text="record.region"></span></td>
-                            <td><span class="badge bg-secondary" x-text="record.majorCode"></span></td>
-                            <td class="text-truncate" style="max-width: 220px;" x-text="record.projectName" :title="record.projectName"></td>
-                            <td class="text-muted small text-truncate" style="max-width: 150px;" x-text="record.spec || '-'" :title="record.spec"></td>
-                            <td class="text-truncate" style="max-width: 180px;" x-text="record.vendor" :title="record.vendor"></td>
-                            <td class="text-center tabular-nums" x-text="record.floors + '階'"></td>
-                            <td class="text-center tabular-nums" x-text="record.unitRow + '戸'"></td>
-                            <td class="text-center tabular-nums" x-text="record.resUnits + '戸'"></td>
-                            <td class="text-end tabular-nums text-nowrap" x-text="`${formatNumber(record.constArea)} ㎡`"></td>
-                            <td class="text-end tabular-nums text-nowrap" x-text="`${formatNumber(record.totalArea)} ㎡`"></td>
-                            <td class="text-end tabular-nums" x-text="formatNumber(record.qty)"></td>
-                            <td class="text-end tabular-nums text-nowrap" x-text="`¥${formatNumber(record.price)}`"></td>
-                            <td class="text-end tabular-nums text-nowrap fw-semibold" x-text="`¥${formatNumber(record.amount)}`"></td>
+                            <td
+                              class="text-nowrap"
+                              x-text="record.orderDateFormatted"
+                            ></td>
+                            <td>
+                              <span
+                                class="badge bg-info"
+                                x-text="record.region"
+                              ></span>
+                            </td>
+                            <td>
+                              <span
+                                class="badge bg-secondary"
+                                x-text="record.majorCode"
+                              ></span>
+                            </td>
+                            <td
+                              class="text-truncate"
+                              style="max-width: 220px"
+                              x-text="record.projectName"
+                              :title="record.projectName"
+                            ></td>
+                            <td
+                              class="text-muted small text-truncate"
+                              style="max-width: 150px"
+                              x-text="record.spec || '-'"
+                              :title="record.spec"
+                            ></td>
+                            <td
+                              class="text-truncate"
+                              style="max-width: 180px"
+                              x-text="record.vendor"
+                              :title="record.vendor"
+                            ></td>
+                            <td
+                              class="text-center tabular-nums"
+                              x-text="record.floors + '階'"
+                            ></td>
+                            <td
+                              class="text-center tabular-nums"
+                              x-text="record.unitRow + '戸'"
+                            ></td>
+                            <td
+                              class="text-center tabular-nums"
+                              x-text="record.resUnits + '戸'"
+                            ></td>
+                            <td
+                              class="text-end tabular-nums text-nowrap"
+                              x-text="`${formatNumber(record.constArea)} ㎡`"
+                            ></td>
+                            <td
+                              class="text-end tabular-nums text-nowrap"
+                              x-text="`${formatNumber(record.totalArea)} ㎡`"
+                            ></td>
+                            <td
+                              class="text-end tabular-nums"
+                              x-text="formatNumber(record.qty)"
+                            ></td>
+                            <td
+                              class="text-end tabular-nums text-nowrap"
+                              x-text="`¥${formatNumber(record.price)}`"
+                            ></td>
+                            <td
+                              class="text-end tabular-nums text-nowrap fw-semibold"
+                              x-text="`¥${formatNumber(record.amount)}`"
+                            ></td>
                           </tr>
                         </template>
                       </tbody>
