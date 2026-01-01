@@ -29,27 +29,62 @@ const CHART_COLORS = {
   actual: { border: "#6f42c1", background: "#6f42c1" },
 };
 
+/**
+ * Default filter values - single source of truth
+ */
+const DEFAULT_FILTERS = {
+  project: "",
+  regions: [],
+  majorCodes: [],
+  dateFrom: "",
+  dateTo: "",
+  floorMin: null,
+  floorMax: null,
+  unitRowMin: null,
+  unitRowMax: null,
+  resUnitMin: null,
+  resUnitMax: null,
+  constAreaMin: null,
+  constAreaMax: null,
+  totalAreaMin: null,
+  totalAreaMax: null,
+  item: "",
+  vendor: "",
+};
+
+/**
+ * Check if a record matches all filter criteria
+ * @param {Object} record - Record to check
+ * @param {Object} criteria - Filter criteria
+ * @returns {boolean} True if record matches all criteria
+ */
+function recordMatchesFilters(record, criteria) {
+  const { projectKw, regions, majorCodes, vendor, dateFrom, dateTo, ranges } =
+    criteria;
+
+  if (projectKw && !record.projectName.toLowerCase().includes(projectKw))
+    return false;
+  if (regions.length && !regions.includes(record.region)) return false;
+  if (majorCodes.length && !majorCodes.includes(record.majorCode)) return false;
+  if (vendor && !record.vendor.toLowerCase().includes(vendor)) return false;
+  if (dateFrom && record.orderDate < dateFrom) return false;
+  if (dateTo && record.orderDate > dateTo) return false;
+  if (!isInRange(record.floors, ranges.floorMin, ranges.floorMax)) return false;
+  if (!isInRange(record.unitRow, ranges.unitRowMin, ranges.unitRowMax))
+    return false;
+  if (!isInRange(record.resUnits, ranges.resUnitMin, ranges.resUnitMax))
+    return false;
+  if (!isInRange(record.constArea, ranges.constAreaMin, ranges.constAreaMax))
+    return false;
+  if (!isInRange(record.totalArea, ranges.totalAreaMin, ranges.totalAreaMax))
+    return false;
+
+  return true;
+}
+
 function appData() {
   return {
-    filters: {
-      project: "",
-      regions: [],
-      majorCodes: [],
-      dateFrom: "",
-      dateTo: "",
-      floorMin: null,
-      floorMax: null,
-      unitRowMin: null,
-      unitRowMax: null,
-      resUnitMin: null,
-      resUnitMax: null,
-      constAreaMin: null,
-      constAreaMax: null,
-      totalAreaMin: null,
-      totalAreaMax: null,
-      item: "",
-      vendor: "",
-    },
+    filters: { ...DEFAULT_FILTERS },
     rawRecords: rawRecords,
     records: [],
     itemGroups: [],
@@ -168,37 +203,36 @@ function appData() {
     },
 
     applyFilters() {
-      const projectKw = this.filters.project.toLowerCase();
-      const itemKw = this.filters.item.toLowerCase();
-      const regions = this.filters.regions;
-      const majorCodes = this.filters.majorCodes;
-      const vendor = this.filters.vendor.toLowerCase();
-      const dateFrom = this.filters.dateFrom.replace(/-/g, "");
-      const dateTo = this.filters.dateTo.replace(/-/g, "");
       const f = this.filters;
+      const itemKw = f.item.toLowerCase();
+
+      // Build filter criteria object for recordMatchesFilters
+      const criteria = {
+        projectKw: f.project.toLowerCase(),
+        regions: f.regions,
+        majorCodes: f.majorCodes,
+        vendor: f.vendor.toLowerCase(),
+        dateFrom: f.dateFrom.replace(/-/g, ""),
+        dateTo: f.dateTo.replace(/-/g, ""),
+        ranges: {
+          floorMin: f.floorMin,
+          floorMax: f.floorMax,
+          unitRowMin: f.unitRowMin,
+          unitRowMax: f.unitRowMax,
+          resUnitMin: f.resUnitMin,
+          resUnitMax: f.resUnitMax,
+          constAreaMin: f.constAreaMin,
+          constAreaMax: f.constAreaMax,
+          totalAreaMin: f.totalAreaMin,
+          totalAreaMax: f.totalAreaMax,
+        },
+      };
 
       this.filteredGroups = this.itemGroups
         .map((g) => {
-          const matchingRecords = g.records.filter((r) => {
-            if (projectKw && !r.projectName.toLowerCase().includes(projectKw))
-              return false;
-            if (regions.length && !regions.includes(r.region)) return false;
-            if (majorCodes.length && !majorCodes.includes(r.majorCode))
-              return false;
-            if (vendor && !r.vendor.toLowerCase().includes(vendor))
-              return false;
-            if (dateFrom && r.orderDate < dateFrom) return false;
-            if (dateTo && r.orderDate > dateTo) return false;
-            if (!isInRange(r.floors, f.floorMin, f.floorMax)) return false;
-            if (!isInRange(r.unitRow, f.unitRowMin, f.unitRowMax)) return false;
-            if (!isInRange(r.resUnits, f.resUnitMin, f.resUnitMax))
-              return false;
-            if (!isInRange(r.constArea, f.constAreaMin, f.constAreaMax))
-              return false;
-            if (!isInRange(r.totalArea, f.totalAreaMin, f.totalAreaMax))
-              return false;
-            return true;
-          });
+          const matchingRecords = g.records.filter((r) =>
+            recordMatchesFilters(r, criteria)
+          );
           const prices = matchingRecords.map((r) => r.price);
           const stats = calcPriceStats(prices);
           return {
@@ -220,25 +254,7 @@ function appData() {
     },
 
     clearFilters() {
-      this.filters = {
-        project: "",
-        regions: [],
-        majorCodes: [],
-        dateFrom: "",
-        dateTo: "",
-        floorMin: null,
-        floorMax: null,
-        unitRowMin: null,
-        unitRowMax: null,
-        resUnitMin: null,
-        resUnitMax: null,
-        constAreaMin: null,
-        constAreaMax: null,
-        totalAreaMin: null,
-        totalAreaMax: null,
-        item: "",
-        vendor: "",
-      };
+      this.filters = { ...DEFAULT_FILTERS };
       this.filteredGroups = this.itemGroups.map((g) => ({
         ...g,
         filteredRecords: g.records,
@@ -382,6 +398,89 @@ function appData() {
       };
     },
 
+    /**
+     * Build datasets for trend line chart
+     * @param {Object} data - Chart data with weekLabels, actualData, stats, weekCount
+     * @returns {Array} Chart.js datasets
+     */
+    buildTrendDatasets(data) {
+      const { actualData, stats, weekCount } = data;
+      return [
+        this.createReferenceLine(
+          "最小値",
+          stats.min,
+          weekCount,
+          CHART_COLORS.min
+        ),
+        this.createReferenceLine(
+          "平均値",
+          stats.avg,
+          weekCount,
+          CHART_COLORS.avg
+        ),
+        this.createReferenceLine(
+          "最大値",
+          stats.max,
+          weekCount,
+          CHART_COLORS.max
+        ),
+        {
+          label: "実行単価",
+          data: actualData,
+          borderColor: CHART_COLORS.actual.border,
+          backgroundColor: CHART_COLORS.actual.background,
+          borderWidth: 2,
+          pointRadius: 8,
+          pointHoverRadius: 10,
+          fill: false,
+          tension: 0.1,
+        },
+      ];
+    },
+
+    /**
+     * Create line chart options
+     * @param {Object} options - Additional options { unit, showXTitle }
+     * @returns {Object} Chart.js options config
+     */
+    createLineChartOptions(options = {}) {
+      const { unit = "", showXTitle = false } = options;
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false, mode: "index" },
+        plugins: {
+          legend: {
+            position: "top",
+            labels: { usePointStyle: true, padding: 20 },
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) =>
+                `${context.dataset.label}: ¥${formatNumber(
+                  context.raw ?? context.parsed?.y
+                )}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            title: showXTitle
+              ? { display: true, text: "発注週" }
+              : { display: false },
+            grid: { display: false },
+          },
+          y: {
+            beginAtZero: false,
+            title: unit
+              ? { display: true, text: `実行単価 (円/${unit})` }
+              : { display: false },
+            ticks: { callback: (value) => `¥${formatNumber(value)}` },
+          },
+        },
+      };
+    },
+
     setChartDisplayMode(mode) {
       this.chartData.displayMode = mode;
       if (mode === "chart") {
@@ -395,53 +494,15 @@ function appData() {
       const ctx = this.$refs.netPriceChart.getContext("2d");
       if (this.chartInstance) this.chartInstance.destroy();
 
-      const { weekLabels, actualData, stats, weekCount } = this.prepareChartData(
-        this.chartData.records
-      );
-
-      const datasets = [
-        this.createReferenceLine("最小値", stats.min, weekCount, CHART_COLORS.min),
-        this.createReferenceLine("平均値", stats.avg, weekCount, CHART_COLORS.avg),
-        this.createReferenceLine("最大値", stats.max, weekCount, CHART_COLORS.max),
-        {
-          label: "実行単価",
-          data: actualData,
-          borderColor: CHART_COLORS.actual.border,
-          backgroundColor: CHART_COLORS.actual.background,
-          borderWidth: 2,
-          pointRadius: 8,
-          pointHoverRadius: 10,
-          fill: false,
-          tension: 0.1,
-        },
-      ];
+      const data = this.prepareChartData(this.chartData.records);
+      const datasets = this.buildTrendDatasets(data);
 
       this.$refs.chartWrapper.style.width = "100%";
 
       this.chartInstance = new Chart(ctx, {
         type: "line",
-        data: { labels: weekLabels, datasets },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: "top" },
-            tooltip: {
-              callbacks: {
-                label: (context) =>
-                  `${context.dataset.label}: ¥${formatNumber(context.parsed.y)}`,
-              },
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: false,
-              ticks: {
-                callback: (value) => `¥${formatNumber(value)}`,
-              },
-            },
-          },
-        },
+        data: { labels: data.weekLabels, datasets },
+        options: this.createLineChartOptions(),
       });
     },
 
@@ -569,16 +630,18 @@ function appData() {
     prepareComparisonData() {
       const grouped = this.getGroupedDetailData();
       const labels = Object.keys(grouped);
-      const avgPrices = labels.map(
-        (k) => calcPriceStats(grouped[k].map((r) => r.price)).avg
+
+      // Calculate stats once per group instead of 3 times
+      const statsArray = labels.map((k) =>
+        calcPriceStats(grouped[k].map((r) => r.price))
       );
-      const minPrices = labels.map(
-        (k) => calcPriceStats(grouped[k].map((r) => r.price)).min
-      );
-      const maxPrices = labels.map(
-        (k) => calcPriceStats(grouped[k].map((r) => r.price)).max
-      );
-      return { labels, avgPrices, minPrices, maxPrices };
+
+      return {
+        labels,
+        avgPrices: statsArray.map((s) => s.avg),
+        minPrices: statsArray.map((s) => s.min),
+        maxPrices: statsArray.map((s) => s.max),
+      };
     },
 
     /**
@@ -612,71 +675,13 @@ function appData() {
      * @param {Object} data - Chart data from prepareChartData
      */
     renderTrendChart(ctx, data) {
-      const { weekLabels, actualData, stats, weekCount } = data;
       const unit = this.detailModal.currentGroup?.unit || "";
-
-      const datasets = [
-        this.createReferenceLine(
-          "最小値",
-          stats.min,
-          weekCount,
-          CHART_COLORS.min
-        ),
-        this.createReferenceLine(
-          "平均値",
-          stats.avg,
-          weekCount,
-          CHART_COLORS.avg
-        ),
-        this.createReferenceLine(
-          "最大値",
-          stats.max,
-          weekCount,
-          CHART_COLORS.max
-        ),
-        {
-          label: "実行単価",
-          data: actualData,
-          borderColor: CHART_COLORS.actual.border,
-          backgroundColor: CHART_COLORS.actual.background,
-          borderWidth: 2,
-          pointRadius: 8,
-          pointHoverRadius: 10,
-          fill: false,
-          tension: 0.1,
-        },
-      ];
+      const datasets = this.buildTrendDatasets(data);
 
       this.detailChartInstance = new Chart(ctx, {
         type: "line",
-        data: { labels: weekLabels, datasets },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { intersect: false, mode: "index" },
-          plugins: {
-            legend: {
-              position: "top",
-              labels: { usePointStyle: true, padding: 20 },
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) =>
-                  `${context.dataset.label}: ¥${formatNumber(context.raw)}`,
-              },
-            },
-          },
-          scales: {
-            x: {
-              title: { display: true, text: "発注週" },
-              grid: { display: false },
-            },
-            y: {
-              title: { display: true, text: `実行単価 (円/${unit})` },
-              ticks: { callback: (value) => "¥" + formatNumber(value) },
-            },
-          },
-        },
+        data: { labels: data.weekLabels, datasets },
+        options: this.createLineChartOptions({ unit, showXTitle: true }),
       });
     },
 
