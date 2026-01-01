@@ -5,7 +5,7 @@
  *
  * 概要:
  *   アプリケーション起動時のデータ読み込みを管理
- *   - 初回: data.js からIndexedDBに投入
+ *   - 初回: data.json を fetch で非同期読み込み → IndexedDBに投入
  *   - 2回目以降: IndexedDBから直接読み込み
  *   - バージョン管理による差分更新対応
  *
@@ -13,7 +13,7 @@
  *
  * 依存関係:
  *   - db.js       : IndexedDB操作
- *   - data.js     : rawRecords（フォールバック/初期データ）
+ *   - data.json   : JSON形式のレコードデータ
  *
  * =============================================================================
  */
@@ -25,15 +25,15 @@ const DataLoader = (function () {
     LAST_UPDATED: "lastUpdated",
   };
 
-  // パフォーマンス設定
+  // 設定
   const CONFIG = {
+    DATA_JSON_PATH: "data/data.json",
     DEBUG:
       location.hostname === "localhost" || location.hostname === "127.0.0.1",
   };
 
-  // バージョンキャッシュ
-  let cachedVersion = null;
-  let cachedRecordsLength = 0;
+  // キャッシュ
+  let cachedRecords = null;
 
   /**
    * デバッグログ（本番環境では出力しない）
@@ -43,146 +43,122 @@ const DataLoader = (function () {
   }
 
   /**
-   * データバージョンを計算（キャッシュ対応）
+   * データバージョンを計算
    * @param {Array} records - レコード配列
    * @returns {string} バージョン文字列
    */
   function calculateVersion(records) {
-    // キャッシュが有効な場合は再計算をスキップ
-    if (cachedVersion && records.length === cachedRecordsLength) {
-      return cachedVersion;
-    }
-
     const count = records.length;
-    // 最大日付を効率的に取得（ループ1回）
     let latestDate = "00000000";
     for (let i = 0; i < count; i++) {
       const date = records[i].orderDate;
       if (date > latestDate) latestDate = date;
     }
-
-    cachedVersion = `v${count}_${latestDate}`;
-    cachedRecordsLength = count;
-    return cachedVersion;
+    return `v${count}_${latestDate}`;
   }
 
   /**
-   * IndexedDBにデータが存在し、最新かどうかを確認
-   * @returns {Promise<{needsUpdate: boolean, reason: string}>}
+   * data.jsonをfetchで読み込み
+   * @returns {Promise<Array>} レコード配列
    */
-  async function checkDataStatus() {
-    try {
-      const [storedVersion, storedCount] = await Promise.all([
-        VendorQuoteDB.getMeta(META_KEYS.DATA_VERSION),
-        VendorQuoteDB.count(),
-      ]);
+  async function fetchDataJson() {
+    log("Fetching data.json...");
+    const startTime = performance.now();
 
-      // rawRecords が存在しない場合（将来のAPI化対応）
-      if (typeof rawRecords === "undefined") {
-        if (storedCount > 0) {
-          return { needsUpdate: false, reason: "using_cached" };
-        }
-        throw new Error("No data source available");
-      }
-
-      const currentVersion = calculateVersion(rawRecords);
-
-      // IndexedDBが空の場合
-      if (storedCount === 0) {
-        return { needsUpdate: true, reason: "empty_db" };
-      }
-
-      // バージョンが異なる場合
-      if (storedVersion !== currentVersion) {
-        return { needsUpdate: true, reason: "version_mismatch" };
-      }
-
-      return { needsUpdate: false, reason: "up_to_date" };
-    } catch (error) {
-      console.warn("DataLoader: Check failed, will reinitialize", error);
-      return { needsUpdate: true, reason: "check_failed" };
+    const response = await fetch(CONFIG.DATA_JSON_PATH);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch data.json: ${response.status}`);
     }
+
+    const records = await response.json();
+    log(
+      `Fetched ${records.length} records in ${(
+        performance.now() - startTime
+      ).toFixed(0)}ms`
+    );
+
+    return records;
   }
 
   /**
-   * rawRecordsをIndexedDBに投入
+   * IndexedDBにデータを投入
+   * @param {Array} records - レコード配列
    * @returns {Promise<void>}
    */
-  async function populateFromRawRecords() {
-    if (typeof rawRecords === "undefined" || !rawRecords.length) {
-      throw new Error("rawRecords is not available");
-    }
+  async function populateIndexedDB(records) {
+    log(`Populating IndexedDB with ${records.length} records...`);
+    const startTime = performance.now();
 
-    log(`Populating ${rawRecords.length} records...`);
-
-    // 既存データをクリア
     await VendorQuoteDB.clearRecords();
+    await VendorQuoteDB.bulkAdd(records);
 
-    // データ投入
-    await VendorQuoteDB.bulkAdd(rawRecords);
+    const version = calculateVersion(records);
 
-    // バージョン計算
-    const version = calculateVersion(rawRecords);
-
-    // メタデータ更新
     await Promise.all([
       VendorQuoteDB.setMeta(META_KEYS.DATA_VERSION, version),
-      VendorQuoteDB.setMeta(META_KEYS.RECORD_COUNT, rawRecords.length),
+      VendorQuoteDB.setMeta(META_KEYS.RECORD_COUNT, records.length),
       VendorQuoteDB.setMeta(META_KEYS.LAST_UPDATED, new Date().toISOString()),
     ]);
 
-    log(`Population complete. Version: ${version}`);
+    log(
+      `IndexedDB populated in ${(performance.now() - startTime).toFixed(0)}ms`
+    );
   }
 
   /**
-   * データを読み込み（メインエントリーポイント）
+   * データを読み込む（メインAPI）
+   * - IndexedDBにデータがあればそこから読み込み
+   * - なければdata.jsonをfetchして投入
    * @returns {Promise<Array>} レコード配列
    */
   async function loadData() {
+    // キャッシュがあれば返す
+    if (cachedRecords) {
+      log("Returning cached records");
+      return cachedRecords;
+    }
+
     const startTime = performance.now();
 
-    try {
-      // IndexedDB対応チェック
-      if (!window.indexedDB) {
-        log("IndexedDB not supported, using rawRecords");
-        return rawRecords;
-      }
+    // IndexedDBの状態を確認
+    const storedCount = await VendorQuoteDB.count();
 
-      // DBを開く
-      await VendorQuoteDB.open();
-
-      // データ状態チェック
-      const status = await checkDataStatus();
-      log(`Status check - ${status.reason}`);
-
-      // 必要に応じてデータ投入
-      if (status.needsUpdate) {
-        await populateFromRawRecords();
-      }
-
-      // IndexedDBからデータ取得
-      const records = await VendorQuoteDB.getAll();
-
+    if (storedCount > 0) {
+      // IndexedDBからデータを取得
+      log(`Loading ${storedCount} records from IndexedDB...`);
+      cachedRecords = await VendorQuoteDB.getAll();
       log(
-        `Loaded ${records.length} records in ${(
-          performance.now() - startTime
-        ).toFixed(2)}ms`
+        `Loaded from IndexedDB in ${(performance.now() - startTime).toFixed(
+          0
+        )}ms`
       );
-
-      return records;
-    } catch (error) {
-      console.error("DataLoader: Failed to load from IndexedDB", error);
-      // フォールバック: rawRecordsを直接使用
-      return typeof rawRecords !== "undefined" ? rawRecords : [];
+      return cachedRecords;
     }
+
+    // 初回: data.jsonを取得してIndexedDBに投入
+    log("Initial load: fetching data.json...");
+    const records = await fetchDataJson();
+
+    // キャッシュに保持（UIは先に表示可能）
+    cachedRecords = records;
+
+    // バックグラウンドでIndexedDBに投入（次回以降のために）
+    populateIndexedDB(records).catch((error) => {
+      console.warn("Failed to populate IndexedDB:", error);
+    });
+
+    log(`Total load time: ${(performance.now() - startTime).toFixed(0)}ms`);
+    return cachedRecords;
   }
 
   /**
-   * 強制的にデータを再投入
-   * @returns {Promise<void>}
+   * 強制的にdata.jsonから再読み込み
+   * @returns {Promise<Array>}
    */
   async function forceRefresh() {
-    await populateFromRawRecords();
+    cachedRecords = null;
+    await VendorQuoteDB.clearRecords();
+    return loadData();
   }
 
   /**
@@ -200,9 +176,8 @@ const DataLoader = (function () {
 
   // Public API
   return {
-    loadData,
-    forceRefresh,
-    getStats,
-    checkDataStatus,
+    loadData, // メインのデータ読み込み
+    forceRefresh, // 強制再読み込み
+    getStats, // 統計情報取得
   };
 })();

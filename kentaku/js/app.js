@@ -138,8 +138,27 @@ function appData() {
     regionDropdownOpen: false,
 
     async init() {
-      // Common initialization logic
-      const initializeData = () => {
+      this.isLoading = true;
+      this.loadError = null;
+
+      // UIレンダリングを確実に完了させるため、フレーム待機 + 短い遅延
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await new Promise((resolve) => setTimeout(resolve, 16));
+
+      try {
+        // DataLoaderからデータを読み込み（fetch + IndexedDB）
+        if (typeof DataLoader === "undefined") {
+          throw new Error("DataLoader is not available");
+        }
+
+        const records = await DataLoader.loadData();
+        if (!records || records.length === 0) {
+          throw new Error("No data available");
+        }
+
+        this.rawRecords = records;
+
+        // データ処理
         this.processData();
         this.groupByItem();
         this.clearFilters();
@@ -153,21 +172,9 @@ function appData() {
         }
         this.projectNames = Object.keys(projectSet).sort();
         this.regionNames = Object.keys(regionSet).sort();
-      };
-
-      try {
-        this.isLoading = true;
-        this.loadError = null;
-        this.rawRecords = await DataLoader.loadData();
-        initializeData();
       } catch (error) {
         console.error("App initialization failed:", error);
         this.loadError = error.message;
-        // フォールバック: rawRecordsが存在すれば使用
-        if (typeof rawRecords !== "undefined" && rawRecords.length > 0) {
-          this.rawRecords = rawRecords;
-          initializeData();
-        }
       } finally {
         this.isLoading = false;
       }

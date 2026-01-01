@@ -3,8 +3,8 @@
  */
 
 import { writeFile } from "node:fs/promises";
-import type { OutputRecord } from "../types/output.js";
 import type { RejectedRecord } from "../types/clean.js";
+import type { OutputRecord } from "../types/output.js";
 
 /** data.jsのヘッダーコメント */
 const DATA_JS_HEADER = `/**
@@ -90,5 +90,18 @@ export async function writeRejectedRecords(
   rejected: RejectedRecord[]
 ): Promise<void> {
   const content = JSON.stringify(rejected, null, 2);
+  await writeFile(outputPath, content, "utf-8");
+}
+
+/**
+ * data.jsonファイルを出力
+ * - JavaScriptのパース不要でfetch + JSON.parseで読み込み可能
+ * - 初回アクセス時のパフォーマンス改善
+ */
+export async function writeDataJson(
+  outputPath: string,
+  records: OutputRecord[]
+): Promise<void> {
+  const content = JSON.stringify(records);
   await writeFile(outputPath, content, "utf-8");
 }

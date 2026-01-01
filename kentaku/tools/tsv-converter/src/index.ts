@@ -22,7 +22,11 @@ import {
   sortByOrderDate,
   transformToOutput,
 } from "./pipeline/transformer.js";
-import { writeDataJs, writeRejectedRecords } from "./pipeline/writer.js";
+import {
+  writeDataJs,
+  writeDataJson,
+  writeRejectedRecords,
+} from "./pipeline/writer.js";
 import {
   createSummary,
   printSummary,
@@ -64,6 +68,7 @@ async function main(): Promise<void> {
   await mkdir(outputDir, { recursive: true });
 
   const outputFile = resolve(outputDir, "data.js");
+  const outputJsonFile = resolve(outputDir, "data.json");
   const rejectedFile = resolve(outputDir, "rejected_records.json");
   const reportFile = resolve(outputDir, "conversion_report.md");
 
@@ -112,6 +117,9 @@ async function main(): Promise<void> {
   console.log("💾 ファイル出力中...");
   await writeDataJs(outputFile, sorted);
   console.log(`  data.js を出力しました`);
+
+  await writeDataJson(outputJsonFile, sorted);
+  console.log(`  data.json を出力しました (高速読み込み用)`);
 
   if (rejected.length > 0) {
     await writeRejectedRecords(rejectedFile, rejected);
