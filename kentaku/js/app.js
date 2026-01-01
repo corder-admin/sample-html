@@ -206,6 +206,9 @@ function appData() {
     },
 
     processData() {
+      // Pre-compute derived fields including cleaned vendor name
+      const vendorNameRegex = /株式会社|有限会社/g;
+      
       this.records = this.rawRecords.map((r) => ({
         ...r,
         orderDateFormatted: formatDateHyphen(r.orderDate),
@@ -215,6 +218,8 @@ function appData() {
         orderWeek: r.orderDate ? getWeekNumber(r.orderDate) : "",
         orderWeekStart: r.orderDate ? getWeekStartDate(r.orderDate) : "",
         amount: r.qty * r.price,
+        // Pre-compute cleaned vendor name to avoid regex in hot path
+        vendorNameClean: r.vendor.replace(vendorNameRegex, "").trim(),
       }));
     },
 
@@ -233,14 +238,26 @@ function appData() {
       });
       this.itemGroups = Object.values(groups).map((g) => {
         g.records.sort((a, b) => a.orderDate.localeCompare(b.orderDate));
-        const prices = g.records.map((r) => r.price);
-        const stats = calcPriceStats(prices);
+        
+        // Inline stats computation: avoid intermediate array allocation
+        let min = Infinity;
+        let max = -Infinity;
+        let sum = 0;
+        const len = g.records.length;
+        
+        for (const r of g.records) {
+          const price = r.price;
+          if (price < min) min = price;
+          if (price > max) max = price;
+          sum += price;
+        }
+        
         return {
           ...g,
-          recordCount: g.records.length,
-          minPrice: stats.min,
-          maxPrice: stats.max,
-          avgPrice: stats.avg,
+          recordCount: len,
+          minPrice: len > 0 ? min : 0,
+          maxPrice: len > 0 ? max : 0,
+          avgPrice: len > 0 ? Math.round(sum / len) : 0,
         };
       });
     },
@@ -273,16 +290,24 @@ function appData() {
 
       this.filteredGroups = this.itemGroups
         .map((g) => {
-          const matchingRecords = g.records.filter((r) =>
-            recordMatchesFilters(r, criteria)
-          );
-          const prices = matchingRecords.map((r) => r.price);
-          const stats = calcPriceStats(prices);
+          // Inline stats computation: avoid intermediate array allocation
+          let min = Infinity;
+          let max = -Infinity;
+          const matchingRecords = [];
+          
+          for (const r of g.records) {
+            if (recordMatchesFilters(r, criteria)) {
+              matchingRecords.push(r);
+              if (r.price < min) min = r.price;
+              if (r.price > max) max = r.price;
+            }
+          }
+          
           return {
             ...g,
             filteredRecords: matchingRecords,
-            minPrice: stats.min,
-            maxPrice: stats.max,
+            minPrice: matchingRecords.length > 0 ? min : 0,
+            maxPrice: matchingRecords.length > 0 ? max : 0,
             vendorSummary: null, // Lazy computed
           };
         })
@@ -351,25 +376,39 @@ function appData() {
 
     computeVendorSummary(records) {
       const vendorData = {};
-      records.forEach((record) => {
+      
+      // Single-pass aggregation with inline stats computation
+      for (const record of records) {
         const vendorName = record.vendor;
-        if (!vendorData[vendorName]) {
-          vendorData[vendorName] = { prices: [], count: 0 };
-        }
-        vendorData[vendorName].prices.push(record.price);
-        vendorData[vendorName].count++;
-      });
-      return Object.entries(vendorData)
-        .map(([name, data]) => {
-          const stats = calcPriceStats(data.prices);
-          return {
-            name: name.replace(/株式会社|有限会社/g, "").trim(),
-            count: data.count,
-            min: stats.min,
-            avg: stats.avg,
-            max: stats.max,
+        let entry = vendorData[vendorName];
+        
+        if (!entry) {
+          entry = { 
+            name: record.vendorNameClean, // Use pre-computed clean name
+            count: 0, 
+            min: Infinity, 
+            max: -Infinity, 
+            sum: 0 
           };
-        })
+          vendorData[vendorName] = entry;
+        }
+        
+        const price = record.price;
+        entry.count++;
+        if (price < entry.min) entry.min = price;
+        if (price > entry.max) entry.max = price;
+        entry.sum += price;
+      }
+      
+      // Convert to array with computed average
+      return Object.values(vendorData)
+        .map((entry) => ({
+          name: entry.name,
+          count: entry.count,
+          min: entry.min,
+          avg: Math.round(entry.sum / entry.count),
+          max: entry.max,
+        }))
         // Sort by count (descending)
         .sort((a, b) => b.count - a.count);
     },
