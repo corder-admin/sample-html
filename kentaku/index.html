@@ -39,28 +39,51 @@
   </head>
   <body class="bg-body-secondary">
     <nav
-      class="navbar navbar-dark bg-dark px-3"
+      class="navbar navbar-dark bg-dark px-2 px-md-3"
       style="height: var(--header-height)"
     >
-      <a class="navbar-brand d-flex align-items-center gap-2" href="#">
-        <svg
-          class="icon-lg"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
+      <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+          <svg
+            class="icon-lg d-none d-sm-block"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+            />
+            <polyline points="7.5 4.21 12 6.81 16.5 4.21" />
+            <polyline points="7.5 19.79 7.5 14.6 3 12" />
+            <polyline points="21 12 16.5 14.6 16.5 19.79" />
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+            <line x1="12" y1="22.08" x2="12" y2="12" />
+          </svg>
+          <span class="fw-bold fs-6 fs-md-5">単価ダッシュボード</span>
+        </a>
+        <!-- モバイル用検索トグルボタン -->
+        <button
+          class="btn btn-outline-light btn-sm d-lg-none"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#searchSidebar"
+          aria-controls="searchSidebar"
+          x-show="!isLoading && !loadError"
         >
-          <path
-            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
-          />
-          <polyline points="7.5 4.21 12 6.81 16.5 4.21" />
-          <polyline points="7.5 19.79 7.5 14.6 3 12" />
-          <polyline points="21 12 16.5 14.6 16.5 19.79" />
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-          <line x1="12" y1="22.08" x2="12" y2="12" />
-        </svg>
-        <span class="fw-bold">単価ダッシュボード</span>
-      </a>
+          <svg
+            class="icon"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <span class="ms-1 d-none d-sm-inline">検索</span>
+        </button>
+      </div>
     </nav>
 
     <div class="d-flex flex-column flex-lg-row" x-data="appData()" x-cloak>
@@ -89,8 +112,9 @@
         </div>
       </template>
 
+      <!-- デスクトップ用サイドバー (lg以上) -->
       <aside
-        class="sidebar d-flex flex-column bg-white"
+        class="sidebar d-none d-lg-flex flex-column bg-white"
         x-show="!isLoading && !loadError"
       >
         <div class="p-3 border-bottom">
@@ -400,7 +424,326 @@
         </div>
       </aside>
 
-      <main class="main-content p-4" x-show="!isLoading && !loadError">
+      <!-- モバイル用オフキャンバスサイドバー (lg未満) -->
+      <div
+        class="offcanvas offcanvas-start d-lg-none"
+        tabindex="-1"
+        id="searchSidebar"
+        aria-labelledby="searchSidebarLabel"
+        x-show="!isLoading && !loadError"
+      >
+        <div class="offcanvas-header border-bottom">
+          <h5 class="offcanvas-title fw-bold text-secondary d-flex align-items-center gap-2" id="searchSidebarLabel">
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            検索条件
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+            aria-label="閉じる"
+          ></button>
+        </div>
+        <div class="offcanvas-body p-3" @keydown.enter="applyFilters()">
+          <div class="section-title">工事情報</div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary"
+              >工事名称</label
+            >
+            <div class="position-relative">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="選択または入力"
+                x-model="filters.project"
+                @focus="autocomplete.show = true; filterProjectNames()"
+                @input="filterProjectNames()"
+                @blur="setTimeout(() => { autocomplete.show = false; applyFilters(); }, 150)"
+                @keydown.arrow-down.prevent="moveAutocompleteDown()"
+                @keydown.arrow-up.prevent="moveAutocompleteUp()"
+                @keydown.enter.prevent="selectAutocomplete(); applyFilters()"
+                @keydown.escape="autocomplete.show = false"
+                autocomplete="off"
+              />
+              <div
+                class="autocomplete-dropdown"
+                x-show="autocomplete.show && autocomplete.items.length > 0"
+                @click="selectProject($event); applyFilters()"
+              >
+                <template x-for="(item, idx) in autocomplete.items" :key="item">
+                  <div
+                    class="autocomplete-item"
+                    :class="{ 'active': idx === autocomplete.activeIndex }"
+                    :data-value="item"
+                    x-text="item"
+                  ></div>
+                </template>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary"
+              >支店名</label
+            >
+            <div class="position-relative">
+              <button
+                type="button"
+                class="form-select form-select-sm text-start"
+                @click="toggleRegionDropdown()"
+                @click.away="regionDropdownOpen = false"
+              >
+                <span x-text="selectedRegionsText"></span>
+              </button>
+              <div
+                class="dropdown-menu w-100 p-2"
+                :class="{ 'show': regionDropdownOpen }"
+                @click.stop
+              >
+                <div class="dropdown-scroll">
+                  <template x-for="region in regionNames" :key="region">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        :id="'region-mobile-' + region"
+                        :checked="isRegionSelected(region)"
+                        @change="toggleRegion(region)"
+                      />
+                      <label
+                        class="form-check-label small"
+                        :for="'region-mobile-' + region"
+                        x-text="region"
+                      ></label>
+                    </div>
+                  </template>
+                </div>
+                <div class="border-top pt-2 mt-2">
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm w-100"
+                    @click="confirmRegionSelection()"
+                  >
+                    決定
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary"
+              >大工事項目コード</label
+            >
+            <div class="d-flex flex-wrap gap-2">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="026"
+                  id="code026-mobile"
+                  x-model="filters.majorCodes"
+                  @change="applyFilters()"
+                /><label class="form-check-label small" for="code026-mobile"
+                  >026</label
+                >
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary"
+              >発注日</label
+            >
+            <div class="input-group input-group-sm">
+              <input
+                type="date"
+                class="form-control"
+                x-model="filters.dateFrom"
+                @change="applyFilters()"
+              />
+              <span class="input-group-text">~</span>
+              <input
+                type="date"
+                class="form-control"
+                x-model="filters.dateTo"
+                @change="applyFilters()"
+              />
+            </div>
+          </div>
+
+          <div class="section-title mt-3">項目情報</div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary"
+              >小工事項目名称</label
+            >
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="キーワード検索"
+              x-model="filters.item"
+              @input="applyFilters()"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary"
+              >業者名</label
+            >
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="業者名"
+              x-model="filters.vendor"
+              @input="applyFilters()"
+            />
+          </div>
+
+          <div class="section-title mt-3">建物情報</div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary"
+              >地上階数</label
+            >
+            <div class="input-group input-group-sm">
+              <input
+                type="number"
+                class="form-control"
+                placeholder="1"
+                min="1"
+                max="3"
+                x-model.number="filters.floorMin"
+                @change="applyFilters()"
+              />
+              <span class="input-group-text">~</span>
+              <input
+                type="number"
+                class="form-control"
+                placeholder="3"
+                min="1"
+                max="3"
+                x-model.number="filters.floorMax"
+                @change="applyFilters()"
+              />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary"
+              >戸並び</label
+            >
+            <div class="input-group input-group-sm">
+              <input
+                type="number"
+                class="form-control"
+                placeholder="1"
+                min="1"
+                max="55"
+                x-model.number="filters.unitRowMin"
+                @change="applyFilters()"
+              />
+              <span class="input-group-text">~</span>
+              <input
+                type="number"
+                class="form-control"
+                placeholder="55"
+                min="1"
+                max="55"
+                x-model.number="filters.unitRowMax"
+                @change="applyFilters()"
+              />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary"
+              >居住用戸数</label
+            >
+            <div class="input-group input-group-sm">
+              <input
+                type="number"
+                class="form-control"
+                placeholder="1"
+                min="1"
+                max="12"
+                x-model.number="filters.resUnitMin"
+                @change="applyFilters()"
+              />
+              <span class="input-group-text">~</span>
+              <input
+                type="number"
+                class="form-control"
+                placeholder="12"
+                min="1"
+                max="12"
+                x-model.number="filters.resUnitMax"
+                @change="applyFilters()"
+              />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary"
+              >施工面積 (㎡)</label
+            >
+            <div class="input-group input-group-sm">
+              <input
+                type="number"
+                class="form-control"
+                placeholder="50"
+                x-model.number="filters.constAreaMin"
+                @change="applyFilters()"
+              />
+              <span class="input-group-text">~</span>
+              <input
+                type="number"
+                class="form-control"
+                placeholder="1000"
+                x-model.number="filters.constAreaMax"
+                @change="applyFilters()"
+              />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary"
+              >延床面積 (㎡)</label
+            >
+            <div class="input-group input-group-sm">
+              <input
+                type="number"
+                class="form-control"
+                placeholder="50"
+                x-model.number="filters.totalAreaMin"
+                @change="applyFilters()"
+              />
+              <span class="input-group-text">~</span>
+              <input
+                type="number"
+                class="form-control"
+                placeholder="1000"
+                x-model.number="filters.totalAreaMax"
+                @change="applyFilters()"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="p-3 border-top bg-light">
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary" @click="applyFilters()" data-bs-dismiss="offcanvas">
+              検索実行
+            </button>
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              @click="clearFilters()"
+            >
+              条件クリア
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <main class="main-content p-2 p-md-3 p-lg-4" x-show="!isLoading && !loadError">
         <div class="mb-4">
           <h4 class="fw-bold mb-3">検索結果一覧</h4>
           <div class="d-flex gap-2 align-items-center flex-wrap mb-3">
@@ -502,7 +845,6 @@
                         viewBox="0 0 24 24"
                         class="transition-transform"
                         :class="vendorSectionExpanded[idx] ? 'rotate-90' : ''"
-                        style="transition: transform 0.2s"
                       >
                         <polyline points="9 18 15 12 9 6"></polyline>
                       </svg>
@@ -517,17 +859,19 @@
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
                       </svg>
-                      <span class="small fw-semibold text-secondary">
-                        業者別 実行単価レンジ（/<span x-text="group.unit"></span
-                        >）
-                      </span>
+                      <span class="small fw-semibold text-secondary"
+                        >業者別 実行単価レンジ（/<span
+                          x-text="group.unit"
+                        ></span
+                        >）</span
+                      >
                       <span
                         class="badge bg-secondary rounded-pill small ms-auto"
                         x-text="getVendorCount(group) + '社'"
                       ></span>
                     </div>
                     <div
-                      class="p-3 transition-collapse"
+                      class="p-2 p-md-3 transition-collapse"
                       :class="vendorSectionExpanded[idx] ? 'collapse-shown' : 'collapse-hidden'"
                     >
                       <div class="d-flex flex-column gap-2">
@@ -536,10 +880,10 @@
                           :key="idx + '-vendor-' + vendorIdx"
                         >
                           <div
-                            class="company-summary-item d-flex align-items-center flex-wrap gap-2 p-2 bg-light rounded border"
+                            class="company-summary-item d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 p-2 bg-light rounded border"
                           >
                             <div
-                              class="company-header d-flex align-items-center gap-2"
+                              class="company-header d-flex align-items-center gap-2 w-100 w-sm-auto"
                             >
                               <span
                                 class="fw-semibold small text-dark"
@@ -551,7 +895,7 @@
                               ></span>
                             </div>
                             <div
-                              class="company-prices d-flex align-items-center gap-3 ms-auto"
+                              class="company-prices d-flex align-items-center gap-2 gap-sm-3 ms-0 ms-sm-auto w-100 w-sm-auto flex-wrap"
                             >
                               <div class="d-flex align-items-baseline gap-1">
                                 <span class="small text-secondary">最小</span>
@@ -585,7 +929,7 @@
                     class="d-flex justify-content-center gap-2 align-items-center flex-wrap"
                   >
                     <button
-                      class="btn btn-sm btn-outline-secondary"
+                      class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
                       @click.stop="expandedGroups[idx] = !expandedGroups[idx]"
                     >
                       <svg
@@ -601,10 +945,11 @@
                         <path d="M3 9h18" />
                         <path d="M9 21V9" />
                       </svg>
-                      時系列一覧
+                      <span class="d-none d-sm-inline">時系列一覧</span>
+                      <span class="d-inline d-sm-none">時系列</span>
                     </button>
                     <button
-                      class="btn btn-sm btn-outline-secondary"
+                      class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
                       @click.stop="showChart(idx)"
                     >
                       <svg
@@ -620,10 +965,11 @@
                         <line x1="12" y1="20" x2="12" y2="4" />
                         <line x1="6" y1="20" x2="6" y2="14" />
                       </svg>
-                      単価推移
+                      <span class="d-none d-sm-inline">単価推移</span>
+                      <span class="d-inline d-sm-none">推移</span>
                     </button>
                     <button
-                      class="btn btn-sm btn-outline-secondary"
+                      class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
                       @click.stop="openDetailModal(idx)"
                     >
                       <svg
@@ -638,7 +984,8 @@
                         <circle cx="11" cy="11" r="8" />
                         <path d="m21 21-4.35-4.35" />
                       </svg>
-                      多角分析
+                      <span class="d-none d-sm-inline">多角分析</span>
+                      <span class="d-inline d-sm-none">分析</span>
                     </button>
                   </div>
                 </div>
@@ -688,9 +1035,9 @@
                           <div class="timeline-dot"></div>
                           <div class="timeline-content">
                             <div
-                              class="d-flex justify-content-between align-items-start gap-3"
+                              class="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-2 gap-sm-3"
                             >
-                              <div class="flex-grow-1">
+                              <div class="flex-grow-1 w-100 w-sm-auto">
                                 <div
                                   class="d-flex align-items-center gap-1 flex-wrap mb-2"
                                 >
@@ -720,7 +1067,7 @@
                                   x-text="record.projectName"
                                 ></div>
                               </div>
-                              <div class="text-end">
+                              <div class="text-start text-sm-end">
                                 <div
                                   class="fs-6 fw-bold text-primary tabular-nums"
                                   x-text="`¥${formatNumber(record.price)}`"
@@ -854,8 +1201,7 @@
                     <line x1="12" y1="20" x2="12" y2="4" />
                     <line x1="6" y1="20" x2="6" y2="14" />
                   </svg>
-                  単価推移 -
-                  <span x-text="chartData.item"></span>
+                  単価推移 - <span x-text="chartData.item"></span>
                   <small
                     class="text-muted ms-2"
                     x-text="`(${chartData.unit})`"
@@ -869,134 +1215,58 @@
               </div>
 
               <!-- Control Bar -->
-              <div class="bg-light border-bottom p-3">
-                <div class="row g-3">
-                  <!-- Chart View Card -->
-                  <div class="col-12 col-md-6 col-lg-4">
-                    <div
-                      class="card h-100 cursor-pointer"
-                      :class="chartData.displayMode === 'chart' ? 'border-primary shadow-sm' : 'border-secondary'"
+              <div class="bg-light border-bottom py-2 px-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                  <!-- View Toggle -->
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button
+                      type="button"
+                      class="btn"
+                      :class="chartData.displayMode === 'chart' ? 'btn-primary' : 'btn-outline-secondary'"
                       @click="setChartDisplayMode('chart')"
                     >
-                      <div class="card-body py-2 px-3">
-                        <div class="d-flex align-items-center gap-2">
-                          <div
-                            class="rounded-circle d-flex align-items-center justify-content-center"
-                            :class="chartData.displayMode === 'chart' ? 'bg-primary text-white' : 'bg-secondary text-white'"
-                            style="width: 28px; height: 28px"
-                          >
-                            <svg
-                              width="14"
-                              height="14"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              viewBox="0 0 24 24"
-                            >
-                              <line x1="18" y1="20" x2="18" y2="10" />
-                              <line x1="12" y1="20" x2="12" y2="4" />
-                              <line x1="6" y1="20" x2="6" y2="14" />
-                            </svg>
-                          </div>
-                          <span
-                            class="fw-semibold"
-                            :class="chartData.displayMode === 'chart' ? 'text-primary' : 'text-secondary'"
-                            >チャート表示</span
-                          >
-                          <span
-                            x-show="chartData.displayMode === 'chart'"
-                            class="badge bg-primary ms-auto"
-                            >選択中</span
-                          >
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Table View Card -->
-                  <div class="col-12 col-md-6 col-lg-4">
-                    <div
-                      class="card h-100 cursor-pointer"
-                      :class="chartData.displayMode === 'table' ? 'border-primary shadow-sm' : 'border-secondary'"
+                      <svg class="icon-inline me-1" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                      </svg>
+                      チャート
+                    </button>
+                    <button
+                      type="button"
+                      class="btn"
+                      :class="chartData.displayMode === 'table' ? 'btn-primary' : 'btn-outline-secondary'"
                       @click="setChartDisplayMode('table')"
                     >
-                      <div class="card-body py-2 px-3">
-                        <div class="d-flex align-items-center gap-2">
-                          <div
-                            class="rounded-circle d-flex align-items-center justify-content-center"
-                            :class="chartData.displayMode === 'table' ? 'bg-primary text-white' : 'bg-secondary text-white'"
-                            style="width: 28px; height: 28px"
-                          >
-                            <svg
-                              width="14"
-                              height="14"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              viewBox="0 0 24 24"
-                            >
-                              <line x1="8" y1="6" x2="21" y2="6" />
-                              <line x1="8" y1="12" x2="21" y2="12" />
-                              <line x1="8" y1="18" x2="21" y2="18" />
-                              <line x1="3" y1="6" x2="3.01" y2="6" />
-                              <line x1="3" y1="12" x2="3.01" y2="12" />
-                              <line x1="3" y1="18" x2="3.01" y2="18" />
-                            </svg>
-                          </div>
-                          <span
-                            class="fw-semibold"
-                            :class="chartData.displayMode === 'table' ? 'text-primary' : 'text-secondary'"
-                            >テーブル表示</span
-                          >
-                          <span
-                            x-show="chartData.displayMode === 'table'"
-                            class="badge bg-primary ms-auto"
-                            >選択中</span
-                          >
-                        </div>
-                      </div>
-                    </div>
+                      <svg class="icon-inline me-1" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <line x1="8" y1="6" x2="21" y2="6" />
+                        <line x1="8" y1="12" x2="21" y2="12" />
+                        <line x1="8" y1="18" x2="21" y2="18" />
+                        <line x1="3" y1="6" x2="3.01" y2="6" />
+                        <line x1="3" y1="12" x2="3.01" y2="12" />
+                        <line x1="3" y1="18" x2="3.01" y2="18" />
+                      </svg>
+                      テーブル
+                    </button>
                   </div>
 
                   <!-- Summary Stats -->
-                  <div
-                    class="col-12 col-lg-4 d-flex align-items-center justify-content-lg-end"
-                  >
-                    <div class="d-flex gap-3 align-items-center flex-wrap">
-                      <span
-                        class="badge bg-info fs-6"
-                        x-text="chartData.records.length + '件'"
-                      ></span>
-                      <div class="d-flex gap-2 align-items-center">
-                        <small class="text-muted">最小:</small>
-                        <span
-                          class="fw-semibold text-success"
-                          x-text="`¥${formatNumber(chartData.minPrice)}`"
-                        ></span>
-                      </div>
-                      <div class="d-flex gap-2 align-items-center">
-                        <small class="text-muted">平均:</small>
-                        <span
-                          class="fw-semibold text-primary"
-                          x-text="`¥${formatNumber(chartData.avgPrice)}`"
-                        ></span>
-                      </div>
-                      <div class="d-flex gap-2 align-items-center">
-                        <small class="text-muted">最大:</small>
-                        <span
-                          class="fw-semibold text-danger"
-                          x-text="`¥${formatNumber(chartData.maxPrice)}`"
-                        ></span>
-                      </div>
-                    </div>
+                  <div class="d-flex gap-2 gap-md-3 align-items-center flex-wrap">
+                    <span class="badge bg-info" x-text="chartData.records.length + '件'"></span>
+                    <small class="text-muted">最小:</small>
+                    <span class="fw-semibold text-success small" x-text="`¥${formatNumber(chartData.minPrice)}`"></span>
+                    <small class="text-muted">平均:</small>
+                    <span class="fw-semibold text-primary small" x-text="`¥${formatNumber(chartData.avgPrice)}`"></span>
+                    <small class="text-muted">最大:</small>
+                    <span class="fw-semibold text-danger small" x-text="`¥${formatNumber(chartData.maxPrice)}`"></span>
                   </div>
                 </div>
               </div>
 
               <!-- Modal Body -->
-              <div class="modal-body">
+              <div class="modal-body p-0">
                 <!-- Chart View -->
-                <div x-show="chartData.displayMode === 'chart'">
+                <div x-show="chartData.displayMode === 'chart'" class="p-3">
                   <div class="chart-scroll-container">
                     <div class="chart-wrapper" x-ref="chartWrapper">
                       <canvas x-ref="netPriceChart"></canvas>
@@ -1004,119 +1274,178 @@
                   </div>
                 </div>
 
-                <!-- Table View -->
-                <div x-show="chartData.displayMode === 'table'">
-                  <div
-                    class="table-responsive"
-                    style="max-height: calc(100vh - 280px); overflow: auto"
+                <!-- Table View (Weekly Grouped) -->
+                <div
+                  x-show="chartData.displayMode === 'table'"
+                  class="bg-body-secondary p-3 overflow-auto"
+                  style="max-height: calc(100vh - 160px)"
+                >
+                  <template
+                    x-for="(weekGroup, weekIdx) in chartData.weeklyData"
+                    :key="weekIdx"
                   >
-                    <table
-                      class="table table-sm table-bordered table-hover mb-0"
-                      style="min-width: 1400px; table-layout: fixed"
-                    >
-                      <thead class="table-light sticky-top">
-                        <tr>
-                          <th style="width: 100px">発注日</th>
-                          <th style="width: 70px">支店</th>
-                          <th style="width: 60px">大工事</th>
-                          <th style="width: 220px">工事名称</th>
-                          <th style="width: 150px">仕様</th>
-                          <th style="width: 180px">業者</th>
-                          <th style="width: 55px" class="text-center">階数</th>
-                          <th style="width: 55px" class="text-center">戸並</th>
-                          <th style="width: 55px" class="text-center">戸数</th>
-                          <th style="width: 100px" class="text-end">
-                            施工面積
-                          </th>
-                          <th style="width: 100px" class="text-end">
-                            延床面積
-                          </th>
-                          <th style="width: 85px" class="text-end">実行数量</th>
-                          <th style="width: 100px" class="text-end">
-                            実行単価
-                          </th>
-                          <th style="width: 110px" class="text-end">
-                            実行金額
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <template
-                          x-for="record in chartData.records"
-                          :key="record.id"
-                        >
-                          <tr>
-                            <td
-                              class="text-nowrap"
-                              x-text="record.orderDateFormatted"
-                            ></td>
-                            <td>
-                              <span
-                                class="badge bg-info"
-                                x-text="record.region"
-                              ></span>
-                            </td>
-                            <td>
-                              <span
-                                class="badge bg-secondary"
-                                x-text="record.majorCode"
-                              ></span>
-                            </td>
-                            <td
-                              class="text-truncate"
-                              style="max-width: 220px"
-                              x-text="record.projectName"
-                              :title="record.projectName"
-                            ></td>
-                            <td
-                              class="text-muted small text-truncate"
-                              style="max-width: 150px"
-                              x-text="record.spec || '-'"
-                              :title="record.spec"
-                            ></td>
-                            <td
-                              class="text-truncate"
-                              style="max-width: 180px"
-                              x-text="record.vendor"
-                              :title="record.vendor"
-                            ></td>
-                            <td
-                              class="text-center tabular-nums"
-                              x-text="record.floors + '階'"
-                            ></td>
-                            <td
-                              class="text-center tabular-nums"
-                              x-text="record.unitRow + '戸'"
-                            ></td>
-                            <td
-                              class="text-center tabular-nums"
-                              x-text="record.resUnits + '戸'"
-                            ></td>
-                            <td
-                              class="text-end tabular-nums text-nowrap"
-                              x-text="`${formatNumber(record.constArea)} ㎡`"
-                            ></td>
-                            <td
-                              class="text-end tabular-nums text-nowrap"
-                              x-text="`${formatNumber(record.totalArea)} ㎡`"
-                            ></td>
-                            <td
-                              class="text-end tabular-nums"
-                              x-text="formatNumber(record.qty)"
-                            ></td>
-                            <td
-                              class="text-end tabular-nums text-nowrap"
-                              x-text="`¥${formatNumber(record.price)}`"
-                            ></td>
-                            <td
-                              class="text-end tabular-nums text-nowrap fw-semibold"
-                              x-text="`¥${formatNumber(record.amount)}`"
-                            ></td>
-                          </tr>
-                        </template>
-                      </tbody>
-                    </table>
-                  </div>
+                    <div class="mb-4">
+                      <!-- Week Group Header -->
+                      <div
+                        class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2 mb-2 pb-2 border-bottom"
+                      >
+                        <div class="d-flex align-items-center gap-2">
+                          <h6
+                            class="fw-bold mb-0"
+                            x-text="weekGroup.weekStart"
+                          ></h6>
+                          <span
+                            class="badge bg-secondary"
+                            x-text="weekGroup.count + '件'"
+                          ></span>
+                        </div>
+                        <div class="ms-0 ms-md-auto small d-flex flex-wrap gap-2 gap-md-3">
+                          <span class="text-success">
+                            <span class="d-none d-sm-inline">最小:</span>
+                            <span class="d-inline d-sm-none">小:</span>
+                            <span
+                              class="fw-semibold"
+                              x-text="`¥${formatNumber(weekGroup.minPrice)}`"
+                            ></span>
+                          </span>
+                          <span class="text-muted d-none d-md-inline">|</span>
+                          <span class="text-primary">
+                            <span class="d-none d-sm-inline">平均:</span>
+                            <span class="d-inline d-sm-none">均:</span>
+                            <span
+                              class="fw-semibold"
+                              x-text="`¥${formatNumber(weekGroup.avgPrice)}`"
+                            ></span>
+                          </span>
+                          <span class="text-muted d-none d-md-inline">|</span>
+                          <span class="text-danger">
+                            <span class="d-none d-sm-inline">最大:</span>
+                            <span class="d-inline d-sm-none">大:</span>
+                            <span
+                              class="fw-semibold"
+                              x-text="`¥${formatNumber(weekGroup.maxPrice)}`"
+                            ></span>
+                          </span>
+                        </div>
+                      </div>
+                      <!-- Week Group Table -->
+                      <div class="card shadow-sm">
+                        <div class="table-responsive">
+                          <table
+                            class="table table-sm table-bordered table-hover mb-0"
+                            style="min-width: 1400px; table-layout: fixed"
+                          >
+                            <thead class="table-light">
+                              <tr>
+                                <th style="width: 100px">発注日</th>
+                                <th style="width: 70px">支店</th>
+                                <th style="width: 60px">大工事</th>
+                                <th style="width: 180px">工事名称</th>
+                                <th style="width: 180px">業者</th>
+                                <th class="text-end" style="width: 70px">
+                                  実行数量
+                                </th>
+                                <th class="text-center" style="width: 50px">
+                                  単位
+                                </th>
+                                <th class="text-end" style="width: 100px">
+                                  実行単価
+                                </th>
+                                <th class="text-end" style="width: 110px">
+                                  実行金額
+                                </th>
+                                <th class="text-center" style="width: 55px">
+                                  階数
+                                </th>
+                                <th class="text-center" style="width: 55px">
+                                  戸並
+                                </th>
+                                <th class="text-center" style="width: 55px">
+                                  戸数
+                                </th>
+                                <th class="text-end" style="width: 100px">
+                                  施工面積
+                                </th>
+                                <th class="text-end" style="width: 100px">
+                                  延床面積
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <template
+                                x-for="(r, rIdx) in weekGroup.records"
+                                :key="weekIdx + '-' + rIdx"
+                              >
+                                <tr>
+                                  <td
+                                    class="text-nowrap"
+                                    x-text="r.orderDateFormatted"
+                                  ></td>
+                                  <td>
+                                    <span
+                                      class="badge bg-info"
+                                      x-text="r.region"
+                                    ></span>
+                                  </td>
+                                  <td>
+                                    <span
+                                      class="badge bg-secondary"
+                                      x-text="r.majorCode"
+                                    ></span>
+                                  </td>
+                                  <td
+                                    class="text-truncate"
+                                    style="max-width: 180px"
+                                    x-text="r.projectName"
+                                    :title="r.projectName"
+                                  ></td>
+                                  <td
+                                    class="text-truncate"
+                                    style="max-width: 180px"
+                                    x-text="r.vendor"
+                                    :title="r.vendor"
+                                  ></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap"
+                                    x-text="formatNumber(r.qty)"
+                                  ></td>
+                                  <td class="text-center" x-text="r.unit"></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap"
+                                    x-text="`¥${formatNumber(r.price)}`"
+                                  ></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap fw-semibold"
+                                    x-text="`¥${formatNumber(r.amount)}`"
+                                  ></td>
+                                  <td
+                                    class="text-center tabular-nums"
+                                    x-text="r.floors + '階'"
+                                  ></td>
+                                  <td
+                                    class="text-center tabular-nums"
+                                    x-text="r.unitRow + '戸'"
+                                  ></td>
+                                  <td
+                                    class="text-center tabular-nums"
+                                    x-text="r.resUnits + '戸'"
+                                  ></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap"
+                                    x-text="`${formatNumber(r.constArea)} ㎡`"
+                                  ></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap"
+                                    x-text="`${formatNumber(r.totalArea)} ㎡`"
+                                  ></td>
+                                </tr>
+                              </template>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
                 </div>
               </div>
 
@@ -1133,7 +1462,7 @@
           </div>
         </div>
 
-        <!-- Detail Analysis Modal -->
+        <!-- Detail Analysis Modal (BI Dashboard) -->
         <div
           class="modal fade"
           id="detailModal"
@@ -1144,23 +1473,24 @@
           <div class="modal-dialog modal-fullscreen">
             <div class="modal-content">
               <!-- Header -->
-              <div class="modal-header">
-                <h5 class="modal-title fw-bold">
-                  <svg
-                    class="icon-inline me-2"
-                    width="20"
-                    height="20"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.35-4.35" />
-                  </svg>
-                  多角分析 -
-                  <span x-text="detailModal.currentGroup?.item"></span>
-                </h5>
+              <div class="modal-header py-2">
+                <div class="d-flex flex-column">
+                  <h5 class="modal-title fw-bold mb-0">
+                    <svg
+                      class="icon-inline me-2"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <span x-text="detailModal.currentGroup?.item"></span>
+                  </h5>
+                </div>
                 <button
                   type="button"
                   class="btn-close"
@@ -1168,307 +1498,504 @@
                 ></button>
               </div>
 
-              <!-- Control Bar - Card-based Grouping -->
-              <div class="bg-light border-bottom p-3">
-                <div class="row g-3">
-                  <!-- List View Card -->
-                  <div class="col-12 col-md-6 col-lg-5">
-                    <div
-                      class="card h-100 cursor-pointer"
-                      :class="detailModal.displayMode === 'list' ? 'border-primary shadow-sm' : 'border-secondary'"
-                      @click="setDetailDisplayMode('list')"
+              <!-- Tab Navigation -->
+              <div class="bg-white border-bottom">
+                <ul class="nav nav-tabs border-bottom-0 px-3" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button
+                      class="nav-link"
+                      :class="{ 'active': detailModal.activeTab === 'timeseries' }"
+                      @click="setDetailTab('timeseries')"
+                      type="button"
+                      role="tab"
                     >
-                      <div class="card-body py-2 px-3">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                          <div
-                            class="rounded-circle d-flex align-items-center justify-content-center"
-                            :class="detailModal.displayMode === 'list' ? 'bg-primary text-white' : 'bg-secondary text-white'"
-                            style="width: 28px; height: 28px"
-                          >
-                            <svg
-                              width="14"
-                              height="14"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              viewBox="0 0 24 24"
-                            >
-                              <line x1="8" y1="6" x2="21" y2="6" />
-                              <line x1="8" y1="12" x2="21" y2="12" />
-                              <line x1="8" y1="18" x2="21" y2="18" />
-                              <line x1="3" y1="6" x2="3.01" y2="6" />
-                              <line x1="3" y1="12" x2="3.01" y2="12" />
-                              <line x1="3" y1="18" x2="3.01" y2="18" />
-                            </svg>
-                          </div>
-                          <span
-                            class="fw-semibold"
-                            :class="detailModal.displayMode === 'list' ? 'text-primary' : 'text-secondary'"
-                            >リスト表示</span
-                          >
-                          <span
-                            x-show="detailModal.displayMode === 'list'"
-                            class="badge bg-primary ms-auto"
-                            >選択中</span
-                          >
-                        </div>
-                        <div
-                          class="d-flex align-items-center gap-2"
-                          @click.stop
-                        >
-                          <label class="form-label small mb-0 text-muted"
-                            >グループ:</label
-                          >
-                          <select
-                            class="form-select form-select-sm"
-                            style="width: auto"
-                            x-model="detailModal.groupBy"
-                            :disabled="detailModal.displayMode !== 'list'"
-                          >
-                            <option value="timeline">時系列</option>
-                            <option value="majorCode">大工事項目別</option>
-                            <option value="region">支店別</option>
-                            <option value="building">建物情報別</option>
-                            <option value="vendor">業者別</option>
-                          </select>
-                        </div>
-                      </div>
+                      <svg class="icon-inline me-1" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                      </svg>
+                      時系列分析
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button
+                      class="nav-link"
+                      :class="{ 'active': detailModal.activeTab === 'comparison' }"
+                      @click="setDetailTab('comparison')"
+                      type="button"
+                      role="tab"
+                    >
+                      <svg class="icon-inline me-1" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                      </svg>
+                      比較分析
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button
+                      class="nav-link"
+                      :class="{ 'active': detailModal.activeTab === 'trend' }"
+                      @click="setDetailTab('trend')"
+                      type="button"
+                      role="tab"
+                    >
+                      <svg class="icon-inline me-1" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="2" />
+                        <circle cx="6" cy="6" r="2" />
+                        <circle cx="18" cy="18" r="2" />
+                        <circle cx="6" cy="18" r="2" />
+                        <circle cx="18" cy="6" r="2" />
+                      </svg>
+                      傾向分析
+                    </button>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Common Filters Bar -->
+              <div class="bg-light border-bottom py-2 px-3">
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                  <!-- Date Range Filter -->
+                  <div class="d-flex align-items-center gap-1">
+                    <label class="form-label small mb-0 text-muted fw-semibold">期間:</label>
+                    <div class="input-group input-group-sm" style="width: auto">
+                      <input
+                        type="date"
+                        class="form-control form-control-sm"
+                        x-model="detailModal.commonFilters.dateFrom"
+                        @change="applyDetailCommonFilters()"
+                      />
+                      <span class="input-group-text">~</span>
+                      <input
+                        type="date"
+                        class="form-control form-control-sm"
+                        x-model="detailModal.commonFilters.dateTo"
+                        @change="applyDetailCommonFilters()"
+                      />
                     </div>
                   </div>
-
-                  <!-- Chart View Card -->
-                  <div class="col-12 col-md-6 col-lg-5">
-                    <div
-                      class="card h-100 cursor-pointer"
-                      :class="detailModal.displayMode === 'chart' ? 'border-primary shadow-sm' : 'border-secondary'"
-                      @click="setDetailDisplayMode('chart')"
-                    >
-                      <div class="card-body py-2 px-3">
-                        <div
-                          class="d-flex align-items-center gap-2 mb-2"
-                          @click="setDetailDisplayMode('chart')"
-                          style="cursor: pointer"
-                        >
-                          <div
-                            class="rounded-circle d-flex align-items-center justify-content-center"
-                            :class="detailModal.displayMode === 'chart' ? 'bg-primary text-white' : 'bg-secondary text-white'"
-                            style="width: 28px; height: 28px"
-                          >
-                            <svg
-                              width="14"
-                              height="14"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              viewBox="0 0 24 24"
-                            >
-                              <line x1="18" y1="20" x2="18" y2="10" />
-                              <line x1="12" y1="20" x2="12" y2="4" />
-                              <line x1="6" y1="20" x2="6" y2="14" />
-                            </svg>
-                          </div>
-                          <span
-                            class="fw-semibold"
-                            :class="detailModal.displayMode === 'chart' ? 'text-primary' : 'text-secondary'"
-                            >チャート表示</span
-                          >
-                          <span
-                            x-show="detailModal.displayMode === 'chart'"
-                            class="badge bg-primary ms-auto"
-                            >選択中</span
-                          >
-                        </div>
-                        <div
-                          class="d-flex flex-wrap align-items-center gap-2"
-                          @click.stop
-                        >
-                          <label class="form-label small mb-0 text-muted"
-                            >種別:</label
-                          >
-                          <select
-                            class="form-select form-select-sm"
-                            style="width: auto"
-                            x-model="detailModal.chartType"
-                            @change="detailModal.displayMode === 'chart' && renderDetailChart()"
-                            :disabled="detailModal.displayMode !== 'chart'"
-                          >
-                            <option value="trend">単価推移</option>
-                            <option value="comparison">グループ比較</option>
-                            <option value="distribution">単価分布</option>
-                          </select>
-                          <template
-                            x-if="detailModal.chartType === 'comparison'"
-                          >
-                            <div class="d-flex align-items-center gap-2">
-                              <label class="form-label small mb-0 text-muted"
-                                >比較軸:</label
-                              >
-                              <select
-                                class="form-select form-select-sm"
-                                style="width: auto"
-                                x-model="detailModal.groupBy"
-                                @change="detailModal.displayMode === 'chart' && renderDetailChart()"
-                                :disabled="detailModal.displayMode !== 'chart'"
-                              >
-                                <option value="timeline">時系列</option>
-                                <option value="majorCode">大工事項目別</option>
-                                <option value="region">支店別</option>
-                                <option value="building">建物情報別</option>
-                                <option value="vendor">業者別</option>
-                              </select>
+                  <!-- Region Filter -->
+                  <div class="d-flex align-items-center gap-1">
+                    <label class="form-label small mb-0 text-muted fw-semibold">支店:</label>
+                    <div class="position-relative">
+                      <button
+                        type="button"
+                        class="form-select form-select-sm text-start"
+                        style="width: auto; min-width: 120px"
+                        @click="toggleDetailRegionDropdown()"
+                        @click.away="detailRegionDropdownOpen = false"
+                      >
+                        <span x-text="selectedDetailRegionsText"></span>
+                      </button>
+                      <div
+                        class="dropdown-menu p-2"
+                        style="min-width: 200px"
+                        :class="{ 'show': detailRegionDropdownOpen }"
+                        @click.stop
+                      >
+                        <div class="dropdown-scroll" style="max-height: 200px; overflow-y: auto">
+                          <template x-for="region in detailModalRegionOptions" :key="region">
+                            <div class="form-check">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                :id="'detail-region-' + region"
+                                :checked="isDetailRegionSelected(region)"
+                                @change="toggleDetailRegion(region)"
+                              />
+                              <label
+                                class="form-check-label small"
+                                :for="'detail-region-' + region"
+                                x-text="region"
+                              ></label>
                             </div>
                           </template>
                         </div>
+                        <div class="border-top pt-2 mt-2">
+                          <button
+                            type="button"
+                            class="btn btn-primary btn-sm w-100"
+                            @click="confirmDetailRegionSelection()"
+                          >
+                            決定
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                  <!-- Summary Stats -->
-                  <div
-                    class="col-12 col-lg-2 d-flex align-items-center justify-content-lg-end"
-                  >
-                    <div class="d-flex gap-2 align-items-center">
-                      <span
-                        class="badge bg-info fs-6"
-                        x-text="(detailModal.currentGroup?.filteredRecords?.length || 0) + '件'"
-                      ></span>
-                      <small class="text-muted d-none d-lg-inline">
-                        <span
-                          class="fw-semibold text-success"
-                          x-text="`¥${formatNumber(detailModal.currentGroup?.minPrice)}`"
-                        ></span>
-                        ~
-                        <span
-                          class="fw-semibold text-danger"
-                          x-text="`¥${formatNumber(detailModal.currentGroup?.maxPrice)}`"
-                        ></span>
-                      </small>
+                  <!-- Vendor Filter -->
+                  <div class="d-flex align-items-center gap-1">
+                    <label class="form-label small mb-0 text-muted fw-semibold">業者:</label>
+                    <div class="position-relative">
+                      <button
+                        type="button"
+                        class="form-select form-select-sm text-start"
+                        style="width: auto; min-width: 150px"
+                        @click="toggleDetailVendorDropdown()"
+                        @click.away="detailVendorDropdownOpen = false"
+                      >
+                        <span x-text="selectedDetailVendorsText"></span>
+                      </button>
+                      <div
+                        class="dropdown-menu p-2"
+                        style="min-width: 250px"
+                        :class="{ 'show': detailVendorDropdownOpen }"
+                        @click.stop
+                      >
+                        <div class="dropdown-scroll" style="max-height: 200px; overflow-y: auto">
+                          <template x-for="vendor in detailModalVendorOptions" :key="vendor">
+                            <div class="form-check">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                :id="'detail-vendor-' + vendor"
+                                :checked="isDetailVendorSelected(vendor)"
+                                @change="toggleDetailVendor(vendor)"
+                              />
+                              <label
+                                class="form-check-label small"
+                                :for="'detail-vendor-' + vendor"
+                                x-text="vendor"
+                              ></label>
+                            </div>
+                          </template>
+                        </div>
+                        <div class="border-top pt-2 mt-2">
+                          <button
+                            type="button"
+                            class="btn btn-primary btn-sm w-100"
+                            @click="confirmDetailVendorSelection()"
+                          >
+                            決定
+                          </button>
+                        </div>
+                      </div>
                     </div>
+                  </div>
+                  <!-- Clear Filters -->
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    @click="clearDetailCommonFilters()"
+                  >
+                    クリア
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tab-specific Controls -->
+              <div class="bg-white border-bottom py-2 px-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                  <!-- Timeseries Controls -->
+                  <div :class="detailModal.activeTab === 'timeseries' ? 'd-flex align-items-center gap-3 flex-wrap' : 'd-none'">
+                    <div class="d-flex align-items-center gap-1">
+                      <label class="form-label small mb-0 text-muted fw-semibold">時間軸:</label>
+                      <select class="form-select form-select-sm" style="width: auto" x-model="detailModal.timeseries.timeUnit" @change="renderDetailChart()">
+                        <option value="yearly">年次</option>
+                        <option value="monthly">月次</option>
+                        <option value="weekly">週次</option>
+                        <option value="daily">日次</option>
+                      </select>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                      <label class="form-label small mb-0 text-muted fw-semibold">表示:</label>
+                      <select class="form-select form-select-sm" style="width: auto" x-model="detailModal.timeseries.chartType" @change="renderDetailChart()">
+                        <option value="line">折れ線</option>
+                        <option value="area">面グラフ</option>
+                        <option value="bar">棒グラフ</option>
+                        <option value="table">テーブル</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Comparison Controls (right-aligned) -->
+                  <div :class="detailModal.activeTab === 'comparison' ? 'd-flex align-items-center gap-3 flex-wrap ms-auto' : 'd-none'">
+                    <div class="d-flex align-items-center gap-1">
+                      <label class="form-label small mb-0 text-muted fw-semibold">比較軸:</label>
+                      <select class="form-select form-select-sm" style="width: auto" x-model="detailModal.comparison.groupBy" @change="renderDetailChart()">
+                        <option value="region">支店別</option>
+                        <option value="vendor">業者別</option>
+                        <option value="majorCode">大工事項目別</option>
+                        <option value="building">建物タイプ別</option>
+                      </select>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                      <label class="form-label small mb-0 text-muted fw-semibold">指標:</label>
+                      <select class="form-select form-select-sm" style="width: auto" x-model="detailModal.comparison.metric" @change="renderDetailChart()">
+                        <option value="avg">平均</option>
+                        <option value="median">中央値</option>
+                      </select>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                      <label class="form-label small mb-0 text-muted fw-semibold">表示:</label>
+                      <select class="form-select form-select-sm" style="width: auto" x-model="detailModal.comparison.chartType" @change="renderDetailChart()">
+                        <option value="bar">棒グラフ</option>
+                        <option value="boxplot">箱ひげ図</option>
+                        <option value="radar">レーダー</option>
+                        <option value="table">テーブル</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Trend Controls (right-aligned) -->
+                  <div :class="detailModal.activeTab === 'trend' ? 'd-flex align-items-center gap-3 flex-wrap ms-auto' : 'd-none'">
+                    <div class="d-flex align-items-center gap-1">
+                      <label class="form-label small mb-0 text-muted fw-semibold">要因(X軸):</label>
+                      <select class="form-select form-select-sm" style="width: auto" x-model="detailModal.trend.xAxis" @change="renderDetailChart()">
+                        <option value="resUnits">総戸数</option>
+                        <option value="floors">階数</option>
+                        <option value="totalArea">延床面積</option>
+                        <option value="constArea">施工面積</option>
+                      </select>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                      <label class="form-label small mb-0 text-muted fw-semibold">表示:</label>
+                      <select class="form-select form-select-sm" style="width: auto" x-model="detailModal.trend.chartType" @change="renderDetailChart()">
+                        <option value="scatter">散布図</option>
+                        <option value="bubble">バブル</option>
+                        <option value="heatmap">ヒートマップ</option>
+                        <option value="table">テーブル</option>
+                      </select>
+                    </div>
+                    <template x-if="detailModal.trend.chartType === 'bubble'">
+                      <div class="d-flex align-items-center gap-1">
+                        <label class="form-label small mb-0 text-muted fw-semibold">サイズ:</label>
+                        <select class="form-select form-select-sm" style="width: auto" x-model="detailModal.trend.bubbleSize" @change="renderDetailChart()">
+                          <option value="qty">数量</option>
+                          <option value="amount">金額</option>
+                        </select>
+                      </div>
+                    </template>
+                  </div>
+
+                  <!-- KPI Summary (right side) -->
+                  <div class="d-flex gap-2 gap-md-3 align-items-center flex-wrap ms-auto">
+                    <span class="badge bg-info" x-text="detailModal.kpiSummary.count + '件'"></span>
+                    <small class="text-muted">最小:</small>
+                    <span class="fw-semibold text-success small" x-text="`¥${formatNumber(detailModal.kpiSummary.minPrice)}`"></span>
+                    <small class="text-muted">平均:</small>
+                    <span class="fw-semibold text-primary small" x-text="`¥${formatNumber(detailModal.kpiSummary.avgPrice)}`"></span>
+                    <small class="text-muted">中央値:</small>
+                    <span class="fw-semibold text-warning small" x-text="`¥${formatNumber(detailModal.kpiSummary.medianPrice)}`"></span>
+                    <small class="text-muted">最大:</small>
+                    <span class="fw-semibold text-danger small" x-text="`¥${formatNumber(detailModal.kpiSummary.maxPrice)}`"></span>
                   </div>
                 </div>
               </div>
 
               <!-- Modal Body -->
-              <div class="modal-body p-4 bg-body-secondary">
-                <!-- List View -->
-                <div x-show="detailModal.displayMode === 'list'">
-                  <template
-                    x-for="(records, key) in getGroupedDetailData()"
-                    :key="key"
-                  >
-                    <div class="mb-4">
-                      <!-- Group Header -->
-                      <div
-                        class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom"
-                      >
-                        <h6 class="fw-bold mb-0" x-text="key"></h6>
-                        <span
-                          class="badge bg-secondary"
-                          x-text="records.length + '件'"
-                        ></span>
-                        <span class="ms-auto small text-muted">
-                          平均:
-                          <span
-                            class="fw-semibold"
-                            x-text="`¥${formatNumber(calcPriceStats(records.map(r => r.price)).avg)}`"
-                          ></span>
-                        </span>
-                      </div>
-                      <!-- Group Table -->
-                      <div class="card shadow-sm">
-                        <div class="table-responsive">
-                          <table class="table table-sm table-hover mb-0">
-                            <thead class="table-light">
-                              <tr>
-                                <th>発注日</th>
-                                <th>支店</th>
-                                <th>工事名称</th>
-                                <th>業者</th>
-                                <th>建物情報</th>
-                                <th class="text-end">実行単価</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <template
-                                x-for="(r, rIdx) in records"
-                                :key="key + '-' + rIdx"
-                              >
-                                <tr>
-                                  <td x-text="r.orderDateFormatted"></td>
-                                  <td>
-                                    <span
-                                      class="badge bg-info"
-                                      x-text="r.region"
-                                    ></span>
-                                  </td>
-                                  <td
-                                    class="text-truncate"
-                                    style="max-width: 200px"
-                                    x-text="r.projectName"
-                                  ></td>
-                                  <td x-text="r.vendor"></td>
-                                  <td
-                                    x-text="`${r.floors}階/${r.resUnits}戸`"
-                                  ></td>
-                                  <td
-                                    class="text-end fw-bold text-primary tabular-nums"
-                                    x-text="'¥' + formatNumber(r.price)"
-                                  ></td>
-                                </tr>
-                              </template>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
+              <div class="modal-body p-3 bg-body-secondary overflow-auto">
+                <!-- Shared Chart Container (visible when not in table mode) -->
+                <div x-show="!isDetailTableMode()" class="card shadow-sm mb-3">
+                  <div class="card-body">
+                    <div class="detail-chart-container">
+                      <canvas x-ref="detailChart"></canvas>
                     </div>
-                  </template>
-
-                  <!-- Load More Button for Detail List -->
-                  <template x-if="hasMoreDetailRecords">
-                    <div class="text-center py-4">
-                      <button
-                        class="btn btn-outline-primary"
-                        @click="loadMoreDetailRecords()"
-                      >
-                        <svg
-                          class="icon-inline me-2"
-                          width="16"
-                          height="16"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          viewBox="0 0 24 24"
-                        >
-                          <polyline points="6 9 12 15 18 9" />
-                        </svg>
-                        さらに表示
-                        <span
-                          class="badge bg-primary ms-2"
-                          x-text="Math.min(detailModal.listLimit, remainingDetailRecords) + '件'"
-                        ></span>
-                      </button>
-                      <p class="text-muted small mt-2">
-                        <span x-text="detailModal.listDisplayed"></span> /
-                        <span x-text="detailTotalRecords"></span> 件表示中
-                      </p>
-                    </div>
-                  </template>
+                  </div>
                 </div>
 
-                <!-- Chart View -->
-                <div x-show="detailModal.displayMode === 'chart'" x-transition>
-                  <div class="card shadow-sm">
-                    <div class="card-body">
-                      <div class="detail-chart-container">
-                        <canvas x-ref="detailChart"></canvas>
+                <!-- Timeseries Tab Content -->
+                <div x-show="detailModal.activeTab === 'timeseries'">
+                  <!-- Table View -->
+                  <div x-show="isDetailTableMode()">
+                    <template x-for="(weekGroup, weekIdx) in getDetailTableData()" :key="weekIdx">
+                      <div class="mb-4">
+                        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2 mb-2 pb-2 border-bottom">
+                          <div class="d-flex align-items-center gap-2">
+                            <h6 class="fw-bold mb-0" x-text="weekGroup.label"></h6>
+                            <span class="badge bg-secondary" x-text="weekGroup.count + '件'"></span>
+                          </div>
+                          <div class="ms-0 ms-md-auto small d-flex flex-wrap gap-2 gap-md-3">
+                            <span class="text-success">最小: <span class="fw-semibold" x-text="`¥${formatNumber(weekGroup.minPrice)}`"></span></span>
+                            <span class="text-primary">平均: <span class="fw-semibold" x-text="`¥${formatNumber(weekGroup.avgPrice)}`"></span></span>
+                            <span class="text-danger">最大: <span class="fw-semibold" x-text="`¥${formatNumber(weekGroup.maxPrice)}`"></span></span>
+                          </div>
+                        </div>
+                        <div class="card shadow-sm">
+                          <div class="table-responsive">
+                            <table class="table table-sm table-bordered table-hover mb-0" style="min-width: 1400px; table-layout: fixed">
+                              <thead class="table-light">
+                                <tr>
+                                  <th style="width: 100px">発注日</th>
+                                  <th style="width: 70px">支店</th>
+                                  <th style="width: 60px">大工事</th>
+                                  <th style="width: 180px">工事名称</th>
+                                  <th style="width: 180px">業者</th>
+                                  <th class="text-end" style="width: 70px">実行数量</th>
+                                  <th class="text-center" style="width: 50px">単位</th>
+                                  <th class="text-end" style="width: 100px">実行単価</th>
+                                  <th class="text-end" style="width: 110px">実行金額</th>
+                                  <th class="text-center" style="width: 55px">階数</th>
+                                  <th class="text-center" style="width: 55px">戸並</th>
+                                  <th class="text-center" style="width: 55px">戸数</th>
+                                  <th class="text-end" style="width: 100px">施工面積</th>
+                                  <th class="text-end" style="width: 100px">延床面積</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <template x-for="(r, rIdx) in weekGroup.records" :key="weekIdx + '-' + rIdx">
+                                  <tr>
+                                    <td class="text-nowrap" x-text="r.orderDateFormatted"></td>
+                                    <td><span class="badge bg-info" x-text="r.region"></span></td>
+                                    <td><span class="badge bg-secondary" x-text="r.majorCode"></span></td>
+                                    <td class="text-truncate" style="max-width: 180px" x-text="r.projectName" :title="r.projectName"></td>
+                                    <td class="text-truncate" style="max-width: 180px" x-text="r.vendor" :title="r.vendor"></td>
+                                    <td class="text-end tabular-nums text-nowrap" x-text="formatNumber(r.qty)"></td>
+                                    <td class="text-center" x-text="r.unit"></td>
+                                    <td class="text-end tabular-nums text-nowrap" x-text="`¥${formatNumber(r.price)}`"></td>
+                                    <td class="text-end tabular-nums text-nowrap fw-semibold" x-text="`¥${formatNumber(r.amount)}`"></td>
+                                    <td class="text-center tabular-nums" x-text="r.floors + '階'"></td>
+                                    <td class="text-center tabular-nums" x-text="r.unitRow + '戸'"></td>
+                                    <td class="text-center tabular-nums" x-text="r.resUnits + '戸'"></td>
+                                    <td class="text-end tabular-nums text-nowrap" x-text="`${formatNumber(r.constArea)} ㎡`"></td>
+                                    <td class="text-end tabular-nums text-nowrap" x-text="`${formatNumber(r.totalArea)} ㎡`"></td>
+                                  </tr>
+                                </template>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Comparison Tab Content -->
+                <div x-show="detailModal.activeTab === 'comparison'">
+                  <!-- Table View -->
+                  <div x-show="isDetailTableMode()">
+                    <template x-for="(group, groupIdx) in getDetailTableData()" :key="groupIdx">
+                      <div class="mb-4">
+                        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2 mb-2 pb-2 border-bottom">
+                          <div class="d-flex align-items-center gap-2">
+                            <h6 class="fw-bold mb-0" x-text="group.label"></h6>
+                            <span class="badge bg-secondary" x-text="group.count + '件'"></span>
+                          </div>
+                          <div class="ms-0 ms-md-auto small d-flex flex-wrap gap-2 gap-md-3">
+                            <span class="text-success">最小: <span class="fw-semibold" x-text="`¥${formatNumber(group.minPrice)}`"></span></span>
+                            <span class="text-primary">平均: <span class="fw-semibold" x-text="`¥${formatNumber(group.avgPrice)}`"></span></span>
+                            <span class="text-warning">中央値: <span class="fw-semibold" x-text="`¥${formatNumber(group.medianPrice)}`"></span></span>
+                            <span class="text-danger">最大: <span class="fw-semibold" x-text="`¥${formatNumber(group.maxPrice)}`"></span></span>
+                          </div>
+                        </div>
+                        <div class="card shadow-sm">
+                          <div class="table-responsive">
+                            <table class="table table-sm table-bordered table-hover mb-0" style="min-width: 1400px; table-layout: fixed">
+                              <thead class="table-light">
+                                <tr>
+                                  <th style="width: 100px">発注日</th>
+                                  <th style="width: 70px">支店</th>
+                                  <th style="width: 60px">大工事</th>
+                                  <th style="width: 180px">工事名称</th>
+                                  <th style="width: 180px">業者</th>
+                                  <th class="text-end" style="width: 70px">実行数量</th>
+                                  <th class="text-center" style="width: 50px">単位</th>
+                                  <th class="text-end" style="width: 100px">実行単価</th>
+                                  <th class="text-end" style="width: 110px">実行金額</th>
+                                  <th class="text-center" style="width: 55px">階数</th>
+                                  <th class="text-center" style="width: 55px">戸並</th>
+                                  <th class="text-center" style="width: 55px">戸数</th>
+                                  <th class="text-end" style="width: 100px">施工面積</th>
+                                  <th class="text-end" style="width: 100px">延床面積</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <template x-for="(r, rIdx) in group.records" :key="groupIdx + '-' + rIdx">
+                                  <tr>
+                                    <td class="text-nowrap" x-text="r.orderDateFormatted"></td>
+                                    <td><span class="badge bg-info" x-text="r.region"></span></td>
+                                    <td><span class="badge bg-secondary" x-text="r.majorCode"></span></td>
+                                    <td class="text-truncate" style="max-width: 180px" x-text="r.projectName" :title="r.projectName"></td>
+                                    <td class="text-truncate" style="max-width: 180px" x-text="r.vendor" :title="r.vendor"></td>
+                                    <td class="text-end tabular-nums text-nowrap" x-text="formatNumber(r.qty)"></td>
+                                    <td class="text-center" x-text="r.unit"></td>
+                                    <td class="text-end tabular-nums text-nowrap" x-text="`¥${formatNumber(r.price)}`"></td>
+                                    <td class="text-end tabular-nums text-nowrap fw-semibold" x-text="`¥${formatNumber(r.amount)}`"></td>
+                                    <td class="text-center tabular-nums" x-text="r.floors + '階'"></td>
+                                    <td class="text-center tabular-nums" x-text="r.unitRow + '戸'"></td>
+                                    <td class="text-center tabular-nums" x-text="r.resUnits + '戸'"></td>
+                                    <td class="text-end tabular-nums text-nowrap" x-text="`${formatNumber(r.constArea)} ㎡`"></td>
+                                    <td class="text-end tabular-nums text-nowrap" x-text="`${formatNumber(r.totalArea)} ㎡`"></td>
+                                  </tr>
+                                </template>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Trend Tab Content -->
+                <div x-show="detailModal.activeTab === 'trend'">
+                  <!-- Table View -->
+                  <div x-show="isDetailTableMode()">
+                    <template x-for="(group, groupIdx) in getDetailTableData()" :key="groupIdx">
+                      <div class="mb-4">
+                        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2 mb-2 pb-2 border-bottom">
+                          <div class="d-flex align-items-center gap-2">
+                            <h6 class="fw-bold mb-0" x-text="group.label"></h6>
+                            <span class="badge bg-secondary" x-text="group.count + '件'"></span>
+                          </div>
+                          <div class="ms-0 ms-md-auto small d-flex flex-wrap gap-2 gap-md-3">
+                            <span class="text-success">最小: <span class="fw-semibold" x-text="`¥${formatNumber(group.minPrice)}`"></span></span>
+                            <span class="text-primary">平均: <span class="fw-semibold" x-text="`¥${formatNumber(group.avgPrice)}`"></span></span>
+                            <span class="text-danger">最大: <span class="fw-semibold" x-text="`¥${formatNumber(group.maxPrice)}`"></span></span>
+                          </div>
+                        </div>
+                        <div class="card shadow-sm">
+                          <div class="table-responsive">
+                            <table class="table table-sm table-bordered table-hover mb-0" style="min-width: 1400px; table-layout: fixed">
+                              <thead class="table-light">
+                                <tr>
+                                  <th style="width: 100px">発注日</th>
+                                  <th style="width: 70px">支店</th>
+                                  <th style="width: 60px">大工事</th>
+                                  <th style="width: 180px">工事名称</th>
+                                  <th style="width: 180px">業者</th>
+                                  <th class="text-end" style="width: 70px">実行数量</th>
+                                  <th class="text-center" style="width: 50px">単位</th>
+                                  <th class="text-end" style="width: 100px">実行単価</th>
+                                  <th class="text-end" style="width: 110px">実行金額</th>
+                                  <th class="text-center" style="width: 55px">階数</th>
+                                  <th class="text-center" style="width: 55px">戸並</th>
+                                  <th class="text-center" style="width: 55px">戸数</th>
+                                  <th class="text-end" style="width: 100px">施工面積</th>
+                                  <th class="text-end" style="width: 100px">延床面積</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <template x-for="(r, rIdx) in group.records" :key="groupIdx + '-' + rIdx">
+                                  <tr>
+                                    <td class="text-nowrap" x-text="r.orderDateFormatted"></td>
+                                    <td><span class="badge bg-info" x-text="r.region"></span></td>
+                                    <td><span class="badge bg-secondary" x-text="r.majorCode"></span></td>
+                                    <td class="text-truncate" style="max-width: 180px" x-text="r.projectName" :title="r.projectName"></td>
+                                    <td class="text-truncate" style="max-width: 180px" x-text="r.vendor" :title="r.vendor"></td>
+                                    <td class="text-end tabular-nums text-nowrap" x-text="formatNumber(r.qty)"></td>
+                                    <td class="text-center" x-text="r.unit"></td>
+                                    <td class="text-end tabular-nums text-nowrap" x-text="`¥${formatNumber(r.price)}`"></td>
+                                    <td class="text-end tabular-nums text-nowrap fw-semibold" x-text="`¥${formatNumber(r.amount)}`"></td>
+                                    <td class="text-center tabular-nums" x-text="r.floors + '階'"></td>
+                                    <td class="text-center tabular-nums" x-text="r.unitRow + '戸'"></td>
+                                    <td class="text-center tabular-nums" x-text="r.resUnits + '戸'"></td>
+                                    <td class="text-end tabular-nums text-nowrap" x-text="`${formatNumber(r.constArea)} ㎡`"></td>
+                                    <td class="text-end tabular-nums text-nowrap" x-text="`${formatNumber(r.totalArea)} ㎡`"></td>
+                                  </tr>
+                                </template>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
                   </div>
                 </div>
               </div>
 
               <!-- Footer -->
-              <div class="modal-footer">
+              <div class="modal-footer py-2">
                 <button
                   type="button"
                   class="btn btn-secondary"
@@ -1494,14 +2021,28 @@
       defer
       src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
     ></script>
+    <!-- pako for gzip decompression -->
     <script
       defer
-      src="https://unpkg.com/dexie@4/dist/dexie.min.js"
+      src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"
     ></script>
-
+    <!-- Chart.js Boxplot plugin -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@4"
+    ></script>
+    <!-- Chart.js Matrix (Heatmap) plugin -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2"
+    ></script>
+    <!-- Comlink for Web Worker communication -->
+    <script
+      defer
+      src="https://unpkg.com/comlink@4.4.1/dist/umd/comlink.min.js"
+    ></script>
     <!-- Application Scripts (load order matters) -->
     <script defer src="js/utils.js"></script>
-    <script defer src="js/db.js"></script>
     <script defer src="js/data-loader.js"></script>
     <script defer src="js/app.js"></script>
 

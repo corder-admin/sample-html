@@ -3,6 +3,7 @@
  */
 
 import { writeFile } from "node:fs/promises";
+import { gzipSync } from "node:zlib";
 import type { RejectedRecord } from "../types/clean.js";
 import type { OutputRecord } from "../types/output.js";
 
@@ -94,14 +95,16 @@ export async function writeRejectedRecords(
 }
 
 /**
- * data.jsonファイルを出力
+ * data.json.gzファイルを出力（gzip圧縮）
  * - JavaScriptのパース不要でfetch + JSON.parseで読み込み可能
- * - 初回アクセス時のパフォーマンス改善
+ * - gzip圧縮によりファイルサイズを大幅に削減
+ * - ブラウザは自動でgzip解凍に対応
  */
-export async function writeDataJson(
+export async function writeDataJsonGz(
   outputPath: string,
   records: OutputRecord[]
 ): Promise<void> {
   const content = JSON.stringify(records);
-  await writeFile(outputPath, content, "utf-8");
+  const compressed = gzipSync(Buffer.from(content, "utf-8"));
+  await writeFile(outputPath, compressed);
 }
