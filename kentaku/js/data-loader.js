@@ -5,13 +5,14 @@
  *
  * 概要:
  *   アプリケーション起動時のデータ読み込みを管理
- *   - data.json を fetch で非同期読み込み
+ *   - data.json.gz (gzip圧縮) を読み込み、pako で展開
  *   - メモリキャッシュで同一セッション内の再読み込みを高速化
  *
  * 分類: アプリケーション層 (Application Layer)
  *
  * 依存関係:
- *   - data.json   : JSON形式のレコードデータ
+ *   - pako          : gzip展開ライブラリ (CDN)
+ *   - data.json.gz  : gzip圧縮されたJSONデータ
  *
  * =============================================================================
  */
@@ -19,7 +20,7 @@
 const DataLoader = (function () {
   // 設定
   const CONFIG = {
-    DATA_JSON_PATH: "data/data.json",
+    DATA_GZIP_PATH: "data/data.json.gz",
     DEBUG:
       location.hostname === "localhost" || location.hostname === "127.0.0.1",
   };
@@ -67,23 +68,44 @@ const DataLoader = (function () {
   }
 
   /**
-   * data.jsonをfetchで読み込み
+   * gzip圧縮されたデータを読み込み・展開
    * @returns {Promise<Array>} レコード配列
    */
-  async function fetchDataJson() {
-    log("Fetching data.json...");
+  async function fetchData() {
+    log("Fetching gzip data...");
     const startTime = performance.now();
 
-    const response = await fetch(CONFIG.DATA_JSON_PATH);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch data.json: ${response.status}`);
+    // pako が必要
+    if (typeof pako === "undefined") {
+      throw new Error("pako library is required for gzip decompression");
     }
 
-    let records = await response.json();
+    const response = await fetch(CONFIG.DATA_GZIP_PATH);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch data: ${response.status}`);
+    }
+
+    const compressedData = await response.arrayBuffer();
+    const compressedSize = compressedData.byteLength;
+
+    // pako で gzip 展開
+    const decompressStart = performance.now();
+    const decompressed = pako.inflate(new Uint8Array(compressedData), {
+      to: "string",
+    });
+    const decompressTime = performance.now() - decompressStart;
+
+    // JSON パース
+    const parseStart = performance.now();
+    let records = JSON.parse(decompressed);
+    const parseTime = performance.now() - parseStart;
+
+    const totalTime = performance.now() - startTime;
     log(
-      `Fetched ${records.length} records in ${(
-        performance.now() - startTime
-      ).toFixed(0)}ms`
+      `Gzip: ${(compressedSize / 1024).toFixed(1)}KB → ${records.length} records`
+    );
+    log(
+      `Times: fetch=${(decompressStart - startTime).toFixed(0)}ms, decompress=${decompressTime.toFixed(0)}ms, parse=${parseTime.toFixed(0)}ms, total=${totalTime.toFixed(0)}ms`
     );
 
     // 地域フィルタを適用
@@ -106,7 +128,7 @@ const DataLoader = (function () {
     const startTime = performance.now();
 
     // fetchでデータを取得
-    cachedRecords = await fetchDataJson();
+    cachedRecords = await fetchData();
 
     log(`Total load time: ${(performance.now() - startTime).toFixed(0)}ms`);
     return cachedRecords;

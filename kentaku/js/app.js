@@ -6,6 +6,7 @@
  * 概要:
  *   Alpine.jsで使用するアプリケーションのメインロジックを定義します。
  *   フィルタリング、データ集計、チャート表示などのビジネスロジックを含みます。
+ *   Web Worker (Comlink) を使用してフィルタ処理をオフロードし、UIブロックを防止します。
  *
  * 分類: アプリケーション層 (Application Layer)
  *
@@ -17,9 +18,50 @@
  *   - Alpine.js      : リアクティブUIフレームワーク
  *   - Chart.js       : グラフ描画ライブラリ
  *   - Bootstrap      : UIコンポーネント（モーダル等）
+ *   - Comlink        : Web Worker通信ライブラリ (CDN)
  *
  * =============================================================================
  */
+
+// =============================================================================
+// Web Worker Setup (Comlink)
+// =============================================================================
+
+/**
+ * Filter Worker instance (lazy initialized)
+ */
+let filterWorkerProxy = null;
+let filterWorkerInstance = null;
+
+/**
+ * Initialize the filter worker
+ * @returns {Promise<Object>} Worker proxy
+ */
+async function getFilterWorker() {
+  if (filterWorkerProxy) {
+    return filterWorkerProxy;
+  }
+
+  // Check if Comlink is available
+  if (typeof Comlink === "undefined") {
+    console.warn("Comlink not available, using main thread filtering");
+    return null;
+  }
+
+  try {
+    filterWorkerInstance = new Worker("js/filter-worker.js");
+    filterWorkerProxy = Comlink.wrap(filterWorkerInstance);
+
+    // Verify worker is working
+    const pingResult = await filterWorkerProxy.ping();
+    console.log("FilterWorker initialized:", pingResult);
+
+    return filterWorkerProxy;
+  } catch (error) {
+    console.warn("Failed to initialize filter worker:", error);
+    return null;
+  }
+}
 
 /**
  * Chart.js color constants for consistent styling
@@ -266,7 +308,42 @@ function appData() {
       });
     },
 
-    applyFilters() {
+    /**
+     * Apply filters using Web Worker (or fallback to main thread)
+     */
+    async applyFilters() {
+      const startTime = performance.now();
+
+      // Try to use Web Worker
+      const worker = await getFilterWorker();
+
+      if (worker) {
+        // Use Web Worker for filtering (non-blocking)
+        try {
+          this.filteredGroups = await worker.applyFilters(
+            this.itemGroups,
+            this.filters
+          );
+          console.log(
+            `Worker filter: ${(performance.now() - startTime).toFixed(0)}ms`
+          );
+        } catch (error) {
+          console.warn("Worker filter failed, falling back:", error);
+          this._applyFiltersSync();
+        }
+      } else {
+        // Fallback to synchronous filtering
+        this._applyFiltersSync();
+      }
+
+      // Reset pagination when filters change
+      this.displayedCount = this.displayLimit;
+    },
+
+    /**
+     * Synchronous filter implementation (fallback)
+     */
+    _applyFiltersSync() {
       const f = this.filters;
       const itemKw = f.item.toLowerCase();
 
@@ -326,12 +403,9 @@ function appData() {
         })
         // Sort by record count (descending)
         .sort((a, b) => b.filteredRecords.length - a.filteredRecords.length);
-
-      // Reset pagination when filters change
-      this.displayedCount = this.displayLimit;
     },
 
-    clearFilters() {
+    async clearFilters() {
       this.filters = { ...DEFAULT_FILTERS };
       this.filteredGroups = this.itemGroups
         .map((g) => ({
