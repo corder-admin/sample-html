@@ -181,6 +181,90 @@ function calcPriceStats(prices) {
   return { min, max, avg: Math.round(sum / prices.length) };
 }
 
+/**
+ * Calculate median from an array of numbers
+ * @param {number[]} values - Array of numeric values
+ * @returns {number} Median value
+ */
+function calcMedian(values) {
+  if (!values || values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0
+    ? sorted[mid]
+    : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+}
+
+/**
+ * Calculate moving average
+ * @param {number[]} data - Array of values
+ * @param {number} window - Window size
+ * @returns {number[]} Moving average array (null for insufficient data points)
+ */
+function calcMovingAverage(data, window) {
+  const result = [];
+  for (let i = 0; i < data.length; i++) {
+    if (i < window - 1) {
+      result.push(null);
+    } else {
+      let sum = 0;
+      for (let j = 0; j < window; j++) {
+        sum += data[i - j];
+      }
+      result.push(Math.round(sum / window));
+    }
+  }
+  return result;
+}
+
+/**
+ * Group records by time unit (year, month, week, day)
+ * @param {Array} records - Records to group
+ * @param {string} unit - 'yearly' | 'monthly' | 'weekly' | 'daily'
+ * @returns {Object} Grouped records { key: records[] }
+ */
+function groupByTimeUnit(records, unit) {
+  const keyFn = {
+    yearly: (r) => r.orderDate.slice(0, 4),
+    monthly: (r) => r.orderMonth,
+    weekly: (r) => r.orderWeekStart,
+    daily: (r) => r.orderDateFormatted,
+  }[unit];
+  return groupRecordsBy(records, keyFn);
+}
+
+/**
+ * Calculate boxplot statistics (quartiles, whiskers, outliers)
+ * @param {number[]} values - Array of numeric values
+ * @returns {{min: number, q1: number, median: number, q3: number, max: number, outliers: number[]}}
+ */
+function calcBoxplotStats(values) {
+  if (!values || values.length === 0) {
+    return { min: 0, q1: 0, median: 0, q3: 0, max: 0, outliers: [] };
+  }
+  const sorted = [...values].sort((a, b) => a - b);
+  const n = sorted.length;
+
+  const q1Idx = Math.floor(n * 0.25);
+  const medianIdx = Math.floor(n * 0.5);
+  const q3Idx = Math.floor(n * 0.75);
+
+  const q1 = sorted[q1Idx];
+  const median =
+    n % 2 ? sorted[medianIdx] : (sorted[medianIdx - 1] + sorted[medianIdx]) / 2;
+  const q3 = sorted[q3Idx];
+  const iqr = q3 - q1;
+
+  const lowerFence = q1 - 1.5 * iqr;
+  const upperFence = q3 + 1.5 * iqr;
+
+  const outliers = sorted.filter((v) => v < lowerFence || v > upperFence);
+  const min = sorted.find((v) => v >= lowerFence) || sorted[0];
+  const max = [...sorted].reverse().find((v) => v <= upperFence) || sorted[n - 1];
+
+  return { min, q1, median, q3, max, outliers };
+}
+
 // =============================================================================
 // Range Checking
 // =============================================================================

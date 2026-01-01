@@ -370,10 +370,57 @@
   color: #0d6efd;
 }
 
-/* Detail Analysis Modal */
+/* Detail Analysis Modal (BI Dashboard) */
 #detailModal .modal-body {
-  max-height: calc(100vh - 180px);
+  max-height: calc(100vh - 250px);
   overflow-y: auto;
+}
+
+/* Tab navigation styling */
+#detailModal .nav-tabs {
+  border-bottom: none;
+}
+
+#detailModal .nav-tabs .nav-link {
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  color: #6c757d;
+  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  transition: all 0.2s;
+}
+
+#detailModal .nav-tabs .nav-link:hover {
+  color: #0d6efd;
+  border-bottom-color: #0d6efd33;
+  background: transparent;
+}
+
+#detailModal .nav-tabs .nav-link.active {
+  color: #0d6efd;
+  border-bottom-color: #0d6efd;
+  background: transparent;
+}
+
+/* KPI summary styling */
+#detailModal .kpi-summary {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Filter controls */
+#detailModal .form-select-sm,
+#detailModal .form-control-sm {
+  font-size: 0.8125rem;
+}
+
+/* Multi-select styling */
+#detailModal select[multiple] {
+  min-height: 60px;
+  max-height: 100px;
 }
 
 .detail-chart-container {
