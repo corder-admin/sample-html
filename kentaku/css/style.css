@@ -112,8 +112,14 @@
 .results-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: start;
+}
+
+@media (min-width: 768px) {
+  .results-grid {
+    gap: 1rem;
+  }
 }
 
 @media (min-width: 1200px) {
@@ -159,22 +165,7 @@
   color: #dc3545;
 }
 
-@media (max-width: 576px) {
-  .company-summary-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .company-header {
-    width: 100%;
-  }
-  .company-prices {
-    margin-left: 0;
-    width: 100%;
-    justify-content: space-between;
-    padding-top: 0.25rem;
-    border-top: 1px dashed #dee2e6;
-  }
-}
+/* Removed - now handled by Bootstrap utility classes in HTML */
 
 /* Timeline component */
 .timeline-container {
@@ -290,9 +281,39 @@
   font-size: 0.9rem;
 }
 
-@media (max-width: 768px) {
+/* Mobile timeline adjustments */
+@media (max-width: 576px) {
+  .timeline-container {
+    padding-left: 50px;
+  }
+  .timeline-container::before {
+    left: 35px;
+  }
+  .timeline-date {
+    left: -50px;
+    width: 35px;
+    font-size: 0.7rem;
+  }
+  .timeline-date .year {
+    font-size: 0.6rem;
+  }
+  .timeline-date .month {
+    font-size: 0.85rem;
+  }
+  .timeline-dot {
+    left: -16px;
+    width: 10px;
+    height: 10px;
+  }
   .detail-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem 0.5rem;
+  }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+  .detail-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
   .timeline-container {
     padding-left: 70px;
@@ -372,16 +393,38 @@
   white-space: nowrap;
 }
 
-@media (max-width: 768px) {
-  #detailModal .bg-light .d-flex.gap-3 {
-    flex-direction: column;
-    align-items: flex-start !important;
+/* Modal responsive adjustments */
+@media (max-width: 576px) {
+  .detail-chart-container {
+    height: 250px;
   }
-  #detailModal .bg-light .ms-auto {
-    margin-left: 0 !important;
-    margin-top: 0.5rem;
+  .chart-wrapper {
+    height: 300px;
   }
+  /* Table font size reduction for mobile */
+  #detailModal .table,
+  #chartModal .table {
+    font-size: 0.75rem;
+  }
+  #detailModal .table th,
+  #chartModal .table th {
+    font-size: 0.7rem;
+    padding: 0.375rem 0.25rem;
+  }
+  #detailModal .table td,
+  #chartModal .table td {
+    padding: 0.375rem 0.25rem;
+  }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
   .detail-chart-container {
     height: 300px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+  .detail-chart-container {
+    height: 350px;
   }
 }
