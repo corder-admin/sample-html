@@ -401,18 +401,13 @@ function appData() {
       }
 
       // Convert to array with computed average
-      return (
-        Object.values(vendorData)
-          .map((entry) => ({
-            name: entry.name,
-            count: entry.count,
-            min: entry.min,
-            avg: Math.round(entry.sum / entry.count),
-            max: entry.max,
-          }))
-          // Sort by count (descending)
-          .sort((a, b) => b.count - a.count)
-      );
+      return Object.values(vendorData).map((entry) => ({
+        name: entry.name,
+        count: entry.count,
+        min: entry.min,
+        avg: Math.round(entry.sum / entry.count),
+        max: entry.max,
+      }));
     },
 
     // Cached vendor summary getter
