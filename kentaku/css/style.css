@@ -357,11 +357,13 @@
   height: 400px;
 }
 
-#detailModal .table {
+#detailModal .table,
+#chartModal .table {
   font-size: 0.875rem;
 }
 
-#detailModal .table th {
+#detailModal .table th,
+#chartModal .table th {
   font-weight: 600;
   white-space: nowrap;
 }

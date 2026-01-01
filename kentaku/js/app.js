@@ -826,11 +826,15 @@ function appData() {
         sum += p;
       }
 
+      // Prepare weekly grouped data for table display
+      const weeklyData = this.prepareWeeklyTableData(records);
+
       this.chartData = {
         title: `単価推移 - ${group.item}`,
         item: group.item,
         unit: group.unit,
         records: records,
+        weeklyData: weeklyData,
         displayMode: "chart",
         minPrice: len > 0 ? min : 0,
         maxPrice: len > 0 ? max : 0,
@@ -840,6 +844,66 @@ function appData() {
       this.$nextTick(() => {
         this.renderPriceChart();
         new bootstrap.Modal(this.$refs.chartModal).show();
+      });
+    },
+
+    /**
+     * Prepare weekly grouped data for table display
+     * @param {Array} records - Records to group by week
+     * @returns {Array} Weekly grouped data with statistics and records
+     */
+    prepareWeeklyTableData(records) {
+      const weekData = {};
+
+      // Group records by week
+      for (const record of records) {
+        const week = record.orderWeek;
+        if (!weekData[week]) {
+          weekData[week] = {
+            weekStart: record.orderWeekStart,
+            week: week,
+            records: [],
+            prices: [],
+          };
+        }
+        weekData[week].records.push(record);
+        weekData[week].prices.push(record.price);
+      }
+
+      // Sort weeks and compute statistics
+      const sortedWeeks = Object.keys(weekData).sort();
+      return sortedWeeks.map((week) => {
+        const entry = weekData[week];
+        const prices = entry.prices;
+        const len = prices.length;
+
+        // Compute min/max/avg
+        let min = Infinity;
+        let max = -Infinity;
+        let sum = 0;
+        for (let i = 0; i < len; i++) {
+          const p = prices[i];
+          if (p < min) min = p;
+          if (p > max) max = p;
+          sum += p;
+        }
+
+        // Median calculation
+        const sortedPrices = [...prices].sort((a, b) => a - b);
+        const mid = len >> 1;
+        const median =
+          len & 1 ? sortedPrices[mid] : (sortedPrices[mid - 1] + sortedPrices[mid]) / 2;
+
+        return {
+          weekStart: entry.weekStart,
+          week: week,
+          count: len,
+          minPrice: min,
+          maxPrice: max,
+          avgPrice: Math.round(sum / len),
+          medianPrice: Math.round(median),
+          records: entry.records,
+        };
       });
     },
 
@@ -900,7 +964,7 @@ function appData() {
       const groupBy = this.detailModal.groupBy;
 
       const keyFn = {
-        timeline: (r) => r.orderMonth,
+        timeline: (r) => r.orderWeekStart,
         majorCode: (r) => r.majorCode,
         region: (r) => r.region,
         building: (r) => buildingInfoKey(r),

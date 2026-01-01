@@ -994,9 +994,9 @@
               </div>
 
               <!-- Modal Body -->
-              <div class="modal-body">
+              <div class="modal-body p-0">
                 <!-- Chart View -->
-                <div x-show="chartData.displayMode === 'chart'">
+                <div x-show="chartData.displayMode === 'chart'" class="p-3">
                   <div class="chart-scroll-container">
                     <div class="chart-wrapper" x-ref="chartWrapper">
                       <canvas x-ref="netPriceChart"></canvas>
@@ -1004,119 +1004,173 @@
                   </div>
                 </div>
 
-                <!-- Table View -->
-                <div x-show="chartData.displayMode === 'table'">
-                  <div
-                    class="table-responsive"
-                    style="max-height: calc(100vh - 280px); overflow: auto"
+                <!-- Table View (Weekly Grouped) -->
+                <div
+                  x-show="chartData.displayMode === 'table'"
+                  class="bg-body-secondary p-3"
+                  style="max-height: calc(100vh - 160px); overflow: auto"
+                >
+                  <template
+                    x-for="(weekGroup, weekIdx) in chartData.weeklyData"
+                    :key="weekIdx"
                   >
-                    <table
-                      class="table table-sm table-bordered table-hover mb-0"
-                      style="min-width: 1400px; table-layout: fixed"
-                    >
-                      <thead class="table-light sticky-top">
-                        <tr>
-                          <th style="width: 100px">発注日</th>
-                          <th style="width: 70px">支店</th>
-                          <th style="width: 60px">大工事</th>
-                          <th style="width: 220px">工事名称</th>
-                          <th style="width: 150px">仕様</th>
-                          <th style="width: 180px">業者</th>
-                          <th style="width: 55px" class="text-center">階数</th>
-                          <th style="width: 55px" class="text-center">戸並</th>
-                          <th style="width: 55px" class="text-center">戸数</th>
-                          <th style="width: 100px" class="text-end">
-                            施工面積
-                          </th>
-                          <th style="width: 100px" class="text-end">
-                            延床面積
-                          </th>
-                          <th style="width: 85px" class="text-end">実行数量</th>
-                          <th style="width: 100px" class="text-end">
-                            実行単価
-                          </th>
-                          <th style="width: 110px" class="text-end">
-                            実行金額
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <template
-                          x-for="record in chartData.records"
-                          :key="record.id"
-                        >
-                          <tr>
-                            <td
-                              class="text-nowrap"
-                              x-text="record.orderDateFormatted"
-                            ></td>
-                            <td>
-                              <span
-                                class="badge bg-info"
-                                x-text="record.region"
-                              ></span>
-                            </td>
-                            <td>
-                              <span
-                                class="badge bg-secondary"
-                                x-text="record.majorCode"
-                              ></span>
-                            </td>
-                            <td
-                              class="text-truncate"
-                              style="max-width: 220px"
-                              x-text="record.projectName"
-                              :title="record.projectName"
-                            ></td>
-                            <td
-                              class="text-muted small text-truncate"
-                              style="max-width: 150px"
-                              x-text="record.spec || '-'"
-                              :title="record.spec"
-                            ></td>
-                            <td
-                              class="text-truncate"
-                              style="max-width: 180px"
-                              x-text="record.vendor"
-                              :title="record.vendor"
-                            ></td>
-                            <td
-                              class="text-center tabular-nums"
-                              x-text="record.floors + '階'"
-                            ></td>
-                            <td
-                              class="text-center tabular-nums"
-                              x-text="record.unitRow + '戸'"
-                            ></td>
-                            <td
-                              class="text-center tabular-nums"
-                              x-text="record.resUnits + '戸'"
-                            ></td>
-                            <td
-                              class="text-end tabular-nums text-nowrap"
-                              x-text="`${formatNumber(record.constArea)} ㎡`"
-                            ></td>
-                            <td
-                              class="text-end tabular-nums text-nowrap"
-                              x-text="`${formatNumber(record.totalArea)} ㎡`"
-                            ></td>
-                            <td
-                              class="text-end tabular-nums"
-                              x-text="formatNumber(record.qty)"
-                            ></td>
-                            <td
-                              class="text-end tabular-nums text-nowrap"
-                              x-text="`¥${formatNumber(record.price)}`"
-                            ></td>
-                            <td
-                              class="text-end tabular-nums text-nowrap fw-semibold"
-                              x-text="`¥${formatNumber(record.amount)}`"
-                            ></td>
-                          </tr>
-                        </template>
-                      </tbody>
-                    </table>
-                  </div>
+                    <div class="mb-4">
+                      <!-- Week Group Header -->
+                      <div
+                        class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom"
+                      >
+                        <h6
+                          class="fw-bold mb-0"
+                          x-text="weekGroup.weekStart"
+                        ></h6>
+                        <span
+                          class="badge bg-secondary"
+                          x-text="weekGroup.count + '件'"
+                        ></span>
+                        <span class="ms-auto small">
+                          <span class="text-success">
+                            最小:
+                            <span
+                              class="fw-semibold"
+                              x-text="`¥${formatNumber(weekGroup.minPrice)}`"
+                            ></span>
+                          </span>
+                          <span class="mx-2 text-muted">|</span>
+                          <span class="text-primary">
+                            平均:
+                            <span
+                              class="fw-semibold"
+                              x-text="`¥${formatNumber(weekGroup.avgPrice)}`"
+                            ></span>
+                          </span>
+                          <span class="mx-2 text-muted">|</span>
+                          <span class="text-danger">
+                            最大:
+                            <span
+                              class="fw-semibold"
+                              x-text="`¥${formatNumber(weekGroup.maxPrice)}`"
+                            ></span>
+                          </span>
+                        </span>
+                      </div>
+                      <!-- Week Group Table -->
+                      <div class="card shadow-sm">
+                        <div class="table-responsive">
+                          <table
+                            class="table table-sm table-bordered table-hover mb-0"
+                            style="min-width: 1400px; table-layout: fixed"
+                          >
+                            <thead class="table-light">
+                              <tr>
+                                <th style="width: 100px">発注日</th>
+                                <th style="width: 70px">支店</th>
+                                <th style="width: 60px">大工事</th>
+                                <th style="width: 180px">工事名称</th>
+                                <th style="width: 180px">業者</th>
+                                <th style="width: 70px" class="text-end">
+                                  実行数量
+                                </th>
+                                <th style="width: 50px" class="text-center">
+                                  単位
+                                </th>
+                                <th style="width: 100px" class="text-end">
+                                  実行単価
+                                </th>
+                                <th style="width: 110px" class="text-end">
+                                  実行金額
+                                </th>
+                                <th style="width: 55px" class="text-center">
+                                  階数
+                                </th>
+                                <th style="width: 55px" class="text-center">
+                                  戸並
+                                </th>
+                                <th style="width: 55px" class="text-center">
+                                  戸数
+                                </th>
+                                <th style="width: 100px" class="text-end">
+                                  施工面積
+                                </th>
+                                <th style="width: 100px" class="text-end">
+                                  延床面積
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <template
+                                x-for="(r, rIdx) in weekGroup.records"
+                                :key="weekIdx + '-' + rIdx"
+                              >
+                                <tr>
+                                  <td
+                                    class="text-nowrap"
+                                    x-text="r.orderDateFormatted"
+                                  ></td>
+                                  <td>
+                                    <span
+                                      class="badge bg-info"
+                                      x-text="r.region"
+                                    ></span>
+                                  </td>
+                                  <td>
+                                    <span
+                                      class="badge bg-secondary"
+                                      x-text="r.majorCode"
+                                    ></span>
+                                  </td>
+                                  <td
+                                    class="text-truncate"
+                                    style="max-width: 180px"
+                                    x-text="r.projectName"
+                                    :title="r.projectName"
+                                  ></td>
+                                  <td
+                                    class="text-truncate"
+                                    style="max-width: 180px"
+                                    x-text="r.vendor"
+                                    :title="r.vendor"
+                                  ></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap"
+                                    x-text="formatNumber(r.qty)"
+                                  ></td>
+                                  <td class="text-center" x-text="r.unit"></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap"
+                                    x-text="`¥${formatNumber(r.price)}`"
+                                  ></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap fw-semibold"
+                                    x-text="`¥${formatNumber(r.amount)}`"
+                                  ></td>
+                                  <td
+                                    class="text-center tabular-nums"
+                                    x-text="r.floors + '階'"
+                                  ></td>
+                                  <td
+                                    class="text-center tabular-nums"
+                                    x-text="r.unitRow + '戸'"
+                                  ></td>
+                                  <td
+                                    class="text-center tabular-nums"
+                                    x-text="r.resUnits + '戸'"
+                                  ></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap"
+                                    x-text="`${formatNumber(r.constArea)} ㎡`"
+                                  ></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap"
+                                    x-text="`${formatNumber(r.totalArea)} ㎡`"
+                                  ></td>
+                                </tr>
+                              </template>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
                 </div>
               </div>
 
@@ -1366,26 +1420,73 @@
                           class="badge bg-secondary"
                           x-text="records.length + '件'"
                         ></span>
-                        <span class="ms-auto small text-muted">
-                          平均:
-                          <span
-                            class="fw-semibold"
-                            x-text="`¥${formatNumber(calcPriceStats(records.map(r => r.price)).avg)}`"
-                          ></span>
+                        <span class="ms-auto small">
+                          <span class="text-success">
+                            最小:
+                            <span
+                              class="fw-semibold"
+                              x-text="`¥${formatNumber(calcPriceStats(records.map(r => r.price)).min)}`"
+                            ></span>
+                          </span>
+                          <span class="mx-2 text-muted">|</span>
+                          <span class="text-primary">
+                            平均:
+                            <span
+                              class="fw-semibold"
+                              x-text="`¥${formatNumber(calcPriceStats(records.map(r => r.price)).avg)}`"
+                            ></span>
+                          </span>
+                          <span class="mx-2 text-muted">|</span>
+                          <span class="text-danger">
+                            最大:
+                            <span
+                              class="fw-semibold"
+                              x-text="`¥${formatNumber(calcPriceStats(records.map(r => r.price)).max)}`"
+                            ></span>
+                          </span>
                         </span>
                       </div>
                       <!-- Group Table -->
                       <div class="card shadow-sm">
                         <div class="table-responsive">
-                          <table class="table table-sm table-hover mb-0">
+                          <table
+                            class="table table-sm table-bordered table-hover mb-0"
+                            style="min-width: 1400px; table-layout: fixed"
+                          >
                             <thead class="table-light">
                               <tr>
-                                <th>発注日</th>
-                                <th>支店</th>
-                                <th>工事名称</th>
-                                <th>業者</th>
-                                <th>建物情報</th>
-                                <th class="text-end">実行単価</th>
+                                <th style="width: 100px">発注日</th>
+                                <th style="width: 70px">支店</th>
+                                <th style="width: 60px">大工事</th>
+                                <th style="width: 180px">工事名称</th>
+                                <th style="width: 180px">業者</th>
+                                <th style="width: 70px" class="text-end">
+                                  実行数量
+                                </th>
+                                <th style="width: 50px" class="text-center">
+                                  単位
+                                </th>
+                                <th style="width: 100px" class="text-end">
+                                  実行単価
+                                </th>
+                                <th style="width: 110px" class="text-end">
+                                  実行金額
+                                </th>
+                                <th style="width: 55px" class="text-center">
+                                  階数
+                                </th>
+                                <th style="width: 55px" class="text-center">
+                                  戸並
+                                </th>
+                                <th style="width: 55px" class="text-center">
+                                  戸数
+                                </th>
+                                <th style="width: 100px" class="text-end">
+                                  施工面積
+                                </th>
+                                <th style="width: 100px" class="text-end">
+                                  延床面積
+                                </th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1394,25 +1495,66 @@
                                 :key="key + '-' + rIdx"
                               >
                                 <tr>
-                                  <td x-text="r.orderDateFormatted"></td>
+                                  <td
+                                    class="text-nowrap"
+                                    x-text="r.orderDateFormatted"
+                                  ></td>
                                   <td>
                                     <span
                                       class="badge bg-info"
                                       x-text="r.region"
                                     ></span>
                                   </td>
+                                  <td>
+                                    <span
+                                      class="badge bg-secondary"
+                                      x-text="r.majorCode"
+                                    ></span>
+                                  </td>
                                   <td
                                     class="text-truncate"
-                                    style="max-width: 200px"
+                                    style="max-width: 180px"
                                     x-text="r.projectName"
-                                  ></td>
-                                  <td x-text="r.vendor"></td>
-                                  <td
-                                    x-text="`${r.floors}階/${r.resUnits}戸`"
+                                    :title="r.projectName"
                                   ></td>
                                   <td
-                                    class="text-end fw-bold text-primary tabular-nums"
-                                    x-text="'¥' + formatNumber(r.price)"
+                                    class="text-truncate"
+                                    style="max-width: 180px"
+                                    x-text="r.vendor"
+                                    :title="r.vendor"
+                                  ></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap"
+                                    x-text="formatNumber(r.qty)"
+                                  ></td>
+                                  <td class="text-center" x-text="r.unit"></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap"
+                                    x-text="`¥${formatNumber(r.price)}`"
+                                  ></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap fw-semibold"
+                                    x-text="`¥${formatNumber(r.amount)}`"
+                                  ></td>
+                                  <td
+                                    class="text-center tabular-nums"
+                                    x-text="r.floors + '階'"
+                                  ></td>
+                                  <td
+                                    class="text-center tabular-nums"
+                                    x-text="r.unitRow + '戸'"
+                                  ></td>
+                                  <td
+                                    class="text-center tabular-nums"
+                                    x-text="r.resUnits + '戸'"
+                                  ></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap"
+                                    x-text="`${formatNumber(r.constArea)} ㎡`"
+                                  ></td>
+                                  <td
+                                    class="text-end tabular-nums text-nowrap"
+                                    x-text="`${formatNumber(r.totalArea)} ㎡`"
                                   ></td>
                                 </tr>
                               </template>

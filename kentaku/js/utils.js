@@ -35,6 +35,10 @@ function formatNumber(value) {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return "0";
   }
+  // Handle negative zero: Object.is(-0, value) returns true for -0
+  if (value === 0) {
+    return "0";
+  }
   return value.toLocaleString();
 }
 
