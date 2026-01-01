@@ -219,6 +219,10 @@ function appData() {
     regionNames: [],
     regionDropdownOpen: false,
 
+    // 多角分析モーダル用ドロップダウン状態
+    detailRegionDropdownOpen: false,
+    detailVendorDropdownOpen: false,
+
     async init() {
       this.isLoading = true;
       this.loadError = null;
@@ -290,6 +294,66 @@ function appData() {
         return this.filters.regions.join(", ");
       return `${this.filters.regions.length}件選択中`;
     },
+
+    // ===== 多角分析モーダル用ドロップダウン関数 =====
+    toggleDetailRegionDropdown() {
+      this.detailRegionDropdownOpen = !this.detailRegionDropdownOpen;
+    },
+
+    toggleDetailRegion(region) {
+      const idx = this.detailModal.commonFilters.regions.indexOf(region);
+      if (idx === -1) {
+        this.detailModal.commonFilters.regions.push(region);
+      } else {
+        this.detailModal.commonFilters.regions.splice(idx, 1);
+      }
+    },
+
+    confirmDetailRegionSelection() {
+      this.detailRegionDropdownOpen = false;
+      this.applyDetailCommonFilters();
+    },
+
+    isDetailRegionSelected(region) {
+      return this.detailModal.commonFilters.regions.includes(region);
+    },
+
+    get selectedDetailRegionsText() {
+      if (this.detailModal.commonFilters.regions.length === 0) return "すべて";
+      if (this.detailModal.commonFilters.regions.length <= 2)
+        return this.detailModal.commonFilters.regions.join(", ");
+      return `${this.detailModal.commonFilters.regions.length}件選択中`;
+    },
+
+    toggleDetailVendorDropdown() {
+      this.detailVendorDropdownOpen = !this.detailVendorDropdownOpen;
+    },
+
+    toggleDetailVendor(vendor) {
+      const idx = this.detailModal.commonFilters.vendors.indexOf(vendor);
+      if (idx === -1) {
+        this.detailModal.commonFilters.vendors.push(vendor);
+      } else {
+        this.detailModal.commonFilters.vendors.splice(idx, 1);
+      }
+    },
+
+    confirmDetailVendorSelection() {
+      this.detailVendorDropdownOpen = false;
+      this.applyDetailCommonFilters();
+    },
+
+    isDetailVendorSelected(vendor) {
+      return this.detailModal.commonFilters.vendors.includes(vendor);
+    },
+
+    get selectedDetailVendorsText() {
+      if (this.detailModal.commonFilters.vendors.length === 0) return "すべて";
+      if (this.detailModal.commonFilters.vendors.length <= 2)
+        return this.detailModal.commonFilters.vendors.join(", ");
+      return `${this.detailModal.commonFilters.vendors.length}件選択中`;
+    },
+    // ===== 多角分析モーダル用ドロップダウン関数終了 =====
 
     processData() {
       // Pre-compute derived fields including cleaned vendor name
@@ -969,6 +1033,9 @@ function appData() {
         isOpen: true,
         currentGroup: { ...group },
         activeTab: "timeseries",
+        // 初期値を保存（クリア時に使用）
+        initialDateFrom: minDate,
+        initialDateTo: maxDate,
         commonFilters: {
           dateFrom: minDate,
           dateTo: maxDate,
@@ -1079,12 +1146,12 @@ function appData() {
     },
 
     /**
-     * Clear common filters
+     * Clear common filters (reset to initial values)
      */
     clearDetailCommonFilters() {
       this.detailModal.commonFilters = {
-        dateFrom: "",
-        dateTo: "",
+        dateFrom: this.detailModal.initialDateFrom || "",
+        dateTo: this.detailModal.initialDateTo || "",
         regions: [],
         vendors: [],
       };
