@@ -11,18 +11,23 @@
  */
 
 import { existsSync } from "node:fs";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { basename, dirname, resolve } from "node:path";
 
 import { cleanRecords } from "./pipeline/cleaner.js";
 import { readTsvFileWithProgress } from "./pipeline/reader.js";
 import {
+  aggregateByMinorCode,
   deduplicateRecords,
   sortByOrderDate,
   transformToOutput,
 } from "./pipeline/transformer.js";
 import { writeDataJs, writeRejectedRecords } from "./pipeline/writer.js";
-import { createSummary, printSummary } from "./reports/summary.js";
+import {
+  createSummary,
+  printSummary,
+  summaryToMarkdown,
+} from "./reports/summary.js";
 
 /** デフォルトの出力先（dist/index.js からの相対パス） */
 const DEFAULT_OUTPUT_DIR = "../output";
@@ -60,6 +65,7 @@ async function main(): Promise<void> {
 
   const outputFile = resolve(outputDir, "data.js");
   const rejectedFile = resolve(outputDir, "rejected_records.json");
+  const reportFile = resolve(outputDir, "conversion_report.md");
 
   console.log("TSV → data.js 変換を開始します...");
   console.log(`入力: ${inputFile}`);
@@ -79,21 +85,30 @@ async function main(): Promise<void> {
   console.log(`  ${cleaned.length.toLocaleString()} 件がクレンジング通過`);
   console.log(`  ${rejected.length.toLocaleString()} 件を除外`);
 
-  // Step 3: 変換
-  console.log("🔄 データ変換中...");
-  const outputRecords = transformToOutput(cleaned);
+  // Step 3: 集約（同一小工事項目コードのレコードを合算）
+  console.log("📊 工事細目を集約中...");
+  const { aggregated, stats: aggStats } = aggregateByMinorCode(cleaned);
+  if (aggStats.aggregatedGroups > 0) {
+    console.log(
+      `  ${aggStats.aggregatedGroups.toLocaleString()} グループを集約 (${aggStats.beforeCount.toLocaleString()} → ${aggStats.afterCount.toLocaleString()} 件)`
+    );
+  }
 
-  // Step 4: 重複除去
+  // Step 4: 変換
+  console.log("🔄 データ変換中...");
+  const outputRecords = transformToOutput(aggregated);
+
+  // Step 5: 重複除去
   const { unique, duplicateCount } = deduplicateRecords(outputRecords);
   if (duplicateCount > 0) {
     console.log(`  ${duplicateCount.toLocaleString()} 件の重複を除去`);
   }
 
-  // Step 5: ソート
+  // Step 6: ソート
   const sorted = sortByOrderDate(unique, false); // 古い順
   console.log(`  ${sorted.length.toLocaleString()} 件を出力します`);
 
-  // Step 6: 出力
+  // Step 7: 出力
   console.log("💾 ファイル出力中...");
   await writeDataJs(outputFile, sorted);
   console.log(`  data.js を出力しました`);
@@ -103,16 +118,22 @@ async function main(): Promise<void> {
     console.log(`  rejected_records.json を出力しました`);
   }
 
-  // サマリー表示
+  // サマリー生成・表示
   const processingTimeMs = Date.now() - startTime;
   const summary = createSummary(
     basename(inputFile),
     basename(outputFile),
     stats,
+    aggStats,
     duplicateCount,
     sorted.length,
     processingTimeMs
   );
+
+  // マークダウンレポート出力
+  await writeFile(reportFile, summaryToMarkdown(summary), "utf-8");
+  console.log(`  conversion_report.md を出力しました`);
+
   printSummary(summary);
 
   console.log("✅ 変換完了!");

@@ -7,11 +7,13 @@ export interface CleanedRecord {
   region: string;
   projectName: string;
   majorCode: string;
+  minorCode: string; // 小工事項目コード（集約キー）
   item: string;
   spec: string;
   unit: string;
   qty: number;
   price: number;
+  amount: number; // 実行予算金額（集約用）
   vendor: string;
   orderDate: string;
   floors: number;

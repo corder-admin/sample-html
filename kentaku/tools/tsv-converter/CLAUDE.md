@@ -171,3 +171,19 @@ ALWAYS:
   - Run lint and test after each stage
   - Maintain type consistency across all stages
 ```
+
+---
+
+## §9 Report Maintenance
+
+```yaml
+principle: Keep reports in sync with conversion logic
+
+outputs:
+  - Console: printSummary() in src/reports/summary.ts
+  - Markdown: summaryToMarkdown() → conversion_report.md
+
+ALWAYS:
+  - Update BOTH console and markdown reports when modifying conversion logic
+  - Add new statistics to ProcessingSummary interface first
+```
