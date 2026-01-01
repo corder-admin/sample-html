@@ -190,7 +190,7 @@ function appData() {
       // タブ2: 比較分析
       comparison: {
         groupBy: "region", // 'region' | 'vendor' | 'majorCode' | 'building'
-        metric: "avg", // 'avg' | 'median' | 'total'
+        metric: "avg", // 'avg' | 'median'
         chartType: "bar", // 'bar' | 'boxplot' | 'radar' | 'table'
       },
 
@@ -1434,7 +1434,6 @@ function appData() {
 
         if (metric === "avg") return stats.avg;
         if (metric === "median") return calcMedian(prices);
-        if (metric === "total") return prices.reduce((a, b) => a + b, 0);
         return stats.avg;
       });
 
@@ -1677,7 +1676,7 @@ function appData() {
         this.renderRadarChart(ctx, labels, chartData, metric);
       } else {
         // Default bar chart
-        const metricLabels = { avg: "平均", median: "中央値", total: "合計" };
+        const metricLabels = { avg: "平均", median: "中央値" };
         this.detailChartInstance = new Chart(ctx, {
           type: "bar",
           data: {
@@ -1805,7 +1804,7 @@ function appData() {
      * @param {string} unit - Unit label
      */
     renderRadarChart(ctx, labels, data, metric) {
-      const metricLabels = { avg: "平均", median: "中央値", total: "合計" };
+      const metricLabels = { avg: "平均", median: "中央値" };
       this.detailChartInstance = new Chart(ctx, {
         type: "radar",
         data: {
