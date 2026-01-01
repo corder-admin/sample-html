@@ -395,7 +395,7 @@
         </div>
 
         <div>
-          <template x-if="filteredGroups.length === 0">
+          <template x-if="displayedGroups.length === 0">
             <div class="text-center py-5">
               <svg
                 width="64"
@@ -420,7 +420,7 @@
           </template>
 
           <div class="results-grid">
-            <template x-for="(group, idx) in filteredGroups" :key="idx">
+            <template x-for="(group, idx) in displayedGroups" :key="idx">
               <div
                 class="card item-group-card shadow-sm"
                 :class="{ 'expanded': expandedGroups[idx] }"
@@ -747,6 +747,37 @@
               </div>
             </template>
           </div>
+
+          <!-- Load More Button -->
+          <template x-if="hasMoreGroups">
+            <div class="text-center py-4">
+              <button
+                class="btn btn-outline-primary btn-lg"
+                @click="loadMoreGroups()"
+              >
+                <svg
+                  class="icon-inline me-2"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+                さらに表示
+                <span
+                  class="badge bg-primary ms-2"
+                  x-text="Math.min(displayLimit, remainingGroupsCount) + '件'"
+                ></span>
+              </button>
+              <p class="text-muted small mt-2">
+                <span x-text="displayedCount"></span> /
+                <span x-text="filteredGroups.length"></span> 件表示中
+              </p>
+            </div>
+          </template>
         </div>
 
         <!-- Chart Modal (inside x-data scope) -->
@@ -1164,7 +1195,11 @@
                       @click="setDetailDisplayMode('chart')"
                     >
                       <div class="card-body py-2 px-3">
-                        <div class="d-flex align-items-center gap-2 mb-2">
+                        <div
+                          class="d-flex align-items-center gap-2 mb-2"
+                          @click="setDetailDisplayMode('chart')"
+                          style="cursor: pointer"
+                        >
                           <div
                             class="rounded-circle d-flex align-items-center justify-content-center"
                             :class="detailModal.displayMode === 'chart' ? 'bg-primary text-white' : 'bg-secondary text-white'"
@@ -1336,6 +1371,37 @@
                           </table>
                         </div>
                       </div>
+                    </div>
+                  </template>
+
+                  <!-- Load More Button for Detail List -->
+                  <template x-if="hasMoreDetailRecords">
+                    <div class="text-center py-4">
+                      <button
+                        class="btn btn-outline-primary"
+                        @click="loadMoreDetailRecords()"
+                      >
+                        <svg
+                          class="icon-inline me-2"
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                        さらに表示
+                        <span
+                          class="badge bg-primary ms-2"
+                          x-text="Math.min(detailModal.listLimit, remainingDetailRecords) + '件'"
+                        ></span>
+                      </button>
+                      <p class="text-muted small mt-2">
+                        <span x-text="detailModal.listDisplayed"></span> /
+                        <span x-text="detailTotalRecords"></span> 件表示中
+                      </p>
                     </div>
                   </template>
                 </div>

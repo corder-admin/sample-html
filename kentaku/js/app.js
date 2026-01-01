@@ -29,6 +29,9 @@ const CHART_COLORS = {
   avg: { border: "#0d6efd", background: "#0d6efd22" },
   max: { border: "#dc3545", background: "#dc354522" },
   actual: { border: "#6f42c1", background: "#6f42c1" },
+  weeklyMin: { border: "#20c997", background: "#20c997" },
+  weeklyMax: { border: "#fd7e14", background: "#fd7e14" },
+  weeklyMedian: { border: "#e83e8c", background: "#e83e8c" },
 };
 
 /**
@@ -90,6 +93,10 @@ function appData() {
     isLoading: true,
     loadError: null,
 
+    // Pagination settings
+    displayLimit: 50,
+    displayedCount: 50,
+
     filters: { ...DEFAULT_FILTERS },
     rawRecords: [],
     records: [],
@@ -121,6 +128,8 @@ function appData() {
       groupBy: "timeline",
       displayMode: "list",
       chartType: "trend",
+      listLimit: 100,
+      listDisplayed: 100,
     },
     detailChartInstance: null,
 
@@ -284,6 +293,9 @@ function appData() {
             return false;
           return g.filteredRecords.length > 0;
         });
+
+      // Reset pagination when filters change
+      this.displayedCount = this.displayLimit;
     },
 
     clearFilters() {
@@ -292,6 +304,24 @@ function appData() {
         ...g,
         filteredRecords: g.records,
       }));
+      this.displayedCount = this.displayLimit;
+    },
+
+    // Pagination: displayed subset of filtered groups
+    get displayedGroups() {
+      return this.filteredGroups.slice(0, this.displayedCount);
+    },
+
+    get hasMoreGroups() {
+      return this.displayedCount < this.filteredGroups.length;
+    },
+
+    get remainingGroupsCount() {
+      return this.filteredGroups.length - this.displayedCount;
+    },
+
+    loadMoreGroups() {
+      this.displayedCount += this.displayLimit;
     },
 
     get activeFiltersDisplay() {
@@ -402,11 +432,18 @@ function appData() {
         const prices = weekData[week].prices;
         return prices.reduce((a, b) => a + b, 0) / prices.length;
       });
+      const weeklyMinData = allWeeks.map((week) => Math.min(...weekData[week].prices));
+      const weeklyMaxData = allWeeks.map((week) => Math.max(...weekData[week].prices));
+      const weeklyMedianData = allWeeks.map((week) => {
+        const sorted = [...weekData[week].prices].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      });
 
       const allPrices = records.map((r) => r.price);
       const stats = calcPriceStats(allPrices);
 
-      return { weekLabels, actualData, stats, weekCount: allWeeks.length };
+      return { weekLabels, actualData, weeklyMinData, weeklyMaxData, weeklyMedianData, stats, weekCount: allWeeks.length };
     },
 
     /**
@@ -437,7 +474,7 @@ function appData() {
      * @returns {Array} Chart.js datasets
      */
     buildTrendDatasets(data) {
-      const { actualData, stats, weekCount } = data;
+      const { actualData, weeklyMinData, weeklyMaxData, weeklyMedianData, stats, weekCount } = data;
       return [
         this.createReferenceLine(
           "最小値",
@@ -458,13 +495,46 @@ function appData() {
           CHART_COLORS.max
         ),
         {
-          label: "実行単価",
+          label: "実行単価(週最小)",
+          data: weeklyMinData,
+          borderColor: CHART_COLORS.weeklyMin.border,
+          backgroundColor: CHART_COLORS.weeklyMin.background,
+          borderWidth: 1,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: false,
+          tension: 0.1,
+        },
+        {
+          label: "実行単価(週中央値)",
+          data: weeklyMedianData,
+          borderColor: CHART_COLORS.weeklyMedian.border,
+          backgroundColor: CHART_COLORS.weeklyMedian.background,
+          borderWidth: 1,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          fill: false,
+          tension: 0.1,
+        },
+        {
+          label: "実行単価(週平均)",
           data: actualData,
           borderColor: CHART_COLORS.actual.border,
           backgroundColor: CHART_COLORS.actual.background,
           borderWidth: 2,
           pointRadius: 8,
           pointHoverRadius: 10,
+          fill: false,
+          tension: 0.1,
+        },
+        {
+          label: "実行単価(週最大)",
+          data: weeklyMaxData,
+          borderColor: CHART_COLORS.weeklyMax.border,
+          backgroundColor: CHART_COLORS.weeklyMax.background,
+          borderWidth: 1,
+          pointRadius: 4,
+          pointHoverRadius: 6,
           fill: false,
           tension: 0.1,
         },
@@ -481,6 +551,7 @@ function appData() {
       return {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         interaction: { intersect: false, mode: "index" },
         plugins: {
           legend: {
@@ -576,6 +647,8 @@ function appData() {
         groupBy: "timeline",
         displayMode: "list",
         chartType: "trend",
+        listLimit: 100,
+        listDisplayed: 100,
       };
       this.$nextTick(() => {
         new bootstrap.Modal(this.$refs.detailModal).show();
@@ -609,7 +682,9 @@ function appData() {
      * @returns {Object} Grouped records { key: records[] }
      */
     getGroupedDetailData() {
-      const records = this.detailModal.currentGroup?.filteredRecords || [];
+      const allRecords = this.detailModal.currentGroup?.filteredRecords || [];
+      // Apply pagination limit
+      const records = allRecords.slice(0, this.detailModal.listDisplayed);
       const groupBy = this.detailModal.groupBy;
 
       const keyFn = {
@@ -633,6 +708,22 @@ function appData() {
       return Object.fromEntries(
         Object.entries(groups).sort(([, a], [, b]) => b.length - a.length)
       );
+    },
+
+    get detailTotalRecords() {
+      return this.detailModal.currentGroup?.filteredRecords?.length || 0;
+    },
+
+    get hasMoreDetailRecords() {
+      return this.detailModal.listDisplayed < this.detailTotalRecords;
+    },
+
+    get remainingDetailRecords() {
+      return this.detailTotalRecords - this.detailModal.listDisplayed;
+    },
+
+    loadMoreDetailRecords() {
+      this.detailModal.listDisplayed += this.detailModal.listLimit;
     },
 
     /**
@@ -680,10 +771,22 @@ function appData() {
     /**
      * Render detail chart based on current chart type
      */
-    renderDetailChart() {
-      this.$nextTick(() => {
+    renderDetailChart(retryCount = 0) {
+      // Wait for x-show transition to complete before accessing canvas
+      const maxRetries = 5;
+      const delay = 100;
+
+      setTimeout(() => {
         const ctx = this.$refs.detailChart?.getContext("2d");
-        if (!ctx) return;
+        if (!ctx) {
+          if (retryCount < maxRetries) {
+            console.log(`Detail chart canvas not ready, retrying (${retryCount + 1}/${maxRetries})...`);
+            this.renderDetailChart(retryCount + 1);
+          } else {
+            console.warn("Detail chart canvas not available after retries");
+          }
+          return;
+        }
 
         if (this.detailChartInstance) {
           this.detailChartInstance.destroy();
@@ -699,7 +802,7 @@ function appData() {
         } else if (chartType === "distribution") {
           this.renderDistributionChart(ctx, data);
         }
-      });
+      }, delay);
     },
 
     /**
