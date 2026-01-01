@@ -103,6 +103,7 @@ function appData() {
     itemGroups: [],
     filteredGroups: [],
     expandedGroups: {},
+    vendorSectionExpanded: {},
     autocomplete: {
       show: false,
       items: [],
@@ -282,6 +283,7 @@ function appData() {
             filteredRecords: matchingRecords,
             minPrice: stats.min,
             maxPrice: stats.max,
+            vendorSummary: null, // Lazy computed
           };
         })
         .filter((g) => {
@@ -292,7 +294,9 @@ function appData() {
           )
             return false;
           return g.filteredRecords.length > 0;
-        });
+        })
+        // Sort by record count (descending)
+        .sort((a, b) => b.filteredRecords.length - a.filteredRecords.length);
 
       // Reset pagination when filters change
       this.displayedCount = this.displayLimit;
@@ -300,10 +304,13 @@ function appData() {
 
     clearFilters() {
       this.filters = { ...DEFAULT_FILTERS };
-      this.filteredGroups = this.itemGroups.map((g) => ({
-        ...g,
-        filteredRecords: g.records,
-      }));
+      this.filteredGroups = this.itemGroups
+        .map((g) => ({
+          ...g,
+          filteredRecords: g.records,
+        }))
+        // Sort by record count (descending)
+        .sort((a, b) => b.filteredRecords.length - a.filteredRecords.length);
       this.displayedCount = this.displayLimit;
     },
 
@@ -342,7 +349,7 @@ function appData() {
       this.expandedGroups[idx] = !this.expandedGroups[idx];
     },
 
-    getVendorSummary(records) {
+    computeVendorSummary(records) {
       const vendorData = {};
       records.forEach((record) => {
         const vendorName = record.vendor;
@@ -352,16 +359,37 @@ function appData() {
         vendorData[vendorName].prices.push(record.price);
         vendorData[vendorName].count++;
       });
-      return Object.entries(vendorData).map(([name, data]) => {
-        const stats = calcPriceStats(data.prices);
-        return {
-          name: name.replace(/株式会社|有限会社/g, "").trim(),
-          count: data.count,
-          min: stats.min,
-          avg: stats.avg,
-          max: stats.max,
-        };
-      });
+      return Object.entries(vendorData)
+        .map(([name, data]) => {
+          const stats = calcPriceStats(data.prices);
+          return {
+            name: name.replace(/株式会社|有限会社/g, "").trim(),
+            count: data.count,
+            min: stats.min,
+            avg: stats.avg,
+            max: stats.max,
+          };
+        })
+        // Sort by count (descending)
+        .sort((a, b) => b.count - a.count);
+    },
+
+    // Cached vendor summary getter
+    getVendorSummary(group) {
+      if (!group.vendorSummary) {
+        group.vendorSummary = this.computeVendorSummary(group.filteredRecords);
+      }
+      return group.vendorSummary;
+    },
+
+    // Get vendor count without computing full summary
+    getVendorCount(group) {
+      if (group.vendorSummary) {
+        return group.vendorSummary.length;
+      }
+      // Quick count without full computation
+      const vendors = new Set(group.filteredRecords.map(r => r.vendor));
+      return vendors.size;
     },
 
     filterProjectNames() {

@@ -463,27 +463,50 @@
                   </div>
 
                   <div class="bg-white rounded-3 border overflow-hidden mb-3">
-                    <div class="p-3">
-                      <div
-                        class="small fw-semibold text-secondary d-flex align-items-center gap-1 mb-2"
+                    <div
+                      class="p-2 d-flex align-items-center gap-2 cursor-pointer border-bottom"
+                      @click.stop="vendorSectionExpanded[idx] = !vendorSectionExpanded[idx]"
+                      style="cursor: pointer"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        class="transition-transform"
+                        :class="vendorSectionExpanded[idx] ? 'rotate-90' : ''"
+                        style="transition: transform 0.2s"
                       >
-                        <svg
-                          width="14"
-                          height="14"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                          <circle cx="9" cy="7" r="4" />
-                        </svg>
-                        業者別 実行単価レンジ（/<span x-text="group.unit"></span
-                        >）
-                      </div>
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                      <svg
+                        width="14"
+                        height="14"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                      </svg>
+                      <span class="small fw-semibold text-secondary">
+                        業者別 実行単価レンジ（/<span x-text="group.unit"></span>）
+                      </span>
+                      <span
+                        class="badge bg-secondary rounded-pill small ms-auto"
+                        x-text="getVendorCount(group) + '社'"
+                      ></span>
+                    </div>
+                    <div
+                      class="p-3 transition-collapse"
+                      :class="vendorSectionExpanded[idx] ? 'collapse-shown' : 'collapse-hidden'"
+                    >
                       <div class="d-flex flex-column gap-2">
                         <template
-                          x-for="(vendor, vendorIdx) in getVendorSummary(group.filteredRecords)"
+                          x-for="(vendor, vendorIdx) in getVendorSummary(group)"
                           :key="idx + '-vendor-' + vendorIdx"
                         >
                           <div
@@ -994,7 +1017,7 @@
                       <tbody>
                         <template
                           x-for="record in chartData.records"
-                          :key="record.orderDate + record.vendor"
+                          :key="record.id"
                         >
                           <tr>
                             <td
