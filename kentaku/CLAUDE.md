@@ -17,6 +17,11 @@ framework: Alpine.js 3.15.3 (CDN)
 css: Bootstrap 5.3.3 (CDN)
 charts: Chart.js 4.4.1 (CDN)
 language: JavaScript (ES6+)
+libraries:
+  - pako: gzip decompression
+  - Comlink: Web Worker communication
+  - chartjs-chart-boxplot: Box plot charts
+  - chartjs-chart-matrix: Heatmap charts
 ```
 
 ## §3 Architecture
@@ -27,48 +32,55 @@ language: JavaScript (ES6+)
 kentaku/:
   index.html: SPA entry point
   css/style.css: Bootstrap overrides, layout customization
+  data/data.json.gz: Gzip-compressed quote records
   js/:
-    utils.js: Pure utility functions (fmt, parseDate, getWeekNumber)
-    db.js: IndexedDB operations module
-    data-loader.js: Data loading manager (cache control)
-    data.js: Raw data source (rawRecords[]) - fallback
+    utils.js: Pure utility functions (formatNumber, getWeekNumber, calcPriceStats)
+    chart-helpers.js: Chart drawing helper functions (pure functions)
+    data-loader.js: Data loading manager (gzip decompression, memory cache)
+    filter-worker.js: Web Worker for non-blocking filter operations
     app.js: Alpine.js component (appData())
 ```
 
 ### §3.2 Layer Dependencies
 
 ```text
-Presentation (index.html) → Application (app.js) → Data (data.js) → Utilities (utils.js)
+Presentation (index.html)
+  ↓
+Application (app.js + filter-worker.js)
+  ↓
+Data (data-loader.js → data.json.gz)
+  ↓
+Utilities (utils.js, chart-helpers.js)
 ```
 
 ### §3.3 Script Load Order
 
 ALWAYS load in this exact order:
 
-1. Bootstrap JS (CDN)
-2. Chart.js (CDN)
-3. utils.js → db.js → data-loader.js → data.js → app.js
-4. Alpine.js (CDN, with `defer`)
+1. CDN Libraries (Bootstrap JS, Chart.js, pako, chartjs-chart-boxplot, chartjs-chart-matrix, Comlink)
+2. Local Modules: `utils.js` → `chart-helpers.js` → `data-loader.js` → `app.js`
+3. Alpine.js (CDN, with `defer`)
+4. Web Worker: `filter-worker.js` (loaded dynamically by app.js)
 
 ## §4 Data Structure
 
 ```yaml
 rawRecords[]:
-  region: Branch name (厚木|横浜|高崎|春日部|つくば)
+  region: Branch name (string)
   projectName: Construction project name
   majorCode: Major work item code (e.g., "026")
   item: Item name
   spec: Specification
   unit: Unit of measure
-  qty: Quantity
-  price: Unit price (JPY)
+  qty: Quantity (number)
+  price: Unit price in JPY (number)
   vendor: Vendor name
-  orderDate: Order date (YYYYMMDD format)
-  floors: Number of floors
-  unitRow: Unit row count
-  resUnits: Residential unit count
-  constArea: Construction area (㎡)
-  totalArea: Total floor area (㎡)
+  orderDate: Order date (YYYYMMDD format, string)
+  floors: Number of floors (number)
+  unitRow: Unit row count (number)
+  resUnits: Residential unit count (number)
+  constArea: Construction area in ㎡ (number)
+  totalArea: Total floor area in ㎡ (number)
 ```
 
 ## §5 Alpine.js Rules
@@ -86,57 +98,53 @@ NEVER:
 
 ## §6 Key Functions
 
-| Location       | Function               | Purpose                      |
-| -------------- | ---------------------- | ---------------------------- |
-| app.js         | appData()              | Main Alpine component        |
-| app.js         | applyFilters()         | Filter records by criteria   |
-| app.js         | showChart(idx)         | Display Chart.js price trend |
-| utils.js       | formatNumber(n)        | Format number with locale    |
-| utils.js       | getWeekNumber(dateStr) | Convert YYYYMMDD to ISO week |
-| db.js          | VendorQuoteDB          | IndexedDB operations (IIFE)  |
-| data-loader.js | DataLoader.loadData()  | Load data with cache control |
+| Location          | Function                    | Purpose                            |
+| ----------------- | --------------------------- | ---------------------------------- |
+| app.js            | appData()                   | Main Alpine component              |
+| app.js            | applyFilters()              | Delegate filtering to Web Worker   |
+| app.js            | showChart(idx)              | Display Chart.js price trend       |
+| utils.js          | formatNumber(n)             | Format number with locale          |
+| utils.js          | getWeekNumber(dateStr)      | Convert YYYYMMDD to ISO week       |
+| utils.js          | calcPriceStats(prices)      | Calculate min/max/avg statistics   |
+| chart-helpers.js  | buildTrendDatasets()        | Build trend chart datasets         |
+| chart-helpers.js  | createLineChartOptions()    | Create line chart options          |
+| chart-helpers.js  | createValueRanges()         | Create value ranges for heatmap    |
+| chart-helpers.js  | prepareWeeklyTableData()    | Prepare weekly grouped data        |
+| data-loader.js    | DataLoader.loadData()       | Load gzip data with memory cache   |
+| filter-worker.js  | applyFilters()              | Execute filter logic in Web Worker |
 
-## §7 Data Loading (IndexedDB)
+## §7 Data Loading (Gzip JSON)
 
 ### §7.1 Loading Flow
 
 ```yaml
 initial_access:
-  - DataLoader.loadData() → IndexedDB empty → load from data.js
-  - bulkAdd with version metadata → return to app.js
+  - DataLoader.loadData() → fetch data.json.gz
+  - Decompress with pako → parse JSON → apply region filter
+  - Cache in memory → return to app.js
 
 subsequent_access:
-  - Version check → up_to_date → getAll from IndexedDB (fast)
+  - Return cached records from memory (instant)
 
 data_update:
-  - data.js deployed → version mismatch → clearRecords → bulkAdd
+  - Deploy new data.json.gz → user reload page → automatic refresh
 ```
 
 ### §7.2 Adding New Fields
 
 ```yaml
 simple_field:
-  - data.js: Add field to rawRecords[]
-  - db.js: No change (schemaless)
+  - Update data source (data.json.gz)
   - app.js: Use field as needed
-
-searchable_field:
-  - db.js: Add index in onupgradeneeded
-  - db.js: Increment DB_VERSION
-```
-
-### §7.3 IndexedDB Indexes
-
-```yaml
-indexes: [region, vendor, item, majorCode, orderDate, item_spec (compound)]
+  - No schema changes required
 ```
 
 ## §8 Modification Procedures
 
 ### §8.1 Add Quote Records
 
-1. Edit `js/data.js`
-2. Append object with all fields (§4)
+1. Update source data (data.json.gz)
+2. Ensure all fields match schema (§4)
 3. ALWAYS use YYYYMMDD format for orderDate
 
 ### §8.2 CSS Customization
