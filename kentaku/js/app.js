@@ -208,7 +208,7 @@ function appData() {
     processData() {
       // Pre-compute derived fields including cleaned vendor name
       const vendorNameRegex = /株式会社|有限会社/g;
-      
+
       this.records = this.rawRecords.map((r) => ({
         ...r,
         orderDateFormatted: formatDateHyphen(r.orderDate),
@@ -238,20 +238,20 @@ function appData() {
       });
       this.itemGroups = Object.values(groups).map((g) => {
         g.records.sort((a, b) => a.orderDate.localeCompare(b.orderDate));
-        
+
         // Inline stats computation: avoid intermediate array allocation
         let min = Infinity;
         let max = -Infinity;
         let sum = 0;
         const len = g.records.length;
-        
+
         for (const r of g.records) {
           const price = r.price;
           if (price < min) min = price;
           if (price > max) max = price;
           sum += price;
         }
-        
+
         return {
           ...g,
           recordCount: len,
@@ -294,7 +294,7 @@ function appData() {
           let min = Infinity;
           let max = -Infinity;
           const matchingRecords = [];
-          
+
           for (const r of g.records) {
             if (recordMatchesFilters(r, criteria)) {
               matchingRecords.push(r);
@@ -302,7 +302,7 @@ function appData() {
               if (r.price > max) max = r.price;
             }
           }
-          
+
           return {
             ...g,
             filteredRecords: matchingRecords,
@@ -376,41 +376,43 @@ function appData() {
 
     computeVendorSummary(records) {
       const vendorData = {};
-      
+
       // Single-pass aggregation with inline stats computation
       for (const record of records) {
         const vendorName = record.vendor;
         let entry = vendorData[vendorName];
-        
+
         if (!entry) {
-          entry = { 
+          entry = {
             name: record.vendorNameClean, // Use pre-computed clean name
-            count: 0, 
-            min: Infinity, 
-            max: -Infinity, 
-            sum: 0 
+            count: 0,
+            min: Infinity,
+            max: -Infinity,
+            sum: 0,
           };
           vendorData[vendorName] = entry;
         }
-        
+
         const price = record.price;
         entry.count++;
         if (price < entry.min) entry.min = price;
         if (price > entry.max) entry.max = price;
         entry.sum += price;
       }
-      
+
       // Convert to array with computed average
-      return Object.values(vendorData)
-        .map((entry) => ({
-          name: entry.name,
-          count: entry.count,
-          min: entry.min,
-          avg: Math.round(entry.sum / entry.count),
-          max: entry.max,
-        }))
-        // Sort by count (descending)
-        .sort((a, b) => b.count - a.count);
+      return (
+        Object.values(vendorData)
+          .map((entry) => ({
+            name: entry.name,
+            count: entry.count,
+            min: entry.min,
+            avg: Math.round(entry.sum / entry.count),
+            max: entry.max,
+          }))
+          // Sort by count (descending)
+          .sort((a, b) => b.count - a.count)
+      );
     },
 
     // Cached vendor summary getter
@@ -427,7 +429,7 @@ function appData() {
         return group.vendorSummary.length;
       }
       // Quick count without full computation
-      const vendors = new Set(group.filteredRecords.map(r => r.vendor));
+      const vendors = new Set(group.filteredRecords.map((r) => r.vendor));
       return vendors.size;
     },
 
@@ -499,18 +501,32 @@ function appData() {
         const prices = weekData[week].prices;
         return prices.reduce((a, b) => a + b, 0) / prices.length;
       });
-      const weeklyMinData = allWeeks.map((week) => Math.min(...weekData[week].prices));
-      const weeklyMaxData = allWeeks.map((week) => Math.max(...weekData[week].prices));
+      const weeklyMinData = allWeeks.map((week) =>
+        Math.min(...weekData[week].prices)
+      );
+      const weeklyMaxData = allWeeks.map((week) =>
+        Math.max(...weekData[week].prices)
+      );
       const weeklyMedianData = allWeeks.map((week) => {
         const sorted = [...weekData[week].prices].sort((a, b) => a - b);
         const mid = Math.floor(sorted.length / 2);
-        return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+        return sorted.length % 2
+          ? sorted[mid]
+          : (sorted[mid - 1] + sorted[mid]) / 2;
       });
 
       const allPrices = records.map((r) => r.price);
       const stats = calcPriceStats(allPrices);
 
-      return { weekLabels, actualData, weeklyMinData, weeklyMaxData, weeklyMedianData, stats, weekCount: allWeeks.length };
+      return {
+        weekLabels,
+        actualData,
+        weeklyMinData,
+        weeklyMaxData,
+        weeklyMedianData,
+        stats,
+        weekCount: allWeeks.length,
+      };
     },
 
     /**
@@ -541,7 +557,14 @@ function appData() {
      * @returns {Array} Chart.js datasets
      */
     buildTrendDatasets(data) {
-      const { actualData, weeklyMinData, weeklyMaxData, weeklyMedianData, stats, weekCount } = data;
+      const {
+        actualData,
+        weeklyMinData,
+        weeklyMaxData,
+        weeklyMedianData,
+        stats,
+        weekCount,
+      } = data;
       return [
         this.createReferenceLine(
           "最小値",
@@ -847,7 +870,11 @@ function appData() {
         const ctx = this.$refs.detailChart?.getContext("2d");
         if (!ctx) {
           if (retryCount < maxRetries) {
-            console.log(`Detail chart canvas not ready, retrying (${retryCount + 1}/${maxRetries})...`);
+            console.log(
+              `Detail chart canvas not ready, retrying (${
+                retryCount + 1
+              }/${maxRetries})...`
+            );
             this.renderDetailChart(retryCount + 1);
           } else {
             console.warn("Detail chart canvas not available after retries");
