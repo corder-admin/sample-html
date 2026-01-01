@@ -11,14 +11,13 @@
  * 分類: アプリケーション層 (Application Layer)
  *
  * 依存関係:
- *   - utils.js       : ユーティリティ関数（formatNumber, formatDateHyphen, getWeekNumber, calcPriceStats, isInRange等）
- *   - db.js          : IndexedDB操作モジュール
- *   - data-loader.js : データ読み込み管理モジュール
- *   - data.js        : 生データ（rawRecords）- フォールバック用
- *   - Alpine.js      : リアクティブUIフレームワーク
- *   - Chart.js       : グラフ描画ライブラリ
- *   - Bootstrap      : UIコンポーネント（モーダル等）
- *   - Comlink        : Web Worker通信ライブラリ (CDN)
+ *   - utils.js        : ユーティリティ関数（formatNumber, formatDateHyphen, getWeekNumber, calcPriceStats, isInRange等）
+ *   - chart-helpers.js: チャート描画ヘルパー関数（buildTrendDatasets, createLineChartOptions, createValueRanges等）
+ *   - data-loader.js  : データ読み込み管理モジュール（gzip展開、メモリキャッシュ）
+ *   - Alpine.js       : リアクティブUIフレームワーク
+ *   - Chart.js        : グラフ描画ライブラリ
+ *   - Bootstrap       : UIコンポーネント（モーダル等）
+ *   - Comlink         : Web Worker通信ライブラリ (CDN)
  *
  * =============================================================================
  */
@@ -64,16 +63,23 @@ async function getFilterWorker() {
 }
 
 /**
- * Chart.js color constants for consistent styling
+ * Pagination and list display configuration
  */
-const CHART_COLORS = {
-  min: { border: "#198754", background: "#19875422" },
-  avg: { border: "#0d6efd", background: "#0d6efd22" },
-  max: { border: "#dc3545", background: "#dc354522" },
-  actual: { border: "#6f42c1", background: "#6f42c1" },
-  weeklyMin: { border: "#20c997", background: "#20c997" },
-  weeklyMax: { border: "#fd7e14", background: "#fd7e14" },
-  weeklyMedian: { border: "#e83e8c", background: "#e83e8c" },
+const PAGINATION_CONFIG = {
+  DEFAULT_DISPLAY_LIMIT: 50,
+  DEFAULT_LIST_LIMIT: 100,
+};
+
+/**
+ * Chart rendering and visualization configuration
+ */
+const CHART_CONFIG = {
+  HEATMAP_BUCKET_COUNT: 5,
+  MAX_RENDER_RETRIES: 5,
+  RENDER_RETRY_DELAY: 100,
+  BUBBLE_SIZE_QTY_FACTOR: 2,
+  BUBBLE_SIZE_AMOUNT_DIVISOR: 10000,
+  BUBBLE_SIZE_AMOUNT_FACTOR: 2,
 };
 
 /**
@@ -136,8 +142,8 @@ function appData() {
     loadError: null,
 
     // Pagination settings
-    displayLimit: 50,
-    displayedCount: 50,
+    displayLimit: PAGINATION_CONFIG.DEFAULT_DISPLAY_LIMIT,
+    displayedCount: PAGINATION_CONFIG.DEFAULT_DISPLAY_LIMIT,
 
     filters: { ...DEFAULT_FILTERS },
     rawRecords: [],
@@ -211,8 +217,8 @@ function appData() {
       },
 
       // ページネーション
-      listLimit: 100,
-      listDisplayed: 100,
+      listLimit: PAGINATION_CONFIG.DEFAULT_LIST_LIMIT,
+      listDisplayed: PAGINATION_CONFIG.DEFAULT_LIST_LIMIT,
     },
     detailChartInstance: null,
 
@@ -296,6 +302,9 @@ function appData() {
     },
 
     // ===== 多角分析モーダル用ドロップダウン関数 =====
+    // Note: The following dropdown handlers follow the same pattern as main filter dropdowns above.
+    // This duplication is intentional to maintain Alpine.js reactivity and component isolation.
+
     toggleDetailRegionDropdown() {
       this.detailRegionDropdownOpen = !this.detailRegionDropdownOpen;
     },
@@ -389,25 +398,16 @@ function appData() {
       this.itemGroups = Object.values(groups).map((g) => {
         g.records.sort((a, b) => a.orderDate.localeCompare(b.orderDate));
 
-        // Inline stats computation: avoid intermediate array allocation
-        let min = Infinity;
-        let max = -Infinity;
-        let sum = 0;
-        const len = g.records.length;
-
-        for (const r of g.records) {
-          const price = r.price;
-          if (price < min) min = price;
-          if (price > max) max = price;
-          sum += price;
-        }
+        // Calculate statistics using shared utility
+        const prices = g.records.map((r) => r.price);
+        const stats = calcPriceStats(prices);
 
         return {
           ...g,
-          recordCount: len,
-          minPrice: len > 0 ? min : 0,
-          maxPrice: len > 0 ? max : 0,
-          avgPrice: len > 0 ? Math.round(sum / len) : 0,
+          recordCount: g.records.length,
+          minPrice: stats.min,
+          maxPrice: stats.max,
+          avgPrice: stats.avg,
         };
       });
     },
@@ -475,24 +475,20 @@ function appData() {
 
       this.filteredGroups = this.itemGroups
         .map((g) => {
-          // Inline stats computation: avoid intermediate array allocation
-          let min = Infinity;
-          let max = -Infinity;
-          const matchingRecords = [];
+          // Filter matching records
+          const matchingRecords = g.records.filter((r) =>
+            recordMatchesFilters(r, criteria)
+          );
 
-          for (const r of g.records) {
-            if (recordMatchesFilters(r, criteria)) {
-              matchingRecords.push(r);
-              if (r.price < min) min = r.price;
-              if (r.price > max) max = r.price;
-            }
-          }
+          // Calculate statistics using shared utility
+          const prices = matchingRecords.map((r) => r.price);
+          const stats = calcPriceStats(prices);
 
           return {
             ...g,
             filteredRecords: matchingRecords,
-            minPrice: matchingRecords.length > 0 ? min : 0,
-            maxPrice: matchingRecords.length > 0 ? max : 0,
+            minPrice: stats.min,
+            maxPrice: stats.max,
             vendorSummary: null, // Lazy computed
           };
         })
@@ -743,152 +739,6 @@ function appData() {
       };
     },
 
-    /**
-     * Create a reference line dataset for chart
-     * @param {string} label - Dataset label
-     * @param {number} value - Constant value for the line
-     * @param {number} count - Number of data points
-     * @param {{border: string, background: string}} colors - Color config
-     * @returns {Object} Chart.js dataset configuration
-     */
-    createReferenceLine(label, value, count, colors) {
-      return {
-        label: `${label} (¥${formatNumber(value)})`,
-        data: Array(count).fill(value),
-        borderColor: colors.border,
-        backgroundColor: colors.background,
-        borderWidth: 2,
-        borderDash: [5, 5],
-        pointRadius: 0,
-        fill: false,
-        tension: 0,
-      };
-    },
-
-    /**
-     * Build datasets for trend line chart
-     * @param {Object} data - Chart data with weekLabels, actualData, stats, weekCount
-     * @returns {Array} Chart.js datasets
-     */
-    buildTrendDatasets(data) {
-      const {
-        actualData,
-        weeklyMinData,
-        weeklyMaxData,
-        weeklyMedianData,
-        stats,
-        weekCount,
-      } = data;
-      return [
-        this.createReferenceLine(
-          "最小値",
-          stats.min,
-          weekCount,
-          CHART_COLORS.min
-        ),
-        this.createReferenceLine(
-          "平均値",
-          stats.avg,
-          weekCount,
-          CHART_COLORS.avg
-        ),
-        this.createReferenceLine(
-          "最大値",
-          stats.max,
-          weekCount,
-          CHART_COLORS.max
-        ),
-        {
-          label: "実行単価(週最小)",
-          data: weeklyMinData,
-          borderColor: CHART_COLORS.weeklyMin.border,
-          backgroundColor: CHART_COLORS.weeklyMin.background,
-          borderWidth: 1,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          fill: false,
-          tension: 0.1,
-        },
-        {
-          label: "実行単価(週中央値)",
-          data: weeklyMedianData,
-          borderColor: CHART_COLORS.weeklyMedian.border,
-          backgroundColor: CHART_COLORS.weeklyMedian.background,
-          borderWidth: 1,
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          fill: false,
-          tension: 0.1,
-        },
-        {
-          label: "実行単価(週平均)",
-          data: actualData,
-          borderColor: CHART_COLORS.actual.border,
-          backgroundColor: CHART_COLORS.actual.background,
-          borderWidth: 2,
-          pointRadius: 8,
-          pointHoverRadius: 10,
-          fill: false,
-          tension: 0.1,
-        },
-        {
-          label: "実行単価(週最大)",
-          data: weeklyMaxData,
-          borderColor: CHART_COLORS.weeklyMax.border,
-          backgroundColor: CHART_COLORS.weeklyMax.background,
-          borderWidth: 1,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          fill: false,
-          tension: 0.1,
-        },
-      ];
-    },
-
-    /**
-     * Create line chart options
-     * @param {Object} options - Additional options { unit, showXTitle }
-     * @returns {Object} Chart.js options config
-     */
-    createLineChartOptions(options = {}) {
-      const { unit = "", showXTitle = false } = options;
-      return {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        interaction: { intersect: false, mode: "index" },
-        plugins: {
-          legend: {
-            position: "top",
-            labels: { usePointStyle: true, padding: 20 },
-          },
-          tooltip: {
-            callbacks: {
-              label: (context) =>
-                `${context.dataset.label}: ¥${formatNumber(
-                  context.raw ?? context.parsed?.y
-                )}`,
-            },
-          },
-        },
-        scales: {
-          x: {
-            title: showXTitle
-              ? { display: true, text: "発注週" }
-              : { display: false },
-            grid: { display: false },
-          },
-          y: {
-            beginAtZero: false,
-            title: unit
-              ? { display: true, text: `実行単価 (円/${unit})` }
-              : { display: false },
-            ticks: { callback: (value) => `¥${formatNumber(value)}` },
-          },
-        },
-      };
-    },
-
     setChartDisplayMode(mode) {
       this.chartData.displayMode = mode;
       if (mode === "chart") {
@@ -903,14 +753,14 @@ function appData() {
       if (this.chartInstance) this.chartInstance.destroy();
 
       const data = this.prepareChartData(this.chartData.records);
-      const datasets = this.buildTrendDatasets(data);
+      const datasets = buildTrendDatasets(data);
 
       this.$refs.chartWrapper.style.width = "100%";
 
       this.chartInstance = new Chart(ctx, {
         type: "line",
         data: { labels: data.weekLabels, datasets },
-        options: this.createLineChartOptions(),
+        options: createLineChartOptions(),
       });
     },
 
@@ -918,20 +768,12 @@ function appData() {
       const group = this.filteredGroups[idx];
       const records = group.filteredRecords;
 
-      // Single-pass stats computation
-      let min = Infinity;
-      let max = -Infinity;
-      let sum = 0;
-      const len = records.length;
-      for (let i = 0; i < len; i++) {
-        const p = records[i].price;
-        if (p < min) min = p;
-        if (p > max) max = p;
-        sum += p;
-      }
+      // Calculate statistics using shared utility
+      const prices = records.map((r) => r.price);
+      const stats = calcPriceStats(prices);
 
       // Prepare weekly grouped data for table display
-      const weeklyData = this.prepareWeeklyTableData(records);
+      const weeklyData = prepareWeeklyTableData(records);
 
       this.chartData = {
         title: `単価推移 - ${group.item}`,
@@ -940,74 +782,14 @@ function appData() {
         records: records,
         weeklyData: weeklyData,
         displayMode: "chart",
-        minPrice: len > 0 ? min : 0,
-        maxPrice: len > 0 ? max : 0,
-        avgPrice: len > 0 ? Math.round(sum / len) : 0,
+        minPrice: stats.min,
+        maxPrice: stats.max,
+        avgPrice: stats.avg,
       };
 
       this.$nextTick(() => {
         this.renderPriceChart();
         new bootstrap.Modal(this.$refs.chartModal).show();
-      });
-    },
-
-    /**
-     * Prepare weekly grouped data for table display
-     * @param {Array} records - Records to group by week
-     * @returns {Array} Weekly grouped data with statistics and records
-     */
-    prepareWeeklyTableData(records) {
-      const weekData = {};
-
-      // Group records by week
-      for (const record of records) {
-        const week = record.orderWeek;
-        if (!weekData[week]) {
-          weekData[week] = {
-            weekStart: record.orderWeekStart,
-            week: week,
-            records: [],
-            prices: [],
-          };
-        }
-        weekData[week].records.push(record);
-        weekData[week].prices.push(record.price);
-      }
-
-      // Sort weeks and compute statistics
-      const sortedWeeks = Object.keys(weekData).sort();
-      return sortedWeeks.map((week) => {
-        const entry = weekData[week];
-        const prices = entry.prices;
-        const len = prices.length;
-
-        // Compute min/max/avg
-        let min = Infinity;
-        let max = -Infinity;
-        let sum = 0;
-        for (let i = 0; i < len; i++) {
-          const p = prices[i];
-          if (p < min) min = p;
-          if (p > max) max = p;
-          sum += p;
-        }
-
-        // Median calculation
-        const sortedPrices = [...prices].sort((a, b) => a - b);
-        const mid = len >> 1;
-        const median =
-          len & 1 ? sortedPrices[mid] : (sortedPrices[mid - 1] + sortedPrices[mid]) / 2;
-
-        return {
-          weekStart: entry.weekStart,
-          week: week,
-          count: len,
-          minPrice: min,
-          maxPrice: max,
-          avgPrice: Math.round(sum / len),
-          medianPrice: Math.round(median),
-          records: entry.records,
-        };
       });
     },
 
@@ -1455,7 +1237,9 @@ function appData() {
       const scatterData = records.map((r) => ({
         x: r[xAxis],
         y: r.price,
-        r: bubbleSize === "qty" ? Math.sqrt(r.qty) * 2 : Math.sqrt(r.amount / 10000) * 2,
+        r: bubbleSize === "qty"
+          ? Math.sqrt(r.qty) * CHART_CONFIG.BUBBLE_SIZE_QTY_FACTOR
+          : Math.sqrt(r.amount / CHART_CONFIG.BUBBLE_SIZE_AMOUNT_DIVISOR) * CHART_CONFIG.BUBBLE_SIZE_AMOUNT_FACTOR,
         record: r,
       }));
 
@@ -1463,8 +1247,8 @@ function appData() {
       const xAxisValues = records.map((r) => r[xAxis]);
       const priceValues = records.map((r) => r.price);
 
-      const xRanges = this.createValueRanges(xAxisValues, 5, xAxis);
-      const priceRanges = this.createValueRanges(priceValues, 5, 'price');
+      const xRanges = createValueRanges(xAxisValues, CHART_CONFIG.HEATMAP_BUCKET_COUNT, xAxis);
+      const priceRanges = createValueRanges(priceValues, CHART_CONFIG.HEATMAP_BUCKET_COUNT, 'price');
 
       const heatmapData = [];
       xRanges.forEach((xRange) => {
@@ -1484,74 +1268,13 @@ function appData() {
         });
       });
 
-      // For scatter chart, keep original xValues
-      const xValues = [...new Set(records.map((r) => r[xAxis]))].sort((a, b) => a - b);
-
       return {
         scatterData,
         heatmapData,
-        xValues,
         xRanges,
         priceRanges,
-        xAxisLabel: this.getAxisLabel(xAxis),
+        xAxisLabel: getAxisLabel(xAxis),
       };
-    },
-
-    /**
-     * Create value ranges for heatmap
-     * @param {Array} values - Array of values
-     * @param {number} buckets - Number of buckets
-     * @param {string} fieldType - Type of field ('price', 'totalArea', 'constArea', 'floors', 'resUnits')
-     * @returns {Array} Array of {min, max, label}
-     */
-    createValueRanges(values, buckets, fieldType) {
-      if (values.length === 0) return [];
-      const min = Math.min(...values);
-      const max = Math.max(...values);
-      const step = (max - min) / buckets || 1;
-
-      return Array.from({ length: buckets }, (_, i) => {
-        const rangeMin = min + step * i;
-        const rangeMax = min + step * (i + 1);
-        const isLastRange = i === buckets - 1;
-
-        // ラベル表示用の最小値と最大値を丸める
-        const displayMin = Math.round(rangeMin);
-        const displayMax = isLastRange ? Math.round(max) : Math.round(rangeMax - 1);
-
-        // Generate label based on field type
-        let label;
-        if (fieldType === 'price') {
-          label = `¥${formatNumber(displayMin)}~¥${formatNumber(displayMax)}`;
-        } else if (fieldType === 'totalArea' || fieldType === 'constArea') {
-          label = `${formatNumber(displayMin)}~${formatNumber(displayMax)}㎡`;
-        } else if (fieldType === 'floors' || fieldType === 'resUnits') {
-          label = `${displayMin}~${displayMax}`;
-        } else {
-          label = `${formatNumber(displayMin)}~${formatNumber(displayMax)}`;
-        }
-
-        return {
-          min: rangeMin,
-          max: isLastRange ? max : rangeMax,
-          label: label,
-        };
-      });
-    },
-
-    /**
-     * Get axis label for trend chart
-     * @param {string} xAxis - X-axis field name
-     * @returns {string} Human-readable label
-     */
-    getAxisLabel(xAxis) {
-      const labels = {
-        resUnits: "総戸数",
-        floors: "階数",
-        totalArea: "延床面積 (㎡)",
-        constArea: "施工面積 (㎡)",
-      };
-      return labels[xAxis] || xAxis;
     },
 
     /**
@@ -1577,14 +1300,20 @@ function appData() {
 
     /**
      * Render detail chart based on current tab and chart type
+     *
+     * Note: This method implements a retry mechanism because Alpine.js x-show transitions
+     * may delay canvas availability. The canvas element might not be immediately accessible
+     * after tab switching, so we retry with exponential backoff.
+     *
+     * @param {number} retryCount - Current retry attempt (default: 0)
      */
     renderDetailChart(retryCount = 0) {
       // Skip if in table mode
       if (this.isDetailTableMode()) return;
 
       // Wait for x-show transition to complete before accessing canvas
-      const maxRetries = 5;
-      const delay = 100;
+      const maxRetries = CHART_CONFIG.MAX_RENDER_RETRIES;
+      const delay = CHART_CONFIG.RENDER_RETRY_DELAY;
 
       setTimeout(() => {
         const ctx = this.$refs.detailChart?.getContext("2d");
@@ -1691,7 +1420,7 @@ function appData() {
       this.detailChartInstance = new Chart(ctx, {
         type: chartType === "bar" ? "bar" : "line",
         data: { labels, datasets },
-        options: this.createLineChartOptions({ unit, showXTitle: true }),
+        options: createLineChartOptions({ unit, showXTitle: true }),
       });
     },
 
@@ -1885,7 +1614,7 @@ function appData() {
     renderTrendTabChart(ctx, data) {
       const chartType = this.detailModal.trend.chartType;
       const unit = this.detailModal.currentGroup?.unit || "";
-      const { scatterData, heatmapData, xValues, xRanges, priceRanges, xAxisLabel } = data;
+      const { scatterData, heatmapData, xRanges, priceRanges, xAxisLabel } = data;
 
       if (chartType === "heatmap") {
         this.renderHeatmapChart(ctx, heatmapData, xRanges, priceRanges, xAxisLabel, unit);
