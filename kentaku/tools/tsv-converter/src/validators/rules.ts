@@ -73,7 +73,7 @@ export function checkExclusion(record: RawTsvRecord): ExclusionResult {
 export function normalizeWhitespace(value: string | undefined): string {
   if (!value) return "";
   // 全角・半角スペースを削除して両端をトリム
-  return value.replace(/[\s　]+/g, " ").trim();
+  return value.replace(/[\s\u3000]+/g, " ").trim();
 }
 
 /**

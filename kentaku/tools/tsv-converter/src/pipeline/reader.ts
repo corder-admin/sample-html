@@ -36,9 +36,10 @@ export async function readTsvFile(filePath: string): Promise<ReadResult> {
         totalLines++;
         // 2つ目の摘要カラムを別名にマッピング
         const keys = Object.keys(row);
-        const secondMemoIndex = keys.filter((k) => k === "摘要").length > 1
-          ? keys.lastIndexOf("摘要")
-          : -1;
+        const secondMemoIndex =
+          keys.filter((k) => k === "摘要").length > 1
+            ? keys.lastIndexOf("摘要")
+            : -1;
 
         if (secondMemoIndex !== -1) {
           const values = Object.values(row);

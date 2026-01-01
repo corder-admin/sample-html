@@ -48,14 +48,18 @@ export function printSummary(summary: ProcessingSummary): void {
   }
 
   if (summary.duplicateCount > 0) {
-    const pct = ((summary.duplicateCount / summary.inputCount) * 100).toFixed(2);
+    const pct = ((summary.duplicateCount / summary.inputCount) * 100).toFixed(
+      2
+    );
     console.log(
       `║ 除外: 重複レコード   ${summary.duplicateCount.toLocaleString().padStart(10)} (${pct.padStart(6)}%)${" ".repeat(14)}║`
     );
   }
 
   console.log(`╟${thinLine}╢`);
-  const outputPct = ((summary.outputCount / summary.inputCount) * 100).toFixed(2);
+  const outputPct = ((summary.outputCount / summary.inputCount) * 100).toFixed(
+    2
+  );
   console.log(
     `║ 出力レコード数:${summary.outputCount.toLocaleString().padStart(15)} (${outputPct.padStart(6)}%)${" ".repeat(14)}║`
   );

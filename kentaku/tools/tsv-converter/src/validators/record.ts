@@ -40,7 +40,5 @@ export function formatValidationErrors(
   result: z.SafeParseReturnType<CleanedRecord, CleanedRecord>
 ): string[] {
   if (result.success) return [];
-  return result.error.errors.map(
-    (e) => `${e.path.join(".")}: ${e.message}`
-  );
+  return result.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`);
 }

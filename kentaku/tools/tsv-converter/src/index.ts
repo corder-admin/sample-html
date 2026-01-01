@@ -16,7 +16,11 @@ import { existsSync } from "node:fs";
 
 import { readTsvFileWithProgress } from "./pipeline/reader.js";
 import { cleanRecords } from "./pipeline/cleaner.js";
-import { transformToOutput, deduplicateRecords, sortByOrderDate } from "./pipeline/transformer.js";
+import {
+  transformToOutput,
+  deduplicateRecords,
+  sortByOrderDate,
+} from "./pipeline/transformer.js";
 import { writeDataJs, writeRejectedRecords } from "./pipeline/writer.js";
 import { createSummary, printSummary } from "./reports/summary.js";
 
@@ -33,12 +37,17 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2);
   if (args.length === 0) {
     console.error("エラー: 入力ファイルを指定してください");
-    console.error("使い方: npm run convert -- <入力TSVファイル> [出力先ディレクトリ]");
+    console.error(
+      "使い方: npm run convert -- <入力TSVファイル> [出力先ディレクトリ]"
+    );
     process.exit(1);
   }
 
   const inputFile = resolve(args[0]);
-  const outputDir = resolve(args[1] || resolve(dirname(new URL(import.meta.url).pathname), DEFAULT_OUTPUT_DIR));
+  const outputDir = resolve(
+    args[1] ||
+      resolve(dirname(new URL(import.meta.url).pathname), DEFAULT_OUTPUT_DIR)
+  );
 
   // 入力ファイル存在確認
   if (!existsSync(inputFile)) {

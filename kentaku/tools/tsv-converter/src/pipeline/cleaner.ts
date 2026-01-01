@@ -3,7 +3,11 @@
  */
 
 import type { RawTsvRecord } from "../types/raw.js";
-import type { CleanedRecord, RejectedRecord, ExclusionReason } from "../types/clean.js";
+import type {
+  CleanedRecord,
+  RejectedRecord,
+  ExclusionReason,
+} from "../types/clean.js";
 import {
   checkExclusion,
   normalizeWhitespace,
