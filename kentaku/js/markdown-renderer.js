@@ -141,9 +141,9 @@ function customizeRenderer(mdInstance) {
     return '<hr class="my-4">';
   };
 
-  // Strong: Bold text with red color
+  // Strong: Bold text with dark color
   mdInstance.renderer.rules.strong_open = function () {
-    return '<strong class="fw-bold text-danger">';
+    return '<strong class="fw-bold text-dark">';
   };
 
   // Emphasis: Italic text

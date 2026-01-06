@@ -21,32 +21,40 @@
 const GEMINI_API_CONFIG = {
   model: "gemini-3-flash-preview",
   baseUrl: "https://generativelanguage.googleapis.com/v1beta/models",
+  storageKey: "gemini_api_key",
 };
 
 // =============================================================================
-// API Key Management (Memory Store)
+// API Key Management (Session Storage)
 // =============================================================================
 
 /**
- * Gemini API Key stored in memory (not persisted)
- * @type {string|null}
- */
-let geminiApiKey = null;
-
-/**
- * Get the stored Gemini API key
+ * Get the stored Gemini API key from sessionStorage
  * @returns {string|null} The API key or null if not set
  */
 function getGeminiApiKey() {
-  return geminiApiKey;
+  try {
+    return sessionStorage.getItem(GEMINI_API_CONFIG.storageKey);
+  } catch (e) {
+    console.warn("sessionStorage not available:", e);
+    return null;
+  }
 }
 
 /**
- * Set the Gemini API key
+ * Set the Gemini API key to sessionStorage
  * @param {string|null} key - The API key to store
  */
 function setGeminiApiKey(key) {
-  geminiApiKey = key;
+  try {
+    if (key) {
+      sessionStorage.setItem(GEMINI_API_CONFIG.storageKey, key);
+    } else {
+      sessionStorage.removeItem(GEMINI_API_CONFIG.storageKey);
+    }
+  } catch (e) {
+    console.warn("sessionStorage not available:", e);
+  }
 }
 
 // =============================================================================
@@ -59,11 +67,11 @@ function setGeminiApiKey(key) {
  */
 function apiSettingsData() {
   return {
-    apiKeyInput: geminiApiKey || "",
+    apiKeyInput: getGeminiApiKey() || "",
     showPassword: false,
 
     get isApiKeySet() {
-      return !!geminiApiKey;
+      return !!getGeminiApiKey();
     },
 
     togglePasswordVisibility() {
@@ -151,5 +159,7 @@ async function callGeminiVisionApi(base64Images, prompt) {
   }
 
   const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "レスポンスが空です";
+  return (
+    data.candidates?.[0]?.content?.parts?.[0]?.text || "レスポンスが空です"
+  );
 }
