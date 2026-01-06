@@ -40,6 +40,9 @@ const DataLoader = (function () {
   ]; // 7地域 約17,000件 (26.6%)
   // const ACTIVE_REGIONS = null; // ← 本番用: 全データ使用
 
+  // [Performance] Set を事前生成して applyRegionFilter での繰り返し生成を回避
+  const REGION_SET = ACTIVE_REGIONS ? new Set(ACTIVE_REGIONS) : null;
+
   // メモリキャッシュ
   let cachedRecords = null;
 
@@ -56,11 +59,10 @@ const DataLoader = (function () {
    * @returns {Array} フィルタ後のレコード配列
    */
   function applyRegionFilter(records) {
-    if (!ACTIVE_REGIONS) {
+    if (!REGION_SET) {
       return records; // フィルタなし（本番モード）
     }
-    const regionSet = new Set(ACTIVE_REGIONS);
-    const filtered = records.filter((r) => regionSet.has(r.region));
+    const filtered = records.filter((r) => REGION_SET.has(r.region));
     log(
       `Region filter applied: ${records.length} → ${filtered.length} records`
     );
@@ -73,7 +75,9 @@ const DataLoader = (function () {
    */
   async function fetchData() {
     log("Fetching gzip data...");
-    const startTime = performance.now();
+
+    // [Performance] 時間計測はデバッグ時のみ実行
+    const startTime = CONFIG.DEBUG ? performance.now() : 0;
 
     // pako が必要
     if (typeof pako === "undefined") {
@@ -89,24 +93,34 @@ const DataLoader = (function () {
     const compressedSize = compressedData.byteLength;
 
     // pako で gzip 展開
-    const decompressStart = performance.now();
+    const decompressStart = CONFIG.DEBUG ? performance.now() : 0;
     const decompressed = pako.inflate(new Uint8Array(compressedData), {
       to: "string",
     });
-    const decompressTime = performance.now() - decompressStart;
+    const decompressTime = CONFIG.DEBUG
+      ? performance.now() - decompressStart
+      : 0;
 
     // JSON パース
-    const parseStart = performance.now();
+    const parseStart = CONFIG.DEBUG ? performance.now() : 0;
     let records = JSON.parse(decompressed);
-    const parseTime = performance.now() - parseStart;
+    const parseTime = CONFIG.DEBUG ? performance.now() - parseStart : 0;
 
-    const totalTime = performance.now() - startTime;
-    log(
-      `Gzip: ${(compressedSize / 1024).toFixed(1)}KB → ${records.length} records`
-    );
-    log(
-      `Times: fetch=${(decompressStart - startTime).toFixed(0)}ms, decompress=${decompressTime.toFixed(0)}ms, parse=${parseTime.toFixed(0)}ms, total=${totalTime.toFixed(0)}ms`
-    );
+    if (CONFIG.DEBUG) {
+      const totalTime = performance.now() - startTime;
+      log(
+        `Gzip: ${(compressedSize / 1024).toFixed(1)}KB → ${
+          records.length
+        } records`
+      );
+      log(
+        `Times: fetch=${(decompressStart - startTime).toFixed(
+          0
+        )}ms, decompress=${decompressTime.toFixed(
+          0
+        )}ms, parse=${parseTime.toFixed(0)}ms, total=${totalTime.toFixed(0)}ms`
+      );
+    }
 
     // 地域フィルタを適用
     records = applyRegionFilter(records);
@@ -125,12 +139,14 @@ const DataLoader = (function () {
       return cachedRecords;
     }
 
-    const startTime = performance.now();
+    const startTime = CONFIG.DEBUG ? performance.now() : 0;
 
     // fetchでデータを取得
     cachedRecords = await fetchData();
 
-    log(`Total load time: ${(performance.now() - startTime).toFixed(0)}ms`);
+    if (CONFIG.DEBUG) {
+      log(`Total load time: ${(performance.now() - startTime).toFixed(0)}ms`);
+    }
     return cachedRecords;
   }
 
