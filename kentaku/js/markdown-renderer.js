@@ -208,32 +208,32 @@ function sanitizeFilename(name, maxLength = 30) {
 function renderMarkdownSimple(markdown) {
   if (!markdown) return "";
 
-  const S = MARKDOWN_STYLES;
+  const styles = MARKDOWN_STYLES;
 
   let html = escapeHtml(markdown)
     // Headers (process longest pattern first)
-    .replace(/^### (.+)$/gm, `<h5 class="${S.headings.h5}">$1</h5>`)
-    .replace(/^## (.+)$/gm, `<h4 class="${S.headings.h4}">$1</h4>`)
-    .replace(/^# (.+)$/gm, `<h3 class="${S.headings.h3}">$1</h3>`)
+    .replace(/^### (.+)$/gm, `<h5 class="${styles.headings.h5}">$1</h5>`)
+    .replace(/^## (.+)$/gm, `<h4 class="${styles.headings.h4}">$1</h4>`)
+    .replace(/^# (.+)$/gm, `<h3 class="${styles.headings.h3}">$1</h3>`)
     // Bold and Italic
-    .replace(/\*\*(.+?)\*\*/g, `<strong class="${S.strong}">$1</strong>`)
-    .replace(/\*(.+?)\*/g, `<em class="${S.emphasis}">$1</em>`)
+    .replace(/\*\*(.+?)\*\*/g, `<strong class="${styles.strong}">$1</strong>`)
+    .replace(/\*(.+?)\*/g, `<em class="${styles.emphasis}">$1</em>`)
     // Inline code
-    .replace(/`([^`]+)`/g, `<code class="${S.codeInline}">$1</code>`)
+    .replace(/`([^`]+)`/g, `<code class="${styles.codeInline}">$1</code>`)
     // Lists
-    .replace(/^- (.+)$/gm, `<li class="${S.listItem}">$1</li>`)
-    .replace(/^\d+\. (.+)$/gm, `<li class="${S.listItem}">$1</li>`)
+    .replace(/^- (.+)$/gm, `<li class="${styles.listItem}">$1</li>`)
+    .replace(/^\d+\. (.+)$/gm, `<li class="${styles.listItem}">$1</li>`)
     // Paragraphs
-    .replace(/\n\n/g, `</p><p class="${S.paragraph}">`)
+    .replace(/\n\n/g, `</p><p class="${styles.paragraph}">`)
     .replace(/\n/g, "<br>");
 
   // Wrap list items
   html = html.replace(
     /(<li[^>]*>.*?<\/li>)+/gs,
-    `<ul class="${S.bulletList}">$&</ul>`
+    `<ul class="${styles.bulletList}">$&</ul>`
   );
 
-  return `<div class="ai-report-content"><p class="${S.paragraph}">${html}</p></div>`;
+  return `<div class="ai-report-content"><p class="${styles.paragraph}">${html}</p></div>`;
 }
 
 // =============================================================================
