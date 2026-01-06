@@ -22,6 +22,12 @@ const MILLISECONDS_PER_DAY = 86400000;
 /** Regular expression for YYYYMMDD date format validation */
 const DATE_YYYYMMDD_REGEX = /^\d{8}$/;
 
+/**
+ * IQR outlier detection multiplier (Tukey's fence)
+ * Standard statistical practice: Q1 - 1.5×IQR and Q3 + 1.5×IQR
+ */
+const IQR_OUTLIER_MULTIPLIER = 1.5;
+
 // =============================================================================
 // Number Formatting
 // =============================================================================
@@ -157,6 +163,28 @@ function getWeekStartDate(dateStr) {
 // =============================================================================
 
 /**
+ * Find minimum and maximum values in an array (single-pass O(n))
+ * @param {number[]} values - Array of numeric values
+ * @returns {{min: number, max: number}} Min and max values
+ */
+function findMinMax(values) {
+  if (!values || values.length === 0) {
+    return { min: 0, max: 0 };
+  }
+
+  let min = values[0];
+  let max = values[0];
+
+  for (let i = 1; i < values.length; i++) {
+    const v = values[i];
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+
+  return { min, max };
+}
+
+/**
  * Calculate price statistics from an array of prices
  * @param {number[]} prices - Array of price values
  * @returns {{min: number, max: number, avg: number}} Statistics object
@@ -166,16 +194,13 @@ function calcPriceStats(prices) {
     return { min: 0, max: 0, avg: 0 };
   }
 
-  // Single-pass calculation for O(n) instead of O(3n)
-  let min = prices[0];
-  let max = prices[0];
-  let sum = prices[0];
+  // Use extracted findMinMax for DRY compliance
+  const { min, max } = findMinMax(prices);
 
-  for (let i = 1; i < prices.length; i++) {
-    const price = prices[i];
-    if (price < min) min = price;
-    if (price > max) max = price;
-    sum += price;
+  // Calculate sum in the same pass
+  let sum = 0;
+  for (let i = 0; i < prices.length; i++) {
+    sum += prices[i];
   }
 
   return { min, max, avg: Math.round(sum / prices.length) };
@@ -259,12 +284,13 @@ function calcBoxplotStats(values) {
   const q3 = calcPercentile(0.75);
   const iqr = q3 - q1;
 
-  const lowerFence = q1 - 1.5 * iqr;
-  const upperFence = q3 + 1.5 * iqr;
+  const lowerFence = q1 - IQR_OUTLIER_MULTIPLIER * iqr;
+  const upperFence = q3 + IQR_OUTLIER_MULTIPLIER * iqr;
 
   const outliers = sorted.filter((v) => v < lowerFence || v > upperFence);
   const min = sorted.find((v) => v >= lowerFence) || sorted[0];
-  const max = [...sorted].reverse().find((v) => v <= upperFence) || sorted[n - 1];
+  const max =
+    [...sorted].reverse().find((v) => v <= upperFence) || sorted[n - 1];
 
   return { min, q1, median, q3, max, outliers };
 }
@@ -365,14 +391,8 @@ function createDistribution(values, bucketCount = 10) {
     return { labels: [], counts: [] };
   }
 
-  // Single-pass to find min/max: O(n) instead of O(2n)
-  let min = values[0];
-  let max = values[0];
-  for (let i = 1; i < values.length; i++) {
-    const v = values[i];
-    if (v < min) min = v;
-    if (v > max) max = v;
-  }
+  // Use extracted findMinMax for DRY compliance
+  const { min, max } = findMinMax(values);
 
   const range = max - min;
   const step = range / bucketCount || 1;
