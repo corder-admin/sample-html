@@ -808,8 +808,12 @@ function appData() {
         .map((r) => r.orderDate)
         .filter((d) => d && d.length === 8)
         .sort();
-      const minDate = orderDates.length > 0 ? formatDateHyphen(orderDates[0]) : "";
-      const maxDate = orderDates.length > 0 ? formatDateHyphen(orderDates[orderDates.length - 1]) : "";
+      const minDate =
+        orderDates.length > 0 ? formatDateHyphen(orderDates[0]) : "";
+      const maxDate =
+        orderDates.length > 0
+          ? formatDateHyphen(orderDates[orderDates.length - 1])
+          : "";
 
       this.detailModal = {
         isOpen: true,
@@ -897,8 +901,10 @@ function appData() {
      */
     isDetailTableMode() {
       const tab = this.detailModal.activeTab;
-      if (tab === "timeseries") return this.detailModal.timeseries.chartType === "table";
-      if (tab === "comparison") return this.detailModal.comparison.chartType === "table";
+      if (tab === "timeseries")
+        return this.detailModal.timeseries.chartType === "table";
+      if (tab === "comparison")
+        return this.detailModal.comparison.chartType === "table";
       if (tab === "trend") return this.detailModal.trend.chartType === "table";
       return false;
     },
@@ -908,7 +914,8 @@ function appData() {
      */
     applyDetailCommonFilters() {
       const records = this.detailModal.currentGroup?.filteredRecords || [];
-      const { dateFrom, dateTo, regions, vendors } = this.detailModal.commonFilters;
+      const { dateFrom, dateTo, regions, vendors } =
+        this.detailModal.commonFilters;
 
       const dateFromYMD = dateFrom ? dateFrom.replace(/-/g, "") : "";
       const dateToYMD = dateTo ? dateTo.replace(/-/g, "") : "";
@@ -1115,7 +1122,9 @@ function appData() {
         const value = r[xAxis];
         if (xAxis === "totalArea" || xAxis === "constArea") {
           // Group area values into buckets of 100
-          return `${Math.floor(value / 100) * 100}~${Math.floor(value / 100) * 100 + 99}㎡`;
+          return `${Math.floor(value / 100) * 100}~${
+            Math.floor(value / 100) * 100 + 99
+          }㎡`;
         }
         return `${value}${xAxis === "floors" ? "階" : "戸"}`;
       });
@@ -1186,7 +1195,14 @@ function appData() {
         maxData.push(stats.max);
       });
 
-      return { labels, minData, avgData, medianData, maxData, count: sortedKeys.length };
+      return {
+        labels,
+        minData,
+        avgData,
+        medianData,
+        maxData,
+        count: sortedKeys.length,
+      };
     },
 
     /**
@@ -1237,9 +1253,13 @@ function appData() {
       const scatterData = records.map((r) => ({
         x: r[xAxis],
         y: r.price,
-        r: bubbleSize === "qty"
-          ? Math.log10(Math.abs(r.qty) + 1) * CHART_CONFIG.BUBBLE_SIZE_QTY_FACTOR
-          : Math.sqrt(Math.abs(r.amount) / CHART_CONFIG.BUBBLE_SIZE_AMOUNT_DIVISOR) * CHART_CONFIG.BUBBLE_SIZE_AMOUNT_FACTOR,
+        r:
+          bubbleSize === "qty"
+            ? Math.log10(Math.abs(r.qty) + 1) *
+              CHART_CONFIG.BUBBLE_SIZE_QTY_FACTOR
+            : Math.sqrt(
+                Math.abs(r.amount) / CHART_CONFIG.BUBBLE_SIZE_AMOUNT_DIVISOR
+              ) * CHART_CONFIG.BUBBLE_SIZE_AMOUNT_FACTOR,
         record: r,
       }));
 
@@ -1247,8 +1267,16 @@ function appData() {
       const xAxisValues = records.map((r) => r[xAxis]);
       const priceValues = records.map((r) => r.price);
 
-      const xRanges = createValueRanges(xAxisValues, CHART_CONFIG.HEATMAP_BUCKET_COUNT, xAxis);
-      const priceRanges = createValueRanges(priceValues, CHART_CONFIG.HEATMAP_BUCKET_COUNT, 'price');
+      const xRanges = createValueRanges(
+        xAxisValues,
+        CHART_CONFIG.HEATMAP_BUCKET_COUNT,
+        xAxis
+      );
+      const priceRanges = createValueRanges(
+        priceValues,
+        CHART_CONFIG.HEATMAP_BUCKET_COUNT,
+        "price"
+      );
 
       const heatmapData = [];
       xRanges.forEach((xRange) => {
@@ -1257,8 +1285,12 @@ function appData() {
           const isLastYRange = yRange === priceRanges[priceRanges.length - 1];
 
           const count = records.filter((r) => {
-            const xMatch = r[xAxis] >= xRange.min && (isLastXRange ? r[xAxis] <= xRange.max : r[xAxis] < xRange.max);
-            const yMatch = r.price >= yRange.min && (isLastYRange ? r.price <= yRange.max : r.price < yRange.max);
+            const xMatch =
+              r[xAxis] >= xRange.min &&
+              (isLastXRange ? r[xAxis] <= xRange.max : r[xAxis] < xRange.max);
+            const yMatch =
+              r.price >= yRange.min &&
+              (isLastYRange ? r.price <= yRange.max : r.price < yRange.max);
             return xMatch && yMatch;
           }).length;
 
@@ -1366,7 +1398,10 @@ function appData() {
         label: "最小値",
         data: minData,
         borderColor: CHART_COLORS.min.border,
-        backgroundColor: chartType === "bar" ? CHART_COLORS.min.border + "88" : CHART_COLORS.min.background,
+        backgroundColor:
+          chartType === "bar"
+            ? CHART_COLORS.min.border + "88"
+            : CHART_COLORS.min.background,
         borderWidth: 1,
         borderDash: [4, 4],
         pointRadius: chartType === "bar" ? 0 : 3,
@@ -1393,9 +1428,10 @@ function appData() {
         label: "平均値",
         data: avgData,
         borderColor: CHART_COLORS.actual.border,
-        backgroundColor: chartType === "area"
-          ? CHART_COLORS.actual.border + "44"
-          : CHART_COLORS.actual.background,
+        backgroundColor:
+          chartType === "area"
+            ? CHART_COLORS.actual.border + "44"
+            : CHART_COLORS.actual.background,
         borderWidth: 2,
         pointRadius: chartType === "bar" ? 0 : 5,
         fill: chartType === "area",
@@ -1408,7 +1444,10 @@ function appData() {
         label: "最大値",
         data: maxData,
         borderColor: CHART_COLORS.max.border,
-        backgroundColor: chartType === "bar" ? CHART_COLORS.max.border + "88" : CHART_COLORS.max.background,
+        backgroundColor:
+          chartType === "bar"
+            ? CHART_COLORS.max.border + "88"
+            : CHART_COLORS.max.background,
         borderWidth: 1,
         borderDash: [4, 4],
         pointRadius: chartType === "bar" ? 0 : 3,
@@ -1446,11 +1485,13 @@ function appData() {
           type: "bar",
           data: {
             labels,
-            datasets: [{
-              label: metricLabels[metric] || "平均",
-              data: chartData,
-              backgroundColor: CHART_COLORS.avg.border,
-            }],
+            datasets: [
+              {
+                label: metricLabels[metric] || "平均",
+                data: chartData,
+                backgroundColor: CHART_COLORS.avg.border,
+              },
+            ],
           },
           options: {
             responsive: true,
@@ -1495,24 +1536,36 @@ function appData() {
           data: {
             labels,
             datasets: [
-              { label: "Q1", data: statsData.map((s) => s.q1), backgroundColor: "#20c99755" },
-              { label: "中央値", data: statsData.map((s) => s.median), backgroundColor: "#0d6efd" },
-              { label: "Q3", data: statsData.map((s) => s.q3), backgroundColor: "#fd7e1455" },
+              {
+                label: "Q1",
+                data: statsData.map((s) => s.q1),
+                backgroundColor: "#20c99755",
+              },
+              {
+                label: "中央値",
+                data: statsData.map((s) => s.median),
+                backgroundColor: "#0d6efd",
+              },
+              {
+                label: "Q3",
+                data: statsData.map((s) => s.q3),
+                backgroundColor: "#fd7e1455",
+              },
             ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
-            plugins: { 
+            plugins: {
               legend: { position: "top" },
               subtitle: {
                 display: true,
                 text: "※ データを4等分した位置（25%, 50%, 75%）を正確に計算",
                 font: { size: 11 },
                 color: "#6c757d",
-                padding: { bottom: 10 }
-              }
+                padding: { bottom: 10 },
+              },
             },
             scales: {
               y: {
@@ -1529,14 +1582,16 @@ function appData() {
         type: "boxplot",
         data: {
           labels,
-          datasets: [{
-            label: "単価分布",
-            data: boxplotData,
-            backgroundColor: CHART_COLORS.avg.border + "44",
-            borderColor: CHART_COLORS.avg.border,
-            borderWidth: 1,
-            outlierBackgroundColor: CHART_COLORS.max.border,
-          }],
+          datasets: [
+            {
+              label: "単価分布",
+              data: boxplotData,
+              backgroundColor: CHART_COLORS.avg.border + "44",
+              borderColor: CHART_COLORS.avg.border,
+              borderWidth: 1,
+              outlierBackgroundColor: CHART_COLORS.max.border,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -1549,7 +1604,7 @@ function appData() {
               text: "※ 箱はデータの中央50%の範囲、ひげは通常範囲（箱の1.5倍まで）、灰色の点は各データ、赤い点は外れ値を表示",
               font: { size: 11 },
               color: "#6c757d",
-              padding: { bottom: 10 }
+              padding: { bottom: 10 },
             },
             tooltip: {
               callbacks: {
@@ -1590,14 +1645,16 @@ function appData() {
         type: "radar",
         data: {
           labels,
-          datasets: [{
-            label: metricLabels[metric] || "平均",
-            data,
-            backgroundColor: CHART_COLORS.avg.border + "44",
-            borderColor: CHART_COLORS.avg.border,
-            borderWidth: 2,
-            pointBackgroundColor: CHART_COLORS.avg.border,
-          }],
+          datasets: [
+            {
+              label: metricLabels[metric] || "平均",
+              data,
+              backgroundColor: CHART_COLORS.avg.border + "44",
+              borderColor: CHART_COLORS.avg.border,
+              borderWidth: 2,
+              pointBackgroundColor: CHART_COLORS.avg.border,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -1630,23 +1687,35 @@ function appData() {
     renderTrendTabChart(ctx, data) {
       const chartType = this.detailModal.trend.chartType;
       const unit = this.detailModal.currentGroup?.unit || "";
-      const { scatterData, heatmapData, xRanges, priceRanges, xAxisLabel } = data;
+      const { scatterData, heatmapData, xRanges, priceRanges, xAxisLabel } =
+        data;
 
       if (chartType === "heatmap") {
-        this.renderHeatmapChart(ctx, heatmapData, xRanges, priceRanges, xAxisLabel, unit);
+        this.renderHeatmapChart(
+          ctx,
+          heatmapData,
+          xRanges,
+          priceRanges,
+          xAxisLabel,
+          unit
+        );
       } else {
         // Scatter or bubble chart
         // Calculate correlation coefficient
         const xValues = scatterData.map((d) => d.x);
         const yValues = scatterData.map((d) => d.y);
         const correlation = calcCorrelation(xValues, yValues);
-        const correlationText = correlation !== null
-          ? `相関係数: ${correlation.toFixed(3)}`
-          : '';
+        const correlationText =
+          correlation !== null ? `相関係数: ${correlation.toFixed(3)}` : "";
 
-        const bubbleText = chartType === "bubble"
-          ? `円の大きさは${this.detailModal.trend.bubbleSize === "qty" ? "数量" : "合計金額（数量×単価）"}を表示。`
-          : '';
+        const bubbleText =
+          chartType === "bubble"
+            ? `円の大きさは${
+                this.detailModal.trend.bubbleSize === "qty"
+                  ? "数量"
+                  : "合計金額（数量×単価）"
+              }を表示。`
+            : "";
 
         const subtitleText = correlationText
           ? `※ ${bubbleText}${correlationText} (右上ほど単価が高く${xAxisLabel}が多い傾向、外れ値や標準的な価格帯の分布を確認)`
@@ -1655,22 +1724,24 @@ function appData() {
         this.detailChartInstance = new Chart(ctx, {
           type: chartType === "bubble" ? "bubble" : "scatter",
           data: {
-            datasets: [{
-              label: "単価",
-              data: scatterData,
-              backgroundColor: CHART_COLORS.avg.border + "88",
-              borderColor: CHART_COLORS.avg.border,
-              borderWidth: 1,
-            }],
+            datasets: [
+              {
+                label: "単価",
+                data: scatterData,
+                backgroundColor: CHART_COLORS.avg.border + "88",
+                borderColor: CHART_COLORS.avg.border,
+                borderWidth: 1,
+              },
+            ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
             interaction: {
-              mode: 'point',
+              mode: "point",
               intersect: true,
-              axis: 'xy',
+              axis: "xy",
             },
             plugins: {
               legend: { display: false },
@@ -1679,7 +1750,7 @@ function appData() {
                 text: subtitleText,
                 font: { size: 11 },
                 color: "#6c757d",
-                padding: { bottom: 10 }
+                padding: { bottom: 10 },
               },
               tooltip: {
                 callbacks: {
@@ -1724,11 +1795,13 @@ function appData() {
         this.detailChartInstance = new Chart(ctx, {
           type: "scatter",
           data: {
-            datasets: [{
-              label: "件数",
-              data: data.map((d) => ({ x: d.x, y: d.y, r: d.v * 3 })),
-              backgroundColor: CHART_COLORS.avg.border + "88",
-            }],
+            datasets: [
+              {
+                label: "件数",
+                data: data.map((d) => ({ x: d.x, y: d.y, r: d.v * 3 })),
+                backgroundColor: CHART_COLORS.avg.border + "88",
+              },
+            ],
           },
           options: {
             responsive: true,
@@ -1751,19 +1824,23 @@ function appData() {
       this.detailChartInstance = new Chart(ctx, {
         type: "matrix",
         data: {
-          datasets: [{
-            label: "件数",
-            data: data,
-            backgroundColor: (context) => {
-              const value = context.dataset.data[context.dataIndex]?.v || 0;
-              const alpha = Math.min(value / 10, 1);
-              return `rgba(13, 110, 253, ${alpha})`;
+          datasets: [
+            {
+              label: "件数",
+              data: data,
+              backgroundColor: (context) => {
+                const value = context.dataset.data[context.dataIndex]?.v || 0;
+                const alpha = Math.min(value / 10, 1);
+                return `rgba(13, 110, 253, ${alpha})`;
+              },
+              borderWidth: 1,
+              borderColor: "rgba(0, 0, 0, 0.1)",
+              width: ({ chart }) =>
+                (chart.chartArea?.width || 100) / xRanges.length - 1,
+              height: ({ chart }) =>
+                (chart.chartArea?.height || 100) / priceRanges.length - 1,
             },
-            borderWidth: 1,
-            borderColor: "rgba(0, 0, 0, 0.1)",
-            width: ({ chart }) => (chart.chartArea?.width || 100) / xRanges.length - 1,
-            height: ({ chart }) => (chart.chartArea?.height || 100) / priceRanges.length - 1,
-          }],
+          ],
         },
         options: {
           responsive: true,
@@ -1771,21 +1848,21 @@ function appData() {
           animation: false,
           layout: {
             padding: {
-              bottom: 5
-            }
+              bottom: 5,
+            },
           },
           plugins: {
             legend: {
               display: true,
-              position: 'bottom',
-              align: 'center',
+              position: "bottom",
+              align: "center",
               labels: {
                 boxWidth: 30,
                 boxHeight: 8,
                 padding: 3,
                 font: { size: 9 },
-                usePointStyle: false
-              }
+                usePointStyle: false,
+              },
             },
             tooltip: {
               callbacks: {
