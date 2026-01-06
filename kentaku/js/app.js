@@ -320,6 +320,14 @@ function appData() {
     },
     detailChartInstance: null,
 
+    // AIレポート生成状態
+    aiReport: {
+      isGenerating: false,
+      isOpen: false,
+      content: "",
+      error: null,
+    },
+
     regionNames: [],
     regionDropdownOpen: false,
 
@@ -2089,6 +2097,54 @@ function appData() {
           },
         },
       });
+    },
+
+    // =========================================================================
+    // AI Report Generation (using ai-report.js helpers)
+    // =========================================================================
+
+    /**
+     * APIキーが設定されているかどうか
+     * @returns {boolean}
+     */
+    isApiKeyConfigured() {
+      return !!getGeminiApiKey();
+    },
+
+    /**
+     * AIレポートを生成（現在表示中のチャートのみ）
+     * ai-report.jsのgenerateAiReport関数を使用
+     */
+    async generateAiReport() {
+      const self = this;
+
+      await generateAiReport({
+        chartInstance: this.detailChartInstance,
+        detailModal: this.detailModal,
+        onStart: () => {
+          self.aiReport.isGenerating = true;
+          self.aiReport.error = null;
+          self.aiReport.content = "";
+          self.aiReport.isOpen = true;
+        },
+        onSuccess: (response) => {
+          self.aiReport.content = response;
+        },
+        onError: (errorMessage) => {
+          self.aiReport.error = errorMessage;
+          self.aiReport.isOpen = true;
+        },
+        onComplete: () => {
+          self.aiReport.isGenerating = false;
+        },
+      });
+    },
+
+    /**
+     * AIレポートパネルを閉じる
+     */
+    closeAiReport() {
+      this.aiReport.isOpen = false;
     },
   };
 }
