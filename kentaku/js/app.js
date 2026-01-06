@@ -27,14 +27,16 @@
 // =============================================================================
 
 /**
- * Filter Worker instance (lazy initialized)
+ * Filter Worker instance (遅延初期化)
+ * @type {Worker|null}
  */
 let filterWorkerProxy = null;
 let filterWorkerInstance = null;
 
 /**
- * Initialize the filter worker
- * @returns {Promise<Object>} Worker proxy
+ * フィルターWorkerを初期化（遅延ロード、キャッシュあり）
+ * Comlinkが未ロードの場合はnullを返しメインスレッドでフォールバック
+ * @returns {Promise<Object|null>} Worker proxy、または初期化失敗時null
  */
 async function getFilterWorker() {
   if (filterWorkerProxy) {
@@ -63,7 +65,7 @@ async function getFilterWorker() {
 }
 
 /**
- * Pagination and list display configuration
+ * ページネーションとリスト表示の設定
  */
 const PAGINATION_CONFIG = {
   DEFAULT_DISPLAY_LIMIT: 50,
@@ -71,7 +73,7 @@ const PAGINATION_CONFIG = {
 };
 
 /**
- * Chart rendering and visualization configuration
+ * チャート描画と可視化の設定
  */
 const CHART_CONFIG = {
   HEATMAP_BUCKET_COUNT: 5,
@@ -83,7 +85,7 @@ const CHART_CONFIG = {
 };
 
 /**
- * Default filter values - single source of truth
+ * デフォルトフィルター値 - 単一の信頼できる情報源
  */
 const DEFAULT_FILTERS = {
   project: "",
@@ -106,10 +108,10 @@ const DEFAULT_FILTERS = {
 };
 
 /**
- * Check if a record matches all filter criteria
- * @param {Object} record - Record to check
- * @param {Object} criteria - Filter criteria
- * @returns {boolean} True if record matches all criteria
+ * レコードがすべてのフィルター条件に一致するかをチェック
+ * @param {Object} record - チェック対象のレコード
+ * @param {Object} criteria - フィルター条件オブジェクト
+ * @returns {boolean} すべての条件に一致する場合true
  */
 function recordMatchesFilters(record, criteria) {
   const { projectKw, regions, majorCodes, vendor, dateFrom, dateTo, ranges } =
@@ -135,6 +137,102 @@ function recordMatchesFilters(record, criteria) {
   return true;
 }
 
+// =============================================================================
+// Private Helper Functions (Chart Data Preparation)
+// =============================================================================
+
+/**
+ * レコードを週次で集計し、グローバル統計を計算
+ * @private
+ * @param {Array} records - 集計対象のレコード配列
+ * @returns {{weekData: Object, globalMin: number, globalMax: number, globalSum: number}}
+ */
+function groupRecordsByWeek(records) {
+  const weekData = {};
+  let globalMin = Infinity;
+  let globalMax = -Infinity;
+  let globalSum = 0;
+
+  // Single pass: group by week and compute global stats
+  for (const record of records) {
+    const week = record.orderWeek;
+    const price = record.price;
+
+    if (!weekData[week]) {
+      weekData[week] = { prices: [], weekStart: record.orderWeekStart };
+    }
+    weekData[week].prices.push(price);
+
+    if (price < globalMin) globalMin = price;
+    if (price > globalMax) globalMax = price;
+    globalSum += price;
+  }
+
+  return { weekData, globalMin, globalMax, globalSum };
+}
+
+/**
+ * 週次集計データから統計配列を生成
+ * @private
+ * @param {Object} weekData - 週ごとのレコードデータ
+ * @param {number} recordsLength - 全レコード数（平均計算用）
+ * @returns {{weekLabels, actualData, weeklyMinData, weeklyMaxData, weeklyMedianData, stats, weekCount}}
+ */
+function calculateWeeklyStats(weekData, recordsLength) {
+  const allWeeks = Object.keys(weekData).sort();
+  const weekCount = allWeeks.length;
+  const weekLabels = new Array(weekCount);
+  const actualData = new Array(weekCount);
+  const weeklyMinData = new Array(weekCount);
+  const weeklyMaxData = new Array(weekCount);
+  const weeklyMedianData = new Array(weekCount);
+
+  // Single pass: compute all weekly stats
+  for (let i = 0; i < weekCount; i++) {
+    const entry = weekData[allWeeks[i]];
+    const prices = entry.prices;
+    const len = prices.length;
+
+    weekLabels[i] = entry.weekStart;
+
+    // Compute min/max/avg in one pass
+    let min = Infinity;
+    let max = -Infinity;
+    let sum = 0;
+    for (let j = 0; j < len; j++) {
+      const p = prices[j];
+      if (p < min) min = p;
+      if (p > max) max = p;
+      sum += p;
+    }
+
+    weeklyMinData[i] = min;
+    weeklyMaxData[i] = max;
+    actualData[i] = sum / len;
+
+    // Median calculation (requires sort)
+    prices.sort((a, b) => a - b);
+    const mid = len >> 1;
+    weeklyMedianData[i] =
+      len & 1 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
+  }
+
+  return {
+    weekLabels,
+    actualData,
+    weeklyMinData,
+    weeklyMaxData,
+    weeklyMedianData,
+    weekCount,
+  };
+}
+
+/**
+ * Alpine.jsメインコンポーネント
+ * データ管理、フィルタリング、チャート描画、モーダル制御を統合
+ * Note: Alpine.jsのリアクティビティ要件により単一オブジェクトで構成
+ * @returns {Object} Alpine.jsコンポーネントオブジェクト
+ */
 function appData() {
   return {
     // Loading state
@@ -222,6 +320,14 @@ function appData() {
     },
     detailChartInstance: null,
 
+    // AIレポート生成状態
+    aiReport: {
+      isGenerating: false,
+      isOpen: false,
+      content: "",
+      error: null,
+    },
+
     regionNames: [],
     regionDropdownOpen: false,
 
@@ -229,6 +335,9 @@ function appData() {
     detailRegionDropdownOpen: false,
     detailVendorDropdownOpen: false,
 
+    /**
+     * コンポーネント初期化 - データロード、前処理、初期フィルター適用
+     */
     async init() {
       this.isLoading = true;
       this.loadError = null;
@@ -258,9 +367,9 @@ function appData() {
         // Single-pass extraction of unique names
         const projectSet = {};
         const regionSet = {};
-        for (const r of this.rawRecords) {
-          projectSet[r.projectName] = true;
-          regionSet[r.region] = true;
+        for (const record of this.rawRecords) {
+          projectSet[record.projectName] = true;
+          regionSet[record.region] = true;
         }
         this.projectNames = Object.keys(projectSet).sort();
         this.regionNames = Object.keys(regionSet).sort();
@@ -272,10 +381,19 @@ function appData() {
       }
     },
 
+    /**
+     * メイン検索用：支店ドロップダウンの開閉を切り替え
+     * Note: Alpine.jsリアクティビティとコンポーネント分離のため、
+     *       多角分析モーダル用と意図的に独立して実装
+     */
     toggleRegionDropdown() {
       this.regionDropdownOpen = !this.regionDropdownOpen;
     },
 
+    /**
+     * メイン検索用：支店の選択/解除を切り替え
+     * @param {string} region - 対象支店名
+     */
     toggleRegion(region) {
       const idx = this.filters.regions.indexOf(region);
       if (idx === -1) {
@@ -285,15 +403,27 @@ function appData() {
       }
     },
 
+    /**
+     * メイン検索用：支店選択を確定してドロップダウンを閉じる
+     */
     confirmRegionSelection() {
       this.regionDropdownOpen = false;
       this.applyFilters();
     },
 
+    /**
+     * メイン検索用：支店が選択されているかをチェック
+     * @param {string} region - チェック対象支店名
+     * @returns {boolean} 選択済みならtrue
+     */
     isRegionSelected(region) {
       return this.filters.regions.includes(region);
     },
 
+    /**
+     * メイン検索用：選択中の支店を表示用テキストに整形
+     * @returns {string} 表示用テキスト
+     */
     get selectedRegionsText() {
       if (this.filters.regions.length === 0) return "すべて";
       if (this.filters.regions.length <= 2)
@@ -302,13 +432,20 @@ function appData() {
     },
 
     // ===== 多角分析モーダル用ドロップダウン関数 =====
-    // Note: The following dropdown handlers follow the same pattern as main filter dropdowns above.
-    // This duplication is intentional to maintain Alpine.js reactivity and component isolation.
+    // Note: Alpine.jsリアクティビティとコンポーネント分離のため、
+    //       メインフィルター用と意図的に重複して実装
 
+    /**
+     * 多角分析モーダル用：支店ドロップダウンの開閉を切り替え
+     */
     toggleDetailRegionDropdown() {
       this.detailRegionDropdownOpen = !this.detailRegionDropdownOpen;
     },
 
+    /**
+     * 多角分析モーダル用：支店の選択/解除を切り替え
+     * @param {string} region - 対象支店名
+     */
     toggleDetailRegion(region) {
       const idx = this.detailModal.commonFilters.regions.indexOf(region);
       if (idx === -1) {
@@ -318,15 +455,27 @@ function appData() {
       }
     },
 
+    /**
+     * 多角分析モーダル用：支店選択を確定してドロップダウンを閉じる
+     */
     confirmDetailRegionSelection() {
       this.detailRegionDropdownOpen = false;
       this.applyDetailCommonFilters();
     },
 
+    /**
+     * 多角分析モーダル用：支店が選択されているかをチェック
+     * @param {string} region - チェック対象支店名
+     * @returns {boolean} 選択済みならtrue
+     */
     isDetailRegionSelected(region) {
       return this.detailModal.commonFilters.regions.includes(region);
     },
 
+    /**
+     * 多角分析モーダル用：選択中の支店を表示用テキストに整形
+     * @returns {string} 表示用テキスト
+     */
     get selectedDetailRegionsText() {
       if (this.detailModal.commonFilters.regions.length === 0) return "すべて";
       if (this.detailModal.commonFilters.regions.length <= 2)
@@ -334,10 +483,17 @@ function appData() {
       return `${this.detailModal.commonFilters.regions.length}件選択中`;
     },
 
+    /**
+     * 多角分析モーダル用：業者ドロップダウンの開閉を切り替え
+     */
     toggleDetailVendorDropdown() {
       this.detailVendorDropdownOpen = !this.detailVendorDropdownOpen;
     },
 
+    /**
+     * 多角分析モーダル用：業者の選択/解除を切り替え
+     * @param {string} vendor - 対象業者名
+     */
     toggleDetailVendor(vendor) {
       const idx = this.detailModal.commonFilters.vendors.indexOf(vendor);
       if (idx === -1) {
@@ -347,15 +503,27 @@ function appData() {
       }
     },
 
+    /**
+     * 多角分析モーダル用：業者選択を確定してドロップダウンを閉じる
+     */
     confirmDetailVendorSelection() {
       this.detailVendorDropdownOpen = false;
       this.applyDetailCommonFilters();
     },
 
+    /**
+     * 多角分析モーダル用：業者が選択されているかをチェック
+     * @param {string} vendor - チェック対象業者名
+     * @returns {boolean} 選択済みならtrue
+     */
     isDetailVendorSelected(vendor) {
       return this.detailModal.commonFilters.vendors.includes(vendor);
     },
 
+    /**
+     * 多角分析モーダル用：選択中の業者を表示用テキストに整形
+     * @returns {string} 表示用テキスト
+     */
     get selectedDetailVendorsText() {
       if (this.detailModal.commonFilters.vendors.length === 0) return "すべて";
       if (this.detailModal.commonFilters.vendors.length <= 2)
@@ -364,24 +532,33 @@ function appData() {
     },
     // ===== 多角分析モーダル用ドロップダウン関数終了 =====
 
+    /**
+     * rawRecordsに派生フィールドを事前計算して追加
+     * 日付フォーマット、業者名クリーニング、金額計算など
+     */
     processData() {
       // Pre-compute derived fields including cleaned vendor name
       const vendorNameRegex = /株式会社|有限会社/g;
 
-      this.records = this.rawRecords.map((r) => ({
-        ...r,
-        orderDateFormatted: formatDateHyphen(r.orderDate),
-        orderMonth: r.orderDate
-          ? r.orderDate.slice(0, 4) + "-" + r.orderDate.slice(4, 6)
+      this.records = this.rawRecords.map((record) => ({
+        ...record,
+        orderDateFormatted: formatDateHyphen(record.orderDate),
+        orderMonth: record.orderDate
+          ? record.orderDate.slice(0, 4) + "-" + record.orderDate.slice(4, 6)
           : "",
-        orderWeek: r.orderDate ? getWeekNumber(r.orderDate) : "",
-        orderWeekStart: r.orderDate ? getWeekStartDate(r.orderDate) : "",
-        amount: r.qty * r.price,
+        orderWeek: record.orderDate ? getWeekNumber(record.orderDate) : "",
+        orderWeekStart: record.orderDate
+          ? getWeekStartDate(record.orderDate)
+          : "",
+        amount: record.qty * record.price,
         // Pre-compute cleaned vendor name to avoid regex in hot path
-        vendorNameClean: r.vendor.replace(vendorNameRegex, "").trim(),
+        vendorNameClean: record.vendor.replace(vendorNameRegex, "").trim(),
       }));
     },
 
+    /**
+     * レコードを小工事項目（item+spec）でグループ化し統計を計算
+     */
     groupByItem() {
       const groups = {};
       this.records.forEach((item) => {
@@ -395,16 +572,16 @@ function appData() {
           };
         groups[key].records.push(item);
       });
-      this.itemGroups = Object.values(groups).map((g) => {
-        g.records.sort((a, b) => a.orderDate.localeCompare(b.orderDate));
+      this.itemGroups = Object.values(groups).map((group) => {
+        group.records.sort((a, b) => a.orderDate.localeCompare(b.orderDate));
 
         // Calculate statistics using shared utility
-        const prices = g.records.map((r) => r.price);
+        const prices = group.records.map((record) => record.price);
         const stats = calcPriceStats(prices);
 
         return {
-          ...g,
-          recordCount: g.records.length,
+          ...group,
+          recordCount: group.records.length,
           minPrice: stats.min,
           maxPrice: stats.max,
           avgPrice: stats.avg,
@@ -413,7 +590,8 @@ function appData() {
     },
 
     /**
-     * Apply filters using Web Worker (or fallback to main thread)
+     * Web Worker（またはフォールバック）を使用してフィルターを適用
+     * パフォーマンス測定付き
      */
     async applyFilters() {
       const startTime = performance.now();
@@ -445,95 +623,119 @@ function appData() {
     },
 
     /**
-     * Synchronous filter implementation (fallback)
+     * 同期的なフィルター実装（Web Workerフォールバック用）
+     * @private
      */
     _applyFiltersSync() {
-      const f = this.filters;
-      const itemKw = f.item.toLowerCase();
+      const filters = this.filters;
+      const itemKw = filters.item.toLowerCase();
 
       // Build filter criteria object for recordMatchesFilters
       const criteria = {
-        projectKw: f.project.toLowerCase(),
-        regions: f.regions,
-        majorCodes: f.majorCodes,
-        vendor: f.vendor.toLowerCase(),
-        dateFrom: f.dateFrom.replace(/-/g, ""),
-        dateTo: f.dateTo.replace(/-/g, ""),
+        projectKw: filters.project.toLowerCase(),
+        regions: filters.regions,
+        majorCodes: filters.majorCodes,
+        vendor: filters.vendor.toLowerCase(),
+        dateFrom: filters.dateFrom.replace(/-/g, ""),
+        dateTo: filters.dateTo.replace(/-/g, ""),
         ranges: {
-          floorMin: f.floorMin,
-          floorMax: f.floorMax,
-          unitRowMin: f.unitRowMin,
-          unitRowMax: f.unitRowMax,
-          resUnitMin: f.resUnitMin,
-          resUnitMax: f.resUnitMax,
-          constAreaMin: f.constAreaMin,
-          constAreaMax: f.constAreaMax,
-          totalAreaMin: f.totalAreaMin,
-          totalAreaMax: f.totalAreaMax,
+          floorMin: filters.floorMin,
+          floorMax: filters.floorMax,
+          unitRowMin: filters.unitRowMin,
+          unitRowMax: filters.unitRowMax,
+          resUnitMin: filters.resUnitMin,
+          resUnitMax: filters.resUnitMax,
+          constAreaMin: filters.constAreaMin,
+          constAreaMax: filters.constAreaMax,
+          totalAreaMin: filters.totalAreaMin,
+          totalAreaMax: filters.totalAreaMax,
         },
       };
 
       this.filteredGroups = this.itemGroups
-        .map((g) => {
+        .map((group) => {
           // Filter matching records
-          const matchingRecords = g.records.filter((r) =>
-            recordMatchesFilters(r, criteria)
+          const matchingRecords = group.records.filter((record) =>
+            recordMatchesFilters(record, criteria)
           );
 
           // Calculate statistics using shared utility
-          const prices = matchingRecords.map((r) => r.price);
+          const prices = matchingRecords.map((record) => record.price);
           const stats = calcPriceStats(prices);
 
           return {
-            ...g,
+            ...group,
             filteredRecords: matchingRecords,
             minPrice: stats.min,
             maxPrice: stats.max,
             vendorSummary: null, // Lazy computed
           };
         })
-        .filter((g) => {
+        .filter((group) => {
           if (
             itemKw &&
-            !g.item.toLowerCase().includes(itemKw) &&
-            !g.spec.toLowerCase().includes(itemKw)
+            !group.item.toLowerCase().includes(itemKw) &&
+            !group.spec.toLowerCase().includes(itemKw)
           )
             return false;
-          return g.filteredRecords.length > 0;
+          return group.filteredRecords.length > 0;
         })
         // Sort by record count (descending)
         .sort((a, b) => b.filteredRecords.length - a.filteredRecords.length);
     },
 
+    /**
+     * すべてのフィルターをデフォルト値にリセット
+     */
     async clearFilters() {
       this.filters = { ...DEFAULT_FILTERS };
       this.filteredGroups = this.itemGroups
-        .map((g) => ({
-          ...g,
-          filteredRecords: g.records,
+        .map((group) => ({
+          ...group,
+          filteredRecords: group.records,
         }))
         // Sort by record count (descending)
         .sort((a, b) => b.filteredRecords.length - a.filteredRecords.length);
       this.displayedCount = this.displayLimit;
     },
 
-    // Pagination: displayed subset of filtered groups
+    // ===== Pagination Getters =====
+
+    /**
+     * 表示中のグループ一覧（ページネーション適用後）
+     * @returns {Array} 表示範囲のフィルター済みグループ
+     */
     get displayedGroups() {
       return this.filteredGroups.slice(0, this.displayedCount);
     },
 
+    /**
+     * さらに表示可能なグループが存在するか
+     * @returns {boolean} 表示可能ならtrue
+     */
     get hasMoreGroups() {
       return this.displayedCount < this.filteredGroups.length;
     },
 
+    /**
+     * 未表示のグループ数を取得
+     * @returns {number} 残りグループ数
+     */
     get remainingGroupsCount() {
       return this.filteredGroups.length - this.displayedCount;
     },
 
+    /**
+     * さらにグループを読み込む（ページネーション）
+     */
     loadMoreGroups() {
       this.displayedCount += this.displayLimit;
     },
 
+    /**
+     * アクティブなフィルター条件を表示用配列に変換
+     * @returns {Array<string>} フィルター表示文字列配列
+     */
     get activeFiltersDisplay() {
       const filters = [];
       if (this.filters.project)
@@ -548,10 +750,19 @@ function appData() {
       return filters;
     },
 
+    /**
+     * グループの展開/折りたたみを切り替え
+     * @param {number} idx - グループインデックス
+     */
     toggleGroup(idx) {
       this.expandedGroups[idx] = !this.expandedGroups[idx];
     },
 
+    /**
+     * 業者ごとに単価統計を計算（単一パス集計）
+     * @param {Array} records - 集計対象レコード
+     * @returns {Array} 業者別統計配列 [{name, count, min, avg, max}]
+     */
     computeVendorSummary(records) {
       const vendorData = {};
 
@@ -588,7 +799,11 @@ function appData() {
       }));
     },
 
-    // Cached vendor summary getter
+    /**
+     * 業者サマリーを取得（遅延評価、キャッシュあり）
+     * @param {Object} group - 対象グループ
+     * @returns {Array} 業者別統計配列
+     */
     getVendorSummary(group) {
       if (!group.vendorSummary) {
         group.vendorSummary = this.computeVendorSummary(group.filteredRecords);
@@ -596,7 +811,11 @@ function appData() {
       return group.vendorSummary;
     },
 
-    // Get vendor count without computing full summary
+    /**
+     * 業者数を高速に取得（サマリー計算せずカウントのみ）
+     * @param {Object} group - 対象グループ
+     * @returns {number} ユニークな業者数
+     */
     getVendorCount(group) {
       if (group.vendorSummary) {
         return group.vendorSummary.length;
@@ -606,25 +825,33 @@ function appData() {
       let count = 0;
       const records = group.filteredRecords;
       for (let i = 0, len = records.length; i < len; i++) {
-        const v = records[i].vendor;
-        if (!seen[v]) {
-          seen[v] = true;
+        const vendor = records[i].vendor;
+        if (!seen[vendor]) {
+          seen[vendor] = true;
           count++;
         }
       }
       return count;
     },
 
+    // ===== Autocomplete Functions =====
+
+    /**
+     * 工事名称のオートコンプリート候補をフィルタリング
+     */
     filterProjectNames() {
       const filter = this.filters.project;
       this.autocomplete.items = filter
-        ? this.projectNames.filter((p) =>
-            p.toLowerCase().includes(filter.toLowerCase())
+        ? this.projectNames.filter((project) =>
+            project.toLowerCase().includes(filter.toLowerCase())
           )
         : this.projectNames;
       this.autocomplete.activeIndex = -1;
     },
 
+    /**
+     * オートコンプリート選択を下に移動
+     */
     moveAutocompleteDown() {
       if (!this.autocomplete.show) return;
       this.autocomplete.activeIndex = Math.min(
@@ -633,6 +860,9 @@ function appData() {
       );
     },
 
+    /**
+     * オートコンプリート選択を上に移動
+     */
     moveAutocompleteUp() {
       if (!this.autocomplete.show) return;
       this.autocomplete.activeIndex = Math.max(
@@ -641,6 +871,9 @@ function appData() {
       );
     },
 
+    /**
+     * 現在のオートコンプリート選択を確定
+     */
     selectAutocomplete() {
       if (
         this.autocomplete.show &&
@@ -653,6 +886,10 @@ function appData() {
       }
     },
 
+    /**
+     * クリックイベントから工事名称を選択
+     * @param {Event} event - クリックイベント
+     */
     selectProject(event) {
       if (event.target.classList.contains("autocomplete-item")) {
         this.filters.project = event.target.dataset.value;
@@ -661,84 +898,29 @@ function appData() {
     },
 
     /**
-     * Prepare chart data by grouping records by week (optimized single-pass)
-     * @param {Array} records - Filtered records to chart
-     * @returns {{weekLabels: string[], actualData: number[], stats: {min: number, max: number, avg: number}}}
+     * チャート表示用データを準備（週次集計、最適化済み単一パス処理）
+     * @param {Array} records - フィルター済みレコード
+     * @returns {{weekLabels, actualData, weeklyMinData, weeklyMaxData, weeklyMedianData, stats, weekCount}}
      */
     prepareChartData(records) {
-      const weekData = {};
-      let globalMin = Infinity;
-      let globalMax = -Infinity;
-      let globalSum = 0;
-
-      // Single pass: group by week and compute global stats
-      for (const record of records) {
-        const week = record.orderWeek;
-        const price = record.price;
-
-        if (!weekData[week]) {
-          weekData[week] = { prices: [], weekStart: record.orderWeekStart };
-        }
-        weekData[week].prices.push(price);
-
-        if (price < globalMin) globalMin = price;
-        if (price > globalMax) globalMax = price;
-        globalSum += price;
-      }
-
-      const allWeeks = Object.keys(weekData).sort();
-      const weekCount = allWeeks.length;
-      const weekLabels = new Array(weekCount);
-      const actualData = new Array(weekCount);
-      const weeklyMinData = new Array(weekCount);
-      const weeklyMaxData = new Array(weekCount);
-      const weeklyMedianData = new Array(weekCount);
-
-      // Single pass: compute all weekly stats
-      for (let i = 0; i < weekCount; i++) {
-        const entry = weekData[allWeeks[i]];
-        const prices = entry.prices;
-        const len = prices.length;
-
-        weekLabels[i] = entry.weekStart;
-
-        // Compute min/max/avg in one pass
-        let min = Infinity;
-        let max = -Infinity;
-        let sum = 0;
-        for (let j = 0; j < len; j++) {
-          const p = prices[j];
-          if (p < min) min = p;
-          if (p > max) max = p;
-          sum += p;
-        }
-
-        weeklyMinData[i] = min;
-        weeklyMaxData[i] = max;
-        actualData[i] = sum / len;
-
-        // Median calculation (requires sort)
-        prices.sort((a, b) => a - b);
-        const mid = len >> 1;
-        weeklyMedianData[i] =
-          len & 1 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
-      }
+      const { weekData, globalMin, globalMax, globalSum } =
+        groupRecordsByWeek(records);
+      const weeklyStats = calculateWeeklyStats(weekData, records.length);
 
       return {
-        weekLabels,
-        actualData,
-        weeklyMinData,
-        weeklyMaxData,
-        weeklyMedianData,
+        ...weeklyStats,
         stats: {
           min: globalMin === Infinity ? 0 : globalMin,
           max: globalMax === -Infinity ? 0 : globalMax,
           avg: records.length > 0 ? Math.round(globalSum / records.length) : 0,
         },
-        weekCount,
       };
     },
 
+    /**
+     * チャート表示モードを切り替え（チャート/テーブル）
+     * @param {string} mode - 'chart' または 'table'
+     */
     setChartDisplayMode(mode) {
       this.chartData.displayMode = mode;
       if (mode === "chart") {
@@ -748,6 +930,9 @@ function appData() {
       }
     },
 
+    /**
+     * 単価推移チャートを描画（Chart.jsインスタンス生成）
+     */
     renderPriceChart() {
       const ctx = this.$refs.netPriceChart.getContext("2d");
       if (this.chartInstance) this.chartInstance.destroy();
@@ -764,12 +949,16 @@ function appData() {
       });
     },
 
+    /**
+     * 単価推移モーダルを開く
+     * @param {number} idx - filteredGroupsのインデックス
+     */
     showChart(idx) {
       const group = this.filteredGroups[idx];
       const records = group.filteredRecords;
 
       // Calculate statistics using shared utility
-      const prices = records.map((r) => r.price);
+      const prices = records.map((record) => record.price);
       const stats = calcPriceStats(prices);
 
       // Prepare weekly grouped data for table display
@@ -798,18 +987,22 @@ function appData() {
     // =========================================================================
 
     /**
-     * Open detail analysis modal for a specific item group
-     * @param {number} idx - Index of the filtered group
+     * 多角分析モーダルを開く - タブ形式BIダッシュボード
+     * @param {number} idx - filteredGroupsのインデックス
      */
     openDetailModal(idx) {
       const group = this.filteredGroups[idx];
       // Calculate date range from actual data
       const orderDates = group.filteredRecords
-        .map((r) => r.orderDate)
-        .filter((d) => d && d.length === 8)
+        .map((record) => record.orderDate)
+        .filter((date) => date && date.length === 8)
         .sort();
-      const minDate = orderDates.length > 0 ? formatDateHyphen(orderDates[0]) : "";
-      const maxDate = orderDates.length > 0 ? formatDateHyphen(orderDates[orderDates.length - 1]) : "";
+      const minDate =
+        orderDates.length > 0 ? formatDateHyphen(orderDates[0]) : "";
+      const maxDate =
+        orderDates.length > 0
+          ? formatDateHyphen(orderDates[orderDates.length - 1])
+          : "";
 
       this.detailModal = {
         isOpen: true,
@@ -862,7 +1055,7 @@ function appData() {
     },
 
     /**
-     * Close detail analysis modal and cleanup
+     * 多角分析モーダルを閉じてクリーンアップ
      */
     closeDetailModal() {
       if (this.detailChartInstance) {
@@ -880,7 +1073,7 @@ function appData() {
     },
 
     /**
-     * Switch detail modal tab
+     * 多角分析モーダルのタブを切り替え
      * @param {string} tab - 'timeseries' | 'comparison' | 'trend'
      */
     setDetailTab(tab) {
@@ -892,32 +1085,35 @@ function appData() {
     },
 
     /**
-     * Check if current tab is in table mode
-     * @returns {boolean}
+     * 現在のタブがテーブルモードかチェック
+     * @returns {boolean} テーブルモードならtrue
      */
     isDetailTableMode() {
       const tab = this.detailModal.activeTab;
-      if (tab === "timeseries") return this.detailModal.timeseries.chartType === "table";
-      if (tab === "comparison") return this.detailModal.comparison.chartType === "table";
+      if (tab === "timeseries")
+        return this.detailModal.timeseries.chartType === "table";
+      if (tab === "comparison")
+        return this.detailModal.comparison.chartType === "table";
       if (tab === "trend") return this.detailModal.trend.chartType === "table";
       return false;
     },
 
     /**
-     * Apply common filters and update KPI summary
+     * 多角分析モーダルの共通フィルターを適用してKPI更新
      */
     applyDetailCommonFilters() {
       const records = this.detailModal.currentGroup?.filteredRecords || [];
-      const { dateFrom, dateTo, regions, vendors } = this.detailModal.commonFilters;
+      const { dateFrom, dateTo, regions, vendors } =
+        this.detailModal.commonFilters;
 
       const dateFromYMD = dateFrom ? dateFrom.replace(/-/g, "") : "";
       const dateToYMD = dateTo ? dateTo.replace(/-/g, "") : "";
 
-      this.detailModal.filteredByCommon = records.filter((r) => {
-        if (dateFromYMD && r.orderDate < dateFromYMD) return false;
-        if (dateToYMD && r.orderDate > dateToYMD) return false;
-        if (regions.length && !regions.includes(r.region)) return false;
-        if (vendors.length && !vendors.includes(r.vendor)) return false;
+      this.detailModal.filteredByCommon = records.filter((record) => {
+        if (dateFromYMD && record.orderDate < dateFromYMD) return false;
+        if (dateToYMD && record.orderDate > dateToYMD) return false;
+        if (regions.length && !regions.includes(record.region)) return false;
+        if (vendors.length && !vendors.includes(record.vendor)) return false;
         return true;
       });
 
@@ -928,7 +1124,7 @@ function appData() {
     },
 
     /**
-     * Clear common filters (reset to initial values)
+     * 共通フィルターをクリア（初期値にリセット）
      */
     clearDetailCommonFilters() {
       this.detailModal.commonFilters = {
@@ -941,11 +1137,11 @@ function appData() {
     },
 
     /**
-     * Update KPI summary based on filtered records
+     * フィルター済みレコードからKPIサマリーを更新
      */
     updateKpiSummary() {
       const records = this.detailModal.filteredByCommon || [];
-      const prices = records.map((r) => r.price);
+      const prices = records.map((record) => record.price);
       const stats = calcPriceStats(prices);
 
       this.detailModal.kpiSummary = {
@@ -958,24 +1154,26 @@ function appData() {
     },
 
     /**
-     * Get available regions for filter dropdown
+     * 多角分析モーダルで利用可能な支店一覧を取得
+     * @returns {Array<string>} ユニークな支店名配列
      */
     get detailModalRegionOptions() {
       const records = this.detailModal.currentGroup?.filteredRecords || [];
-      return [...new Set(records.map((r) => r.region))].sort();
+      return [...new Set(records.map((record) => record.region))].sort();
     },
 
     /**
-     * Get available vendors for filter dropdown
+     * 多角分析モーダルで利用可能な業者一覧を取得
+     * @returns {Array<string>} ユニークな業者名配列
      */
     get detailModalVendorOptions() {
       const records = this.detailModal.currentGroup?.filteredRecords || [];
-      return [...new Set(records.map((r) => r.vendor))].sort();
+      return [...new Set(records.map((record) => record.vendor))].sort();
     },
 
     /**
-     * Get grouped detail data based on current groupBy setting
-     * @returns {Object} Grouped records { key: records[] }
+     * 現在のgroupBy設定に基づいてグループ化されたデータを取得
+     * @returns {Object} グループ化レコード {key: records[]}
      */
     getGroupedDetailData() {
       const allRecords = this.detailModal.currentGroup?.filteredRecords || [];
@@ -984,11 +1182,11 @@ function appData() {
       const groupBy = this.detailModal.groupBy;
 
       const keyFn = {
-        timeline: (r) => r.orderWeekStart,
-        majorCode: (r) => r.majorCode,
-        region: (r) => r.region,
-        building: (r) => buildingInfoKey(r),
-        vendor: (r) => r.vendor,
+        timeline: (record) => record.orderWeekStart,
+        majorCode: (record) => record.majorCode,
+        region: (record) => record.region,
+        building: (record) => buildingInfoKey(record),
+        vendor: (record) => record.vendor,
       }[groupBy];
 
       const groups = groupRecordsBy(records, keyFn);
@@ -1006,25 +1204,40 @@ function appData() {
       );
     },
 
+    /**
+     * 多角分析モーダルの全レコード数を取得
+     * @returns {number} レコード総数
+     */
     get detailTotalRecords() {
       return this.detailModal.currentGroup?.filteredRecords?.length || 0;
     },
 
+    /**
+     * さらに表示可能なレコードが存在するか
+     * @returns {boolean} 表示可能ならtrue
+     */
     get hasMoreDetailRecords() {
       return this.detailModal.listDisplayed < this.detailTotalRecords;
     },
 
+    /**
+     * 未表示のレコード数を取得
+     * @returns {number} 残りレコード数
+     */
     get remainingDetailRecords() {
       return this.detailTotalRecords - this.detailModal.listDisplayed;
     },
 
+    /**
+     * さらにレコードを読み込む（ページネーション）
+     */
     loadMoreDetailRecords() {
       this.detailModal.listDisplayed += this.detailModal.listLimit;
     },
 
     /**
-     * Get table data for current tab
-     * @returns {Array} Grouped table data with statistics
+     * 現在のタブに応じたテーブルデータを取得
+     * @returns {Array} グループ化されたテーブルデータ（統計付き）
      */
     getDetailTableData() {
       const records = this.detailModal.filteredByCommon || [];
@@ -1044,10 +1257,10 @@ function appData() {
     },
 
     /**
-     * Prepare timeseries table data grouped by time unit
-     * @param {Array} records - Records to group
+     * 時系列分析用テーブルデータを準備（時間単位でグループ化）
+     * @param {Array} records - 処理対象レコード
      * @param {string} timeUnit - 'yearly' | 'monthly' | 'weekly' | 'daily'
-     * @returns {Array} Grouped data with statistics
+     * @returns {Array} グループ化データ（統計付き）
      */
     prepareTimeseriesTableData(records, timeUnit) {
       const grouped = groupByTimeUnit(records, timeUnit);
@@ -1055,7 +1268,7 @@ function appData() {
 
       return sortedKeys.map((key) => {
         const groupRecords = grouped[key];
-        const prices = groupRecords.map((r) => r.price);
+        const prices = groupRecords.map((record) => record.price);
         const stats = calcPriceStats(prices);
 
         return {
@@ -1070,24 +1283,24 @@ function appData() {
     },
 
     /**
-     * Prepare comparison table data grouped by comparison axis
-     * @param {Array} records - Records to group
+     * 比較分析用テーブルデータを準備（比較軸でグループ化）
+     * @param {Array} records - 処理対象レコード
      * @param {string} groupBy - 'region' | 'vendor' | 'majorCode' | 'building'
-     * @returns {Array} Grouped data with statistics
+     * @returns {Array} グループ化データ（統計付き）
      */
     prepareComparisonTableData(records, groupBy) {
       const keyFn = {
-        region: (r) => r.region,
-        vendor: (r) => r.vendor,
-        majorCode: (r) => r.majorCode,
-        building: (r) => buildingInfoKey(r),
+        region: (record) => record.region,
+        vendor: (record) => record.vendor,
+        majorCode: (record) => record.majorCode,
+        building: (record) => buildingInfoKey(record),
       }[groupBy];
 
       const grouped = groupRecordsBy(records, keyFn);
 
       return Object.entries(grouped)
         .map(([key, groupRecords]) => {
-          const prices = groupRecords.map((r) => r.price);
+          const prices = groupRecords.map((record) => record.price);
           const stats = calcPriceStats(prices);
 
           return {
@@ -1104,25 +1317,27 @@ function appData() {
     },
 
     /**
-     * Prepare trend table data grouped by X-axis value
-     * @param {Array} records - Records to group
+     * 傾向分析用テーブルデータを準備（X軸値でグループ化）
+     * @param {Array} records - 処理対象レコード
      * @param {string} xAxis - 'resUnits' | 'floors' | 'totalArea' | 'constArea'
-     * @returns {Array} Grouped data with statistics
+     * @returns {Array} グループ化データ（統計付き）
      */
     prepareTrendTableData(records, xAxis) {
       // Group by x-axis value
-      const grouped = groupRecordsBy(records, (r) => {
-        const value = r[xAxis];
+      const grouped = groupRecordsBy(records, (record) => {
+        const value = record[xAxis];
         if (xAxis === "totalArea" || xAxis === "constArea") {
           // Group area values into buckets of 100
-          return `${Math.floor(value / 100) * 100}~${Math.floor(value / 100) * 100 + 99}㎡`;
+          return `${Math.floor(value / 100) * 100}~${
+            Math.floor(value / 100) * 100 + 99
+          }㎡`;
         }
         return `${value}${xAxis === "floors" ? "階" : "戸"}`;
       });
 
       return Object.entries(grouped)
         .map(([key, groupRecords]) => {
-          const prices = groupRecords.map((r) => r.price);
+          const prices = groupRecords.map((record) => record.price);
           const stats = calcPriceStats(prices);
 
           return {
@@ -1143,8 +1358,8 @@ function appData() {
     },
 
     /**
-     * Prepare chart data based on current tab and chart type
-     * @returns {Object} Chart data
+     * 現在のタブとチャートタイプに基づいてチャートデータを準備
+     * @returns {Object|null} チャートデータ
      */
     prepareDetailChartData() {
       const records = this.detailModal.filteredByCommon || [];
@@ -1161,9 +1376,9 @@ function appData() {
     },
 
     /**
-     * Prepare timeseries chart data
-     * @param {Array} records - Records to process
-     * @returns {Object} Chart data for timeseries
+     * 時系列分析用チャートデータを準備
+     * @param {Array} records - 処理対象レコード
+     * @returns {Object} 時系列チャートデータ
      */
     prepareTimeseriesChartData(records) {
       const timeUnit = this.detailModal.timeseries.timeUnit;
@@ -1178,7 +1393,7 @@ function appData() {
       const maxData = [];
 
       sortedKeys.forEach((key) => {
-        const prices = grouped[key].map((r) => r.price);
+        const prices = grouped[key].map((record) => record.price);
         const stats = calcPriceStats(prices);
         minData.push(stats.min);
         avgData.push(stats.avg);
@@ -1186,23 +1401,30 @@ function appData() {
         maxData.push(stats.max);
       });
 
-      return { labels, minData, avgData, medianData, maxData, count: sortedKeys.length };
+      return {
+        labels,
+        minData,
+        avgData,
+        medianData,
+        maxData,
+        count: sortedKeys.length,
+      };
     },
 
     /**
-     * Prepare comparison chart data
-     * @param {Array} records - Records to process
-     * @returns {Object} Chart data for comparison
+     * 比較分析用チャートデータを準備
+     * @param {Array} records - 処理対象レコード
+     * @returns {Object} 比較チャートデータ {labels, data, boxplotData}
      */
     prepareComparisonChartData(records) {
       const groupBy = this.detailModal.comparison.groupBy;
       const metric = this.detailModal.comparison.metric;
 
       const keyFn = {
-        region: (r) => r.region,
-        vendor: (r) => r.vendor,
-        majorCode: (r) => r.majorCode,
-        building: (r) => buildingInfoKey(r),
+        region: (record) => record.region,
+        vendor: (record) => record.vendor,
+        majorCode: (record) => record.majorCode,
+        building: (record) => buildingInfoKey(record),
       }[groupBy];
 
       const grouped = groupRecordsBy(records, keyFn);
@@ -1211,7 +1433,7 @@ function appData() {
       });
 
       const data = labels.map((key) => {
-        const prices = grouped[key].map((r) => r.price);
+        const prices = grouped[key].map((record) => record.price);
         const stats = calcPriceStats(prices);
 
         if (metric === "avg") return stats.avg;
@@ -1220,35 +1442,50 @@ function appData() {
       });
 
       // For boxplot, we need the raw prices per group
-      const boxplotData = labels.map((key) => grouped[key].map((r) => r.price));
+      const boxplotData = labels.map((key) =>
+        grouped[key].map((record) => record.price)
+      );
 
       return { labels, data, boxplotData };
     },
 
     /**
-     * Prepare trend chart data (scatter/bubble/heatmap)
-     * @param {Array} records - Records to process
-     * @returns {Object} Chart data for trend analysis
+     * 傾向分析用チャートデータを準備（散布図/バブル/ヒートマップ）
+     * @param {Array} records - 処理対象レコード
+     * @returns {Object} 傾向分析チャートデータ
      */
     prepareTrendChartData(records) {
       const xAxis = this.detailModal.trend.xAxis;
       const bubbleSize = this.detailModal.trend.bubbleSize;
 
-      const scatterData = records.map((r) => ({
-        x: r[xAxis],
-        y: r.price,
-        r: bubbleSize === "qty"
-          ? Math.log10(Math.abs(r.qty) + 1) * CHART_CONFIG.BUBBLE_SIZE_QTY_FACTOR
-          : Math.sqrt(Math.abs(r.amount) / CHART_CONFIG.BUBBLE_SIZE_AMOUNT_DIVISOR) * CHART_CONFIG.BUBBLE_SIZE_AMOUNT_FACTOR,
-        record: r,
+      const scatterData = records.map((record) => ({
+        x: record[xAxis],
+        y: record.price,
+        r:
+          bubbleSize === "qty"
+            ? Math.log10(Math.abs(record.qty) + 1) *
+              CHART_CONFIG.BUBBLE_SIZE_QTY_FACTOR
+            : Math.sqrt(
+                Math.abs(record.amount) /
+                  CHART_CONFIG.BUBBLE_SIZE_AMOUNT_DIVISOR
+              ) * CHART_CONFIG.BUBBLE_SIZE_AMOUNT_FACTOR,
+        record: record,
       }));
 
       // For heatmap, create a matrix with ranges
-      const xAxisValues = records.map((r) => r[xAxis]);
-      const priceValues = records.map((r) => r.price);
+      const xAxisValues = records.map((record) => record[xAxis]);
+      const priceValues = records.map((record) => record.price);
 
-      const xRanges = createValueRanges(xAxisValues, CHART_CONFIG.HEATMAP_BUCKET_COUNT, xAxis);
-      const priceRanges = createValueRanges(priceValues, CHART_CONFIG.HEATMAP_BUCKET_COUNT, 'price');
+      const xRanges = createValueRanges(
+        xAxisValues,
+        CHART_CONFIG.HEATMAP_BUCKET_COUNT,
+        xAxis
+      );
+      const priceRanges = createValueRanges(
+        priceValues,
+        CHART_CONFIG.HEATMAP_BUCKET_COUNT,
+        "price"
+      );
 
       const heatmapData = [];
       xRanges.forEach((xRange) => {
@@ -1256,9 +1493,17 @@ function appData() {
           const isLastXRange = xRange === xRanges[xRanges.length - 1];
           const isLastYRange = yRange === priceRanges[priceRanges.length - 1];
 
-          const count = records.filter((r) => {
-            const xMatch = r[xAxis] >= xRange.min && (isLastXRange ? r[xAxis] <= xRange.max : r[xAxis] < xRange.max);
-            const yMatch = r.price >= yRange.min && (isLastYRange ? r.price <= yRange.max : r.price < yRange.max);
+          const count = records.filter((record) => {
+            const xMatch =
+              record[xAxis] >= xRange.min &&
+              (isLastXRange
+                ? record[xAxis] <= xRange.max
+                : record[xAxis] < xRange.max);
+            const yMatch =
+              record.price >= yRange.min &&
+              (isLastYRange
+                ? record.price <= yRange.max
+                : record.price < yRange.max);
             return xMatch && yMatch;
           }).length;
 
@@ -1278,34 +1523,31 @@ function appData() {
     },
 
     /**
-     * Prepare comparison chart data (min/avg/max by group)
-     * @returns {Object} { labels, avgPrices, minPrices, maxPrices }
+     * 比較データを準備（グループごとのmin/avg/max）
+     * @returns {Object} {labels, avgPrices, minPrices, maxPrices}
      */
     prepareComparisonData() {
       const grouped = this.getGroupedDetailData();
       const labels = Object.keys(grouped);
 
       // Calculate stats once per group instead of 3 times
-      const statsArray = labels.map((k) =>
-        calcPriceStats(grouped[k].map((r) => r.price))
+      const statsArray = labels.map((key) =>
+        calcPriceStats(grouped[key].map((record) => record.price))
       );
 
       return {
         labels,
-        avgPrices: statsArray.map((s) => s.avg),
-        minPrices: statsArray.map((s) => s.min),
-        maxPrices: statsArray.map((s) => s.max),
+        avgPrices: statsArray.map((stats) => stats.avg),
+        minPrices: statsArray.map((stats) => stats.min),
+        maxPrices: statsArray.map((stats) => stats.max),
       };
     },
 
     /**
-     * Render detail chart based on current tab and chart type
-     *
-     * Note: This method implements a retry mechanism because Alpine.js x-show transitions
-     * may delay canvas availability. The canvas element might not be immediately accessible
-     * after tab switching, so we retry with exponential backoff.
-     *
-     * @param {number} retryCount - Current retry attempt (default: 0)
+     * 多角分析モーダルのチャートを描画
+     * Note: Alpine.js x-show遷移によりcanvasが即座に利用できない場合があるため、
+     *       リトライメカニズムを実装（指数バックオフ）
+     * @param {number} retryCount - 現在のリトライ回数（デフォルト: 0）
      */
     renderDetailChart(retryCount = 0) {
       // Skip if in table mode
@@ -1350,9 +1592,9 @@ function appData() {
     },
 
     /**
-     * Render timeseries chart (line/area/bar)
+     * 時系列分析用チャートを描画
      * @param {CanvasRenderingContext2D} ctx - Canvas context
-     * @param {Object} data - Chart data from prepareTimeseriesChartData
+     * @param {Object} data - prepareTimeseriesChartDataからのデータ
      */
     renderTimeseriesChart(ctx, data) {
       const chartType = this.detailModal.timeseries.chartType;
@@ -1366,7 +1608,10 @@ function appData() {
         label: "最小値",
         data: minData,
         borderColor: CHART_COLORS.min.border,
-        backgroundColor: chartType === "bar" ? CHART_COLORS.min.border + "88" : CHART_COLORS.min.background,
+        backgroundColor:
+          chartType === "bar"
+            ? CHART_COLORS.min.border + "88"
+            : CHART_COLORS.min.background,
         borderWidth: 1,
         borderDash: [4, 4],
         pointRadius: chartType === "bar" ? 0 : 3,
@@ -1393,9 +1638,10 @@ function appData() {
         label: "平均値",
         data: avgData,
         borderColor: CHART_COLORS.actual.border,
-        backgroundColor: chartType === "area"
-          ? CHART_COLORS.actual.border + "44"
-          : CHART_COLORS.actual.background,
+        backgroundColor:
+          chartType === "area"
+            ? CHART_COLORS.actual.border + "44"
+            : CHART_COLORS.actual.background,
         borderWidth: 2,
         pointRadius: chartType === "bar" ? 0 : 5,
         fill: chartType === "area",
@@ -1408,7 +1654,10 @@ function appData() {
         label: "最大値",
         data: maxData,
         borderColor: CHART_COLORS.max.border,
-        backgroundColor: chartType === "bar" ? CHART_COLORS.max.border + "88" : CHART_COLORS.max.background,
+        backgroundColor:
+          chartType === "bar"
+            ? CHART_COLORS.max.border + "88"
+            : CHART_COLORS.max.background,
         borderWidth: 1,
         borderDash: [4, 4],
         pointRadius: chartType === "bar" ? 0 : 3,
@@ -1425,9 +1674,9 @@ function appData() {
     },
 
     /**
-     * Render comparison tab chart (bar/boxplot/radar)
+     * 比較分析用チャートを描画（棒グラフ/ボックスプロット/レーダー）
      * @param {CanvasRenderingContext2D} ctx - Canvas context
-     * @param {Object} data - Chart data from prepareComparisonChartData
+     * @param {Object} data - prepareComparisonChartDataからのデータ
      */
     renderComparisonTabChart(ctx, data) {
       const chartType = this.detailModal.comparison.chartType;
@@ -1446,11 +1695,13 @@ function appData() {
           type: "bar",
           data: {
             labels,
-            datasets: [{
-              label: metricLabels[metric] || "平均",
-              data: chartData,
-              backgroundColor: CHART_COLORS.avg.border,
-            }],
+            datasets: [
+              {
+                label: metricLabels[metric] || "平均",
+                data: chartData,
+                backgroundColor: CHART_COLORS.avg.border,
+              },
+            ],
           },
           options: {
             responsive: true,
@@ -1478,11 +1729,11 @@ function appData() {
     },
 
     /**
-     * Render boxplot chart
+     * ボックスプロットチャートを描画
      * @param {CanvasRenderingContext2D} ctx - Canvas context
-     * @param {Array} labels - Group labels
-     * @param {Array} boxplotData - Array of price arrays per group
-     * @param {string} unit - Unit label
+     * @param {Array} labels - グループラベル
+     * @param {Array} boxplotData - 各グループの価格配列
+     * @param {string} unit - 単位ラベル
      */
     renderBoxplotChart(ctx, labels, boxplotData, unit) {
       // Check if boxplot plugin is available
@@ -1495,24 +1746,36 @@ function appData() {
           data: {
             labels,
             datasets: [
-              { label: "Q1", data: statsData.map((s) => s.q1), backgroundColor: "#20c99755" },
-              { label: "中央値", data: statsData.map((s) => s.median), backgroundColor: "#0d6efd" },
-              { label: "Q3", data: statsData.map((s) => s.q3), backgroundColor: "#fd7e1455" },
+              {
+                label: "Q1",
+                data: statsData.map((s) => s.q1),
+                backgroundColor: "#20c99755",
+              },
+              {
+                label: "中央値",
+                data: statsData.map((s) => s.median),
+                backgroundColor: "#0d6efd",
+              },
+              {
+                label: "Q3",
+                data: statsData.map((s) => s.q3),
+                backgroundColor: "#fd7e1455",
+              },
             ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
-            plugins: { 
-              legend: { position: "top" },
+            plugins: {
+              legend: { display: false },
               subtitle: {
                 display: true,
                 text: "※ データを4等分した位置（25%, 50%, 75%）を正確に計算",
                 font: { size: 11 },
                 color: "#6c757d",
-                padding: { bottom: 10 }
-              }
+                padding: { bottom: 10 },
+              },
             },
             scales: {
               y: {
@@ -1529,14 +1792,16 @@ function appData() {
         type: "boxplot",
         data: {
           labels,
-          datasets: [{
-            label: "単価分布",
-            data: boxplotData,
-            backgroundColor: CHART_COLORS.avg.border + "44",
-            borderColor: CHART_COLORS.avg.border,
-            borderWidth: 1,
-            outlierBackgroundColor: CHART_COLORS.max.border,
-          }],
+          datasets: [
+            {
+              label: "単価分布",
+              data: boxplotData,
+              backgroundColor: CHART_COLORS.avg.border + "44",
+              borderColor: CHART_COLORS.avg.border,
+              borderWidth: 1,
+              outlierBackgroundColor: CHART_COLORS.max.border,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -1549,7 +1814,7 @@ function appData() {
               text: "※ 箱はデータの中央50%の範囲、ひげは通常範囲（箱の1.5倍まで）、灰色の点は各データ、赤い点は外れ値を表示",
               font: { size: 11 },
               color: "#6c757d",
-              padding: { bottom: 10 }
+              padding: { bottom: 10 },
             },
             tooltip: {
               callbacks: {
@@ -1577,12 +1842,12 @@ function appData() {
     },
 
     /**
-     * Render radar chart
+     * レーダーチャートを描画
      * @param {CanvasRenderingContext2D} ctx - Canvas context
-     * @param {Array} labels - Group labels
-     * @param {Array} data - Data values
-     * @param {string} metric - Metric type
-     * @param {string} unit - Unit label
+     * @param {Array} labels - グループラベル
+     * @param {Array} data - データ値
+     * @param {string} metric - メトリックタイプ
+     * @param {string} unit - 単位ラベル
      */
     renderRadarChart(ctx, labels, data, metric) {
       const metricLabels = { avg: "平均", median: "中央値" };
@@ -1590,14 +1855,16 @@ function appData() {
         type: "radar",
         data: {
           labels,
-          datasets: [{
-            label: metricLabels[metric] || "平均",
-            data,
-            backgroundColor: CHART_COLORS.avg.border + "44",
-            borderColor: CHART_COLORS.avg.border,
-            borderWidth: 2,
-            pointBackgroundColor: CHART_COLORS.avg.border,
-          }],
+          datasets: [
+            {
+              label: metricLabels[metric] || "平均",
+              data,
+              backgroundColor: CHART_COLORS.avg.border + "44",
+              borderColor: CHART_COLORS.avg.border,
+              borderWidth: 2,
+              pointBackgroundColor: CHART_COLORS.avg.border,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -1623,30 +1890,42 @@ function appData() {
     },
 
     /**
-     * Render trend tab chart (scatter/bubble/heatmap)
+     * 傾向分析用チャートを描画（散布図/バブル/ヒートマップ）
      * @param {CanvasRenderingContext2D} ctx - Canvas context
-     * @param {Object} data - Chart data from prepareTrendChartData
+     * @param {Object} data - prepareTrendChartDataからのデータ
      */
     renderTrendTabChart(ctx, data) {
       const chartType = this.detailModal.trend.chartType;
       const unit = this.detailModal.currentGroup?.unit || "";
-      const { scatterData, heatmapData, xRanges, priceRanges, xAxisLabel } = data;
+      const { scatterData, heatmapData, xRanges, priceRanges, xAxisLabel } =
+        data;
 
       if (chartType === "heatmap") {
-        this.renderHeatmapChart(ctx, heatmapData, xRanges, priceRanges, xAxisLabel, unit);
+        this.renderHeatmapChart(
+          ctx,
+          heatmapData,
+          xRanges,
+          priceRanges,
+          xAxisLabel,
+          unit
+        );
       } else {
         // Scatter or bubble chart
         // Calculate correlation coefficient
         const xValues = scatterData.map((d) => d.x);
         const yValues = scatterData.map((d) => d.y);
         const correlation = calcCorrelation(xValues, yValues);
-        const correlationText = correlation !== null
-          ? `相関係数: ${correlation.toFixed(3)}`
-          : '';
+        const correlationText =
+          correlation !== null ? `相関係数: ${correlation.toFixed(3)}` : "";
 
-        const bubbleText = chartType === "bubble"
-          ? `円の大きさは${this.detailModal.trend.bubbleSize === "qty" ? "数量" : "合計金額（数量×単価）"}を表示。`
-          : '';
+        const bubbleText =
+          chartType === "bubble"
+            ? `円の大きさは${
+                this.detailModal.trend.bubbleSize === "qty"
+                  ? "数量"
+                  : "合計金額（数量×単価）"
+              }を表示。`
+            : "";
 
         const subtitleText = correlationText
           ? `※ ${bubbleText}${correlationText} (右上ほど単価が高く${xAxisLabel}が多い傾向、外れ値や標準的な価格帯の分布を確認)`
@@ -1655,22 +1934,24 @@ function appData() {
         this.detailChartInstance = new Chart(ctx, {
           type: chartType === "bubble" ? "bubble" : "scatter",
           data: {
-            datasets: [{
-              label: "単価",
-              data: scatterData,
-              backgroundColor: CHART_COLORS.avg.border + "88",
-              borderColor: CHART_COLORS.avg.border,
-              borderWidth: 1,
-            }],
+            datasets: [
+              {
+                label: "単価",
+                data: scatterData,
+                backgroundColor: CHART_COLORS.avg.border + "88",
+                borderColor: CHART_COLORS.avg.border,
+                borderWidth: 1,
+              },
+            ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
             interaction: {
-              mode: 'point',
+              mode: "point",
               intersect: true,
-              axis: 'xy',
+              axis: "xy",
             },
             plugins: {
               legend: { display: false },
@@ -1679,7 +1960,7 @@ function appData() {
                 text: subtitleText,
                 font: { size: 11 },
                 color: "#6c757d",
-                padding: { bottom: 10 }
+                padding: { bottom: 10 },
               },
               tooltip: {
                 callbacks: {
@@ -1708,13 +1989,13 @@ function appData() {
     },
 
     /**
-     * Render heatmap chart
+     * ヒートマップチャートを描画
      * @param {CanvasRenderingContext2D} ctx - Canvas context
-     * @param {Array} data - Heatmap data [{x, y, v}]
-     * @param {Array} xRanges - X-axis ranges
-     * @param {Array} priceRanges - Price range labels
-     * @param {string} xAxisLabel - X-axis label
-     * @param {string} unit - Unit label
+     * @param {Array} data - ヒートマップデータ [{x, y, v}]
+     * @param {Array} xRanges - X軸の範囲
+     * @param {Array} priceRanges - 価格の範囲ラベル
+     * @param {string} xAxisLabel - X軸のラベル
+     * @param {string} unit - 単位ラベル
      */
     renderHeatmapChart(ctx, data, xRanges, priceRanges, xAxisLabel, unit) {
       // Check if matrix plugin is available
@@ -1724,11 +2005,13 @@ function appData() {
         this.detailChartInstance = new Chart(ctx, {
           type: "scatter",
           data: {
-            datasets: [{
-              label: "件数",
-              data: data.map((d) => ({ x: d.x, y: d.y, r: d.v * 3 })),
-              backgroundColor: CHART_COLORS.avg.border + "88",
-            }],
+            datasets: [
+              {
+                label: "件数",
+                data: data.map((d) => ({ x: d.x, y: d.y, r: d.v * 3 })),
+                backgroundColor: CHART_COLORS.avg.border + "88",
+              },
+            ],
           },
           options: {
             responsive: true,
@@ -1751,19 +2034,23 @@ function appData() {
       this.detailChartInstance = new Chart(ctx, {
         type: "matrix",
         data: {
-          datasets: [{
-            label: "件数",
-            data: data,
-            backgroundColor: (context) => {
-              const value = context.dataset.data[context.dataIndex]?.v || 0;
-              const alpha = Math.min(value / 10, 1);
-              return `rgba(13, 110, 253, ${alpha})`;
+          datasets: [
+            {
+              label: "件数",
+              data: data,
+              backgroundColor: (context) => {
+                const value = context.dataset.data[context.dataIndex]?.v || 0;
+                const alpha = Math.min(value / 10, 1);
+                return `rgba(13, 110, 253, ${alpha})`;
+              },
+              borderWidth: 1,
+              borderColor: "rgba(0, 0, 0, 0.1)",
+              width: ({ chart }) =>
+                (chart.chartArea?.width || 100) / xRanges.length - 1,
+              height: ({ chart }) =>
+                (chart.chartArea?.height || 100) / priceRanges.length - 1,
             },
-            borderWidth: 1,
-            borderColor: "rgba(0, 0, 0, 0.1)",
-            width: ({ chart }) => (chart.chartArea?.width || 100) / xRanges.length - 1,
-            height: ({ chart }) => (chart.chartArea?.height || 100) / priceRanges.length - 1,
-          }],
+          ],
         },
         options: {
           responsive: true,
@@ -1771,21 +2058,21 @@ function appData() {
           animation: false,
           layout: {
             padding: {
-              bottom: 5
-            }
+              bottom: 5,
+            },
           },
           plugins: {
             legend: {
               display: true,
-              position: 'bottom',
-              align: 'center',
+              position: "bottom",
+              align: "center",
               labels: {
                 boxWidth: 30,
                 boxHeight: 8,
                 padding: 3,
                 font: { size: 9 },
-                usePointStyle: false
-              }
+                usePointStyle: false,
+              },
             },
             tooltip: {
               callbacks: {
@@ -1810,6 +2097,54 @@ function appData() {
           },
         },
       });
+    },
+
+    // =========================================================================
+    // AI Report Generation (using ai-report.js helpers)
+    // =========================================================================
+
+    /**
+     * APIキーが設定されているかどうか
+     * @returns {boolean}
+     */
+    isApiKeyConfigured() {
+      return !!getGeminiApiKey();
+    },
+
+    /**
+     * AIレポートを生成（現在表示中のチャートのみ）
+     * ai-report.jsのgenerateAiReport関数を使用
+     */
+    async generateAiReport() {
+      const self = this;
+
+      await generateAiReport({
+        chartInstance: this.detailChartInstance,
+        detailModal: this.detailModal,
+        onStart: () => {
+          self.aiReport.isGenerating = true;
+          self.aiReport.error = null;
+          self.aiReport.content = "";
+          self.aiReport.isOpen = true;
+        },
+        onSuccess: (response) => {
+          self.aiReport.content = response;
+        },
+        onError: (errorMessage) => {
+          self.aiReport.error = errorMessage;
+          self.aiReport.isOpen = true;
+        },
+        onComplete: () => {
+          self.aiReport.isGenerating = false;
+        },
+      });
+    },
+
+    /**
+     * AIレポートパネルを閉じる
+     */
+    closeAiReport() {
+      this.aiReport.isOpen = false;
     },
   };
 }

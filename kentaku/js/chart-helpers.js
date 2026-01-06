@@ -33,6 +33,40 @@ const CHART_COLORS = {
   weeklyMedian: { border: "#e83e8c", background: "#e83e8c" },
 };
 
+/**
+ * データセットスタイル定数
+ */
+const DATASET_STYLES = {
+  referenceLine: {
+    borderWidth: 2,
+    borderDash: [5, 5],
+    pointRadius: 0,
+    fill: false,
+    tension: 0,
+  },
+  weeklyPrimary: {
+    borderWidth: 2,
+    pointRadius: 5,
+    pointHoverRadius: 7,
+    fill: false,
+    tension: 0.1,
+  },
+  weeklySecondary: {
+    borderWidth: 1,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    fill: false,
+    tension: 0.1,
+  },
+  weeklyHighlight: {
+    borderWidth: 2,
+    pointRadius: 8,
+    pointHoverRadius: 10,
+    fill: false,
+    tension: 0.1,
+  },
+};
+
 // =============================================================================
 // Axis and Label Utilities
 // =============================================================================
@@ -103,6 +137,30 @@ function prepareWeeklyTableData(records) {
 }
 
 /**
+ * フィールドタイプに応じた範囲ラベルを生成
+ * @param {number} displayMin - 表示用最小値
+ * @param {number} displayMax - 表示用最大値
+ * @param {string} fieldType - フィールドタイプ
+ * @returns {string} フォーマット済みラベル
+ */
+function formatRangeLabel(displayMin, displayMax, fieldType) {
+  const formatters = {
+    price: () => `¥${formatNumber(displayMin)}~¥${formatNumber(displayMax)}`,
+    totalArea: () =>
+      `${formatNumber(displayMin)}~${formatNumber(displayMax)}㎡`,
+    constArea: () =>
+      `${formatNumber(displayMin)}~${formatNumber(displayMax)}㎡`,
+    floors: () => `${displayMin}~${displayMax}`,
+    resUnits: () => `${displayMin}~${displayMax}`,
+  };
+
+  return (
+    formatters[fieldType]?.() ??
+    `${formatNumber(displayMin)}~${formatNumber(displayMax)}`
+  );
+}
+
+/**
  * Create value ranges for heatmap visualization
  *
  * Algorithm:
@@ -127,26 +185,14 @@ function createValueRanges(values, buckets, fieldType) {
     const rangeMax = min + step * (i + 1);
     const isLastRange = i === buckets - 1;
 
-    // ラベル表示用の最小値と最大値を丸める
+    // 表示用の値を丸める
     const displayMin = Math.round(rangeMin);
     const displayMax = isLastRange ? Math.round(max) : Math.round(rangeMax - 1);
-
-    // Generate label based on field type
-    let label;
-    if (fieldType === 'price') {
-      label = `¥${formatNumber(displayMin)}~¥${formatNumber(displayMax)}`;
-    } else if (fieldType === 'totalArea' || fieldType === 'constArea') {
-      label = `${formatNumber(displayMin)}~${formatNumber(displayMax)}㎡`;
-    } else if (fieldType === 'floors' || fieldType === 'resUnits') {
-      label = `${displayMin}~${displayMax}`;
-    } else {
-      label = `${formatNumber(displayMin)}~${formatNumber(displayMax)}`;
-    }
 
     return {
       min: rangeMin,
       max: isLastRange ? max : rangeMax,
-      label: label,
+      label: formatRangeLabel(displayMin, displayMax, fieldType),
     };
   });
 }
@@ -169,11 +215,25 @@ function createReferenceLine(label, value, count, colors) {
     data: Array(count).fill(value),
     borderColor: colors.border,
     backgroundColor: colors.background,
-    borderWidth: 2,
-    borderDash: [5, 5],
-    pointRadius: 0,
-    fill: false,
-    tension: 0,
+    ...DATASET_STYLES.referenceLine,
+  };
+}
+
+/**
+ * 週次データセットを作成
+ * @param {string} label - データセットラベル
+ * @param {Array} data - データ配列
+ * @param {{border: string, background: string}} colors - カラー設定
+ * @param {Object} style - DATASET_STYLES のスタイル定義
+ * @returns {Object} Chart.js データセット設定
+ */
+function createWeeklyDataset(label, data, colors, style) {
+  return {
+    label,
+    data,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    ...style,
   };
 }
 
@@ -191,69 +251,37 @@ function buildTrendDatasets(data) {
     stats,
     weekCount,
   } = data;
+
   return [
-    createReferenceLine(
-      "最小値",
-      stats.min,
-      weekCount,
-      CHART_COLORS.min
+    // 参照線（統計値）
+    createReferenceLine("最小値", stats.min, weekCount, CHART_COLORS.min),
+    createReferenceLine("平均値", stats.avg, weekCount, CHART_COLORS.avg),
+    createReferenceLine("最大値", stats.max, weekCount, CHART_COLORS.max),
+    // 週次データ
+    createWeeklyDataset(
+      "実行単価(週最小)",
+      weeklyMinData,
+      CHART_COLORS.weeklyMin,
+      DATASET_STYLES.weeklySecondary
     ),
-    createReferenceLine(
-      "平均値",
-      stats.avg,
-      weekCount,
-      CHART_COLORS.avg
+    createWeeklyDataset(
+      "実行単価(週中央値)",
+      weeklyMedianData,
+      CHART_COLORS.weeklyMedian,
+      DATASET_STYLES.weeklyPrimary
     ),
-    createReferenceLine(
-      "最大値",
-      stats.max,
-      weekCount,
-      CHART_COLORS.max
+    createWeeklyDataset(
+      "実行単価(週平均)",
+      actualData,
+      CHART_COLORS.actual,
+      DATASET_STYLES.weeklyHighlight
     ),
-    {
-      label: "実行単価(週最小)",
-      data: weeklyMinData,
-      borderColor: CHART_COLORS.weeklyMin.border,
-      backgroundColor: CHART_COLORS.weeklyMin.background,
-      borderWidth: 1,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      fill: false,
-      tension: 0.1,
-    },
-    {
-      label: "実行単価(週中央値)",
-      data: weeklyMedianData,
-      borderColor: CHART_COLORS.weeklyMedian.border,
-      backgroundColor: CHART_COLORS.weeklyMedian.background,
-      borderWidth: 2,
-      pointRadius: 5,
-      pointHoverRadius: 7,
-      fill: false,
-      tension: 0.1,
-    },
-    {
-      label: "実行単価(週平均)",
-      data: actualData,
-      borderColor: CHART_COLORS.actual.border,
-      backgroundColor: CHART_COLORS.actual.background,
-      borderWidth: 2,
-      pointRadius: 8,
-      pointHoverRadius: 10,
-      fill: false,
-      tension: 0.1,
-    },
-    {
-      label: "実行単価(週最大)",
-      data: weeklyMaxData,
-      borderColor: CHART_COLORS.weeklyMax.border,
-      backgroundColor: CHART_COLORS.weeklyMax.background,
-      borderWidth: 1,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      fill: false,
-      tension: 0.1,
-    },
+    createWeeklyDataset(
+      "実行単価(週最大)",
+      weeklyMaxData,
+      CHART_COLORS.weeklyMax,
+      DATASET_STYLES.weeklySecondary
+    ),
   ];
 }
 
