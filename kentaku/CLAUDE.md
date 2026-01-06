@@ -96,22 +96,75 @@ NEVER:
   - Omit :key in x-for loops
 ```
 
-## §6 Key Functions
+## §6 Core Functions
 
-| Location          | Function                    | Purpose                            |
-| ----------------- | --------------------------- | ---------------------------------- |
-| app.js            | appData()                   | Main Alpine component              |
-| app.js            | applyFilters()              | Delegate filtering to Web Worker   |
-| app.js            | showChart(idx)              | Display Chart.js price trend       |
-| utils.js          | formatNumber(n)             | Format number with locale          |
-| utils.js          | getWeekNumber(dateStr)      | Convert YYYYMMDD to ISO week       |
-| utils.js          | calcPriceStats(prices)      | Calculate min/max/avg statistics   |
-| chart-helpers.js  | buildTrendDatasets()        | Build trend chart datasets         |
-| chart-helpers.js  | createLineChartOptions()    | Create line chart options          |
-| chart-helpers.js  | createValueRanges()         | Create value ranges for heatmap    |
-| chart-helpers.js  | prepareWeeklyTableData()    | Prepare weekly grouped data        |
-| data-loader.js    | DataLoader.loadData()       | Load gzip data with memory cache   |
-| filter-worker.js  | applyFilters()              | Execute filter logic in Web Worker |
+### §6.1 Main Component (app.js)
+
+```yaml
+appData():
+  lifecycle:
+    - init(): Initialize data loading and Alpine component
+    - processData(): Transform raw records to grouped structure
+    - groupByItem(): Group records by item name
+
+  filtering:
+    - applyFilters(): Apply filters via Web Worker (primary filter method)
+    - clearFilters(): Reset all filters to defaults
+
+  charts:
+    - showChart(idx): Display price trend chart for item
+    - openDetailModal(item): Open detail modal with charts and analysis
+
+  ui_interaction:
+    - toggleGroup(item): Expand/collapse item group
+    - loadMoreGroups(): Load more item groups (pagination)
+```
+
+### §6.2 Utilities (utils.js)
+
+```yaml
+formatting:
+  - formatNumber(n): Format number with locale (e.g., "1,234")
+
+date_handling:
+  - getWeekNumber(dateStr): Convert YYYYMMDD to ISO week number
+  - parseDateString(dateStr): Parse YYYYMMDD to Date object
+
+statistics:
+  - calcPriceStats(prices): Calculate min/max/avg/median statistics
+  - calcMedian(arr): Calculate median value
+  - calcCorrelation(x, y): Calculate correlation coefficient
+
+data_processing:
+  - groupRecordsBy(records, key): Group records by key
+  - isInRange(value, min, max): Check if value in range
+```
+
+### §6.3 Chart Helpers (chart-helpers.js)
+
+```yaml
+chart_creation:
+  - buildTrendDatasets(groupedData, options): Build trend chart datasets
+  - createLineChartOptions(options): Create Chart.js line chart config
+  - createValueRanges(values, count): Create value ranges for heatmap
+```
+
+### §6.4 Data Loader (data-loader.js)
+
+```yaml
+data_loading:
+  DataLoader.loadData(regionFilter):
+    - Fetch data.json.gz → Decompress with pako → Parse JSON
+    - Apply region filter → Cache in memory → Return records
+```
+
+### §6.5 Filter Worker (filter-worker.js)
+
+```yaml
+worker_functions:
+  - Web Worker for non-blocking filter operations
+  - Exposed via Comlink for main thread communication
+```
 
 ## §7 Data Loading (Gzip JSON)
 
