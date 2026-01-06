@@ -2013,12 +2013,37 @@
                         </svg>
                         AI分析レポート
                       </h6>
-                      <button
-                        type="button"
-                        class="btn-close btn-close-white"
-                        @click="closeAiReport()"
-                        aria-label="閉じる"
-                      ></button>
+                      <div class="d-flex align-items-center gap-2">
+                        <!-- PDF Export Button -->
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-light d-flex align-items-center gap-1"
+                          @click="exportAiReportToPdf(detailModal.item?.item || '')"
+                          :disabled="aiReport.isGenerating || !aiReport.content"
+                          title="PDFで保存"
+                        >
+                          <svg
+                            width="16"
+                            height="16"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="12" y1="18" x2="12" y2="12" />
+                            <polyline points="9 15 12 18 15 15" />
+                          </svg>
+                          <span class="d-none d-md-inline">PDF</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-close btn-close-white"
+                          @click="closeAiReport()"
+                          aria-label="閉じる"
+                        ></button>
+                      </div>
                     </div>
                     <div
                       class="card-body p-3 overflow-auto"
@@ -2070,6 +2095,7 @@
                         x-if="!aiReport.isGenerating && !aiReport.error && aiReport.content"
                       >
                         <div
+                          id="ai-report-content"
                           class="ai-report-content"
                           x-html="renderMarkdown(aiReport.content)"
                         ></div>
@@ -2842,6 +2868,11 @@
     <script
       defer
       src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"
+    ></script>
+    <!-- html2pdf.js for PDF export -->
+    <script
+      defer
+      src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
     ></script>
     <!-- Application Scripts (load order matters) -->
     <script defer src="js/utils.js"></script>
