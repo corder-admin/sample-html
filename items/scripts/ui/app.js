@@ -195,60 +195,62 @@ function renderGroupCard(g, idx) {
                     </div>
                 </div>
 
-                <div class="list-group list-group-flush mb-3 border rounded">
-                    <div class="list-group-item">
-                        <div class="summary-section-title">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                            協力会社別 NET単価レンジ（/${g.unit}）
-                        </div>
-                        <div class="list-group list-group-flush">
+                <div class="vendor-section border rounded mb-3">
+                    <div class="vendor-section-header d-flex align-items-center gap-2 p-2 bg-light" onclick="event.stopPropagation(); toggleVendorSection(${idx})">
+                        <svg class="vendor-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                        </svg>
+                        <span class="small fw-semibold text-secondary">業者別 NET単価レンジ（/${g.unit}）</span>
+                        <span class="badge bg-secondary rounded-pill small ms-auto">${companyStats.length}社</span>
+                    </div>
+                    <div class="vendor-section-content transition-collapse collapse-hidden" id="vendorSection-${idx}">
+                        <div class="d-flex flex-column gap-2 p-2 p-md-3">
                             ${companyStats
                               .map(
                                 (stat) => `
-                                <div class="list-group-item bg-light company-summary-item">
-                                    <div class="company-header">
-                                        <span class="company-name">${stat.name}</span>
-                                        <span class="company-count">${stat.count}件</span>
+                            <div class="company-summary-item d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 p-2 bg-light rounded border">
+                                <div class="company-header d-flex align-items-center gap-2 w-100 w-sm-auto">
+                                    <span class="fw-semibold small text-dark">${stat.name}</span>
+                                    <span class="badge bg-secondary rounded-pill small">${stat.count}件</span>
+                                </div>
+                                <div class="company-prices d-flex align-items-center gap-2 gap-sm-3 ms-0 ms-sm-auto w-100 w-sm-auto flex-wrap">
+                                    <div class="d-flex align-items-baseline gap-1">
+                                        <span class="small text-secondary">最小</span>
+                                        <span class="small fw-semibold tabular-nums company-price-value min">¥${fmt(stat.minPrice)}</span>
                                     </div>
-                                    <div class="company-prices">
-                                        <div class="company-price-item">
-                                            <span class="company-price-label">最安</span>
-                                            <span class="company-price-value min">¥${fmt(
-                                              stat.minPrice
-                                            )}</span>
-                                        </div>
-                                        <div class="company-price-item">
-                                            <span class="company-price-label">平均</span>
-                                            <span class="company-price-value avg">¥${fmt(
-                                              stat.avgPrice
-                                            )}</span>
-                                        </div>
-                                        <div class="company-price-item">
-                                            <span class="company-price-label">最高</span>
-                                            <span class="company-price-value max">¥${fmt(
-                                              stat.maxPrice
-                                            )}</span>
-                                        </div>
+                                    <div class="d-flex align-items-baseline gap-1">
+                                        <span class="small text-secondary">平均</span>
+                                        <span class="small fw-semibold tabular-nums text-dark">¥${fmt(stat.avgPrice)}</span>
                                     </div>
-                                </div>`
+                                    <div class="d-flex align-items-baseline gap-1">
+                                        <span class="small text-secondary">最大</span>
+                                        <span class="small fw-semibold tabular-nums company-price-value max">¥${fmt(stat.maxPrice)}</span>
+                                    </div>
+                                </div>
+                            </div>`
                               )
                               .join("")}
                         </div>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-center gap-3 align-items-center flex-wrap">
-                    <small class="text-muted">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-3px">
-                            <polyline points="6 9 12 15 18 9"/>
+                <div class="d-flex justify-content-center gap-2 align-items-center flex-wrap">
+                    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
                         </svg>
-                        クリックして実績詳細を表示
-                    </small>
-                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); showChart(${idx})">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px">
+                        <span class="d-none d-sm-inline">時系列一覧</span>
+                        <span class="d-inline d-sm-none">時系列</span>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" onclick="event.stopPropagation(); showChart(${idx})">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
                         </svg>
-                        NET単価実績チャート
+                        <span class="d-none d-sm-inline">NET単価推移</span>
+                        <span class="d-inline d-sm-none">推移</span>
                     </button>
                 </div>
             </div>
@@ -364,6 +366,25 @@ export function toggleGroup(idx) {
 }
 
 /**
+ * 協力会社セクションの展開/折りたたみ
+ */
+export function toggleVendorSection(idx) {
+  const section = document.getElementById(`vendorSection-${idx}`);
+  const header = section.previousElementSibling;
+  const chevron = header.querySelector(".vendor-chevron");
+
+  if (section.classList.contains("collapse-hidden")) {
+    section.classList.remove("collapse-hidden");
+    section.classList.add("collapse-shown");
+    chevron.classList.add("rotated");
+  } else {
+    section.classList.remove("collapse-shown");
+    section.classList.add("collapse-hidden");
+    chevron.classList.remove("rotated");
+  }
+}
+
+/**
  * チャートを表示
  */
 export function showChart(idx) {
@@ -372,7 +393,7 @@ export function showChart(idx) {
 
   document.getElementById(
     "chartModalTitle"
-  ).textContent = `NET単価実績チャート - ${group.item}`;
+  ).textContent = `NET単価推移 - ${group.item}`;
   document.getElementById("chartItemName").textContent =
     group.item + (group.spec ? ` / ${group.spec}` : "");
   document.getElementById("chartUnit").textContent = group.unit;
@@ -430,4 +451,5 @@ clearFilters();
 window.applyFilters = applyFilters;
 window.clearFilters = clearFilters;
 window.toggleGroup = toggleGroup;
+window.toggleVendorSection = toggleVendorSection;
 window.showChart = showChart;
