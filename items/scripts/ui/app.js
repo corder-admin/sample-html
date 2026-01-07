@@ -687,8 +687,12 @@ function updateChartWithFilters() {
  * チャートフィルタをクリア
  */
 function clearChartFilters() {
-  document.getElementById("chartDateFrom").value = "";
-  document.getElementById("chartDateTo").value = "";
+  // 日付はデータの範囲を初期値に設定
+  const dates = currentChartRecords.map((r) => r.priceDate).sort();
+  const minDate = dates[0] || "";
+  const maxDate = dates[dates.length - 1] || "";
+  document.getElementById("chartDateFrom").value = minDate;
+  document.getElementById("chartDateTo").value = maxDate;
   document.getElementById("chartTimeUnit").value = "monthly";
   document.getElementById("chartDisplayMode").value = "line";
   updateChartWithFilters();
@@ -713,9 +717,12 @@ export function showChart(idx) {
     group.item + (group.spec ? ` / ${group.spec}` : "");
   document.getElementById("chartUnit").textContent = group.unit;
 
-  // フィルタをリセット
-  document.getElementById("chartDateFrom").value = "";
-  document.getElementById("chartDateTo").value = "";
+  // フィルタをリセット（日付はデータの範囲を初期値に設定）
+  const dates = records.map((r) => r.priceDate).sort();
+  const minDate = dates[0] || "";
+  const maxDate = dates[dates.length - 1] || "";
+  document.getElementById("chartDateFrom").value = minDate;
+  document.getElementById("chartDateTo").value = maxDate;
   document.getElementById("chartTimeUnit").value = "monthly";
   document.getElementById("chartDisplayMode").value = "line";
 
