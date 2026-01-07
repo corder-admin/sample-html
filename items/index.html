@@ -227,7 +227,11 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-    <script type="module" src="scripts/ui/app.js"></script>
+    <script type="module">
+      // キャッシュ対策: ファイル修正時にバージョン番号を更新してください
+      const APP_VERSION = "20260107-001";
+      import(`./scripts/ui/app.js?v=${APP_VERSION}`);
+    </script>
 
     <!-- NET単価実績チャートモーダル -->
     <div class="modal fade" id="chartModal" tabindex="-1">
