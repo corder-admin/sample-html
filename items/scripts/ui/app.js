@@ -429,10 +429,14 @@ function formatPeriodByTimeUnit(period, timeUnit) {
       return `${year}-${month}`;
     case "weekly":
       const date = new Date(period);
-      const weekNum = Math.ceil(
-        ((date - new Date(date.getFullYear(), 0, 1)) / 86400000 + 1) / 7
-      );
-      return `${year}-W${String(weekNum).padStart(2, "0")}`;
+      const dayOfWeek = date.getDay(); // 0=日曜日, 1=月曜日, ...
+      const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 月曜日までの日数差
+      const monday = new Date(date);
+      monday.setDate(date.getDate() + diff);
+      const weekYear = monday.getFullYear();
+      const weekMonth = String(monday.getMonth() + 1).padStart(2, "0");
+      const weekDay = String(monday.getDate()).padStart(2, "0");
+      return `${weekYear}-${weekMonth}-${weekDay}`;
     case "daily":
     default:
       return period;
