@@ -16,7 +16,7 @@ export const itemRecords = [
     price: 108000,
     netRate: 0.98,
     netPrice: 105840,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
   {
     projectId: "p2",
@@ -30,7 +30,7 @@ export const itemRecords = [
     price: 110000,
     netRate: 0.95,
     netPrice: 104500,
-    priceDate: "2024-01-15",
+    priceDate: "2025-01-15",
   },
   {
     projectId: "p3",
@@ -44,7 +44,7 @@ export const itemRecords = [
     price: 109000,
     netRate: 0.975,
     netPrice: 106275,
-    priceDate: "2024-02-05",
+    priceDate: "2025-02-05",
   },
   {
     projectId: "p4",
@@ -58,7 +58,7 @@ export const itemRecords = [
     price: 111000,
     netRate: 0.96,
     netPrice: 106560,
-    priceDate: "2024-02-20",
+    priceDate: "2025-02-20",
   },
   {
     projectId: "p5",
@@ -72,7 +72,7 @@ export const itemRecords = [
     price: 107500,
     netRate: 0.985,
     netPrice: 105888,
-    priceDate: "2024-03-08",
+    priceDate: "2025-03-08",
   },
   {
     projectId: "p6",
@@ -86,7 +86,7 @@ export const itemRecords = [
     price: 106000,
     netRate: 0.97,
     netPrice: 102820,
-    priceDate: "2024-03-15",
+    priceDate: "2025-03-15",
   },
   {
     projectId: "p7",
@@ -100,7 +100,7 @@ export const itemRecords = [
     price: 109500,
     netRate: 0.955,
     netPrice: 104573,
-    priceDate: "2024-03-25",
+    priceDate: "2025-03-25",
   },
   {
     projectId: "p8",
@@ -114,7 +114,7 @@ export const itemRecords = [
     price: 112000,
     netRate: 0.94,
     netPrice: 105280,
-    priceDate: "2024-04-08",
+    priceDate: "2025-04-08",
   },
   {
     projectId: "p9",
@@ -128,7 +128,7 @@ export const itemRecords = [
     price: 111500,
     netRate: 0.945,
     netPrice: 105368,
-    priceDate: "2024-04-18",
+    priceDate: "2025-04-18",
   },
   {
     projectId: "p10",
@@ -142,7 +142,7 @@ export const itemRecords = [
     price: 108500,
     netRate: 0.96,
     netPrice: 104160,
-    priceDate: "2024-04-25",
+    priceDate: "2025-04-25",
   },
   {
     projectId: "p11",
@@ -156,7 +156,7 @@ export const itemRecords = [
     price: 105500,
     netRate: 0.93,
     netPrice: 98115,
-    priceDate: "2024-05-10",
+    priceDate: "2025-05-10",
   },
   {
     projectId: "p12",
@@ -170,7 +170,7 @@ export const itemRecords = [
     price: 110000,
     netRate: 0.95,
     netPrice: 104500,
-    priceDate: "2024-05-22",
+    priceDate: "2025-05-22",
   },
   {
     projectId: "p13",
@@ -184,7 +184,7 @@ export const itemRecords = [
     price: 109000,
     netRate: 0.955,
     netPrice: 104095,
-    priceDate: "2024-06-05",
+    priceDate: "2025-06-05",
   },
   {
     projectId: "p14",
@@ -198,7 +198,7 @@ export const itemRecords = [
     price: 108000,
     netRate: 0.97,
     netPrice: 104760,
-    priceDate: "2024-06-20",
+    priceDate: "2025-06-20",
   },
   {
     projectId: "p15",
@@ -212,7 +212,7 @@ export const itemRecords = [
     price: 107500,
     netRate: 0.96,
     netPrice: 103200,
-    priceDate: "2024-07-08",
+    priceDate: "2025-07-08",
   },
   {
     projectId: "p16",
@@ -226,7 +226,7 @@ export const itemRecords = [
     price: 106500,
     netRate: 0.965,
     netPrice: 102773,
-    priceDate: "2024-07-18",
+    priceDate: "2025-07-18",
   },
   {
     projectId: "p17",
@@ -240,7 +240,7 @@ export const itemRecords = [
     price: 109000,
     netRate: 0.975,
     netPrice: 106275,
-    priceDate: "2024-07-30",
+    priceDate: "2025-07-30",
   },
   {
     projectId: "p18",
@@ -254,7 +254,7 @@ export const itemRecords = [
     price: 108500,
     netRate: 0.95,
     netPrice: 103075,
-    priceDate: "2024-08-08",
+    priceDate: "2025-08-08",
   },
   {
     projectId: "p19",
@@ -268,7 +268,7 @@ export const itemRecords = [
     price: 110000,
     netRate: 0.94,
     netPrice: 103400,
-    priceDate: "2024-08-22",
+    priceDate: "2025-08-22",
   },
   {
     projectId: "p20",
@@ -282,7 +282,7 @@ export const itemRecords = [
     price: 107000,
     netRate: 0.98,
     netPrice: 104860,
-    priceDate: "2024-09-05",
+    priceDate: "2025-09-05",
   },
   {
     projectId: "p21",
@@ -296,7 +296,7 @@ export const itemRecords = [
     price: 108000,
     netRate: 0.965,
     netPrice: 104220,
-    priceDate: "2024-09-18",
+    priceDate: "2025-09-18",
   },
   {
     projectId: "p22",
@@ -310,7 +310,7 @@ export const itemRecords = [
     price: 112000,
     netRate: 0.955,
     netPrice: 106960,
-    priceDate: "2024-09-28",
+    priceDate: "2025-09-28",
   },
   {
     projectId: "p23",
@@ -324,7 +324,7 @@ export const itemRecords = [
     price: 106500,
     netRate: 0.935,
     netPrice: 99578,
-    priceDate: "2024-10-08",
+    priceDate: "2025-10-08",
   },
   {
     projectId: "p24",
@@ -338,7 +338,7 @@ export const itemRecords = [
     price: 109500,
     netRate: 0.95,
     netPrice: 104025,
-    priceDate: "2024-10-20",
+    priceDate: "2025-10-20",
   },
   {
     projectId: "p25",
@@ -352,7 +352,7 @@ export const itemRecords = [
     price: 110500,
     netRate: 0.945,
     netPrice: 104423,
-    priceDate: "2024-10-30",
+    priceDate: "2025-10-30",
   },
   {
     projectId: "p26",
@@ -366,7 +366,7 @@ export const itemRecords = [
     price: 107000,
     netRate: 0.94,
     netPrice: 100580,
-    priceDate: "2024-11-08",
+    priceDate: "2025-11-08",
   },
   {
     projectId: "p27",
@@ -380,7 +380,7 @@ export const itemRecords = [
     price: 111000,
     netRate: 0.95,
     netPrice: 105450,
-    priceDate: "2024-11-18",
+    priceDate: "2025-11-18",
   },
   {
     projectId: "p28",
@@ -394,7 +394,7 @@ export const itemRecords = [
     price: 108500,
     netRate: 0.96,
     netPrice: 104160,
-    priceDate: "2024-11-28",
+    priceDate: "2025-11-28",
   },
   {
     projectId: "p29",
@@ -408,7 +408,7 @@ export const itemRecords = [
     price: 109000,
     netRate: 0.97,
     netPrice: 105730,
-    priceDate: "2024-12-08",
+    priceDate: "2025-12-08",
   },
   {
     projectId: "p30",
@@ -422,7 +422,7 @@ export const itemRecords = [
     price: 110500,
     netRate: 0.945,
     netPrice: 104423,
-    priceDate: "2024-12-20",
+    priceDate: "2025-12-20",
   },
   // 2025年の鉄筋データ
   {
@@ -522,7 +522,7 @@ export const itemRecords = [
     price: 108000,
     netRate: 0.92,
     netPrice: 99360,
-    priceDate: "2024-03-12",
+    priceDate: "2025-03-12",
   },
   {
     projectId: "p77",
@@ -536,7 +536,7 @@ export const itemRecords = [
     price: 110500,
     netRate: 0.945,
     netPrice: 104423,
-    priceDate: "2024-05-18",
+    priceDate: "2025-05-18",
   },
   {
     projectId: "p78",
@@ -550,7 +550,7 @@ export const itemRecords = [
     price: 107500,
     netRate: 0.935,
     netPrice: 100513,
-    priceDate: "2024-06-22",
+    priceDate: "2025-06-22",
   },
   {
     projectId: "p101",
@@ -564,7 +564,7 @@ export const itemRecords = [
     price: 105000,
     netRate: 0.91,
     netPrice: 95550,
-    priceDate: "2024-01-28",
+    priceDate: "2025-01-28",
   },
   {
     projectId: "p102",
@@ -578,7 +578,7 @@ export const itemRecords = [
     price: 106500,
     netRate: 0.925,
     netPrice: 98513,
-    priceDate: "2024-03-25",
+    priceDate: "2025-03-25",
   },
   {
     projectId: "p103",
@@ -592,7 +592,7 @@ export const itemRecords = [
     price: 104500,
     netRate: 0.92,
     netPrice: 96140,
-    priceDate: "2024-05-30",
+    priceDate: "2025-05-30",
   },
   {
     projectId: "p104",
@@ -606,7 +606,7 @@ export const itemRecords = [
     price: 107000,
     netRate: 0.93,
     netPrice: 99510,
-    priceDate: "2024-07-28",
+    priceDate: "2025-07-28",
   },
   {
     projectId: "p105",
@@ -620,7 +620,7 @@ export const itemRecords = [
     price: 103500,
     netRate: 0.905,
     netPrice: 93668,
-    priceDate: "2024-09-22",
+    priceDate: "2025-09-22",
   },
 
   // ===== 鉄筋工事 (rebar) - 異形棒鋼 SD345 D16 =====
@@ -636,7 +636,7 @@ export const itemRecords = [
     price: 115000,
     netRate: 0.97,
     netPrice: 111550,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
   {
     projectId: "p4",
@@ -650,7 +650,7 @@ export const itemRecords = [
     price: 118000,
     netRate: 0.95,
     netPrice: 112100,
-    priceDate: "2024-02-22",
+    priceDate: "2025-02-22",
   },
   {
     projectId: "p8",
@@ -664,7 +664,7 @@ export const itemRecords = [
     price: 116500,
     netRate: 0.945,
     netPrice: 110093,
-    priceDate: "2024-04-10",
+    priceDate: "2025-04-10",
   },
   {
     projectId: "p9",
@@ -678,7 +678,7 @@ export const itemRecords = [
     price: 117000,
     netRate: 0.955,
     netPrice: 111735,
-    priceDate: "2024-04-18",
+    priceDate: "2025-04-18",
   },
   {
     projectId: "p13",
@@ -692,7 +692,7 @@ export const itemRecords = [
     price: 119000,
     netRate: 0.94,
     netPrice: 111860,
-    priceDate: "2024-06-08",
+    priceDate: "2025-06-08",
   },
   {
     projectId: "p19",
@@ -706,7 +706,7 @@ export const itemRecords = [
     price: 116000,
     netRate: 0.96,
     netPrice: 111360,
-    priceDate: "2024-08-25",
+    priceDate: "2025-08-25",
   },
   {
     projectId: "p25",
@@ -720,7 +720,7 @@ export const itemRecords = [
     price: 117500,
     netRate: 0.965,
     netPrice: 113388,
-    priceDate: "2024-11-02",
+    priceDate: "2025-11-02",
   },
   {
     projectId: "p30",
@@ -734,7 +734,7 @@ export const itemRecords = [
     price: 115500,
     netRate: 0.94,
     netPrice: 108570,
-    priceDate: "2024-12-22",
+    priceDate: "2025-12-22",
   },
   {
     projectId: "p34",
@@ -762,7 +762,7 @@ export const itemRecords = [
     price: 114000,
     netRate: 0.925,
     netPrice: 105450,
-    priceDate: "2024-03-15",
+    priceDate: "2025-03-15",
   },
   {
     projectId: "p101",
@@ -776,7 +776,7 @@ export const itemRecords = [
     price: 112500,
     netRate: 0.915,
     netPrice: 102938,
-    priceDate: "2024-01-30",
+    priceDate: "2025-01-30",
   },
   {
     projectId: "p103",
@@ -790,7 +790,7 @@ export const itemRecords = [
     price: 113500,
     netRate: 0.92,
     netPrice: 104420,
-    priceDate: "2024-06-02",
+    priceDate: "2025-06-02",
   },
   {
     projectId: "p105",
@@ -804,7 +804,7 @@ export const itemRecords = [
     price: 111000,
     netRate: 0.91,
     netPrice: 101010,
-    priceDate: "2024-09-25",
+    priceDate: "2025-09-25",
   },
 
   // ===== 鉄筋工事 (rebar) - 鉄筋加工費 =====
@@ -820,7 +820,7 @@ export const itemRecords = [
     price: 35000,
     netRate: 0.95,
     netPrice: 33250,
-    priceDate: "2024-01-12",
+    priceDate: "2025-01-12",
   },
   {
     projectId: "p2",
@@ -834,7 +834,7 @@ export const itemRecords = [
     price: 36000,
     netRate: 0.92,
     netPrice: 33120,
-    priceDate: "2024-01-18",
+    priceDate: "2025-01-18",
   },
   {
     projectId: "p3",
@@ -848,7 +848,7 @@ export const itemRecords = [
     price: 35500,
     netRate: 0.94,
     netPrice: 33370,
-    priceDate: "2024-02-08",
+    priceDate: "2025-02-08",
   },
   {
     projectId: "p4",
@@ -862,7 +862,7 @@ export const itemRecords = [
     price: 34500,
     netRate: 0.93,
     netPrice: 32085,
-    priceDate: "2024-02-25",
+    priceDate: "2025-02-25",
   },
   {
     projectId: "p5",
@@ -876,7 +876,7 @@ export const itemRecords = [
     price: 36500,
     netRate: 0.945,
     netPrice: 34493,
-    priceDate: "2024-03-10",
+    priceDate: "2025-03-10",
   },
   {
     projectId: "p6",
@@ -890,7 +890,7 @@ export const itemRecords = [
     price: 33500,
     netRate: 0.935,
     netPrice: 31323,
-    priceDate: "2024-03-18",
+    priceDate: "2025-03-18",
   },
   {
     projectId: "p7",
@@ -904,7 +904,7 @@ export const itemRecords = [
     price: 35800,
     netRate: 0.925,
     netPrice: 33115,
-    priceDate: "2024-03-28",
+    priceDate: "2025-03-28",
   },
   {
     projectId: "p8",
@@ -918,7 +918,7 @@ export const itemRecords = [
     price: 33000,
     netRate: 0.915,
     netPrice: 30195,
-    priceDate: "2024-04-10",
+    priceDate: "2025-04-10",
   },
   {
     projectId: "p9",
@@ -932,7 +932,7 @@ export const itemRecords = [
     price: 34200,
     netRate: 0.92,
     netPrice: 31464,
-    priceDate: "2024-04-20",
+    priceDate: "2025-04-20",
   },
   {
     projectId: "p10",
@@ -946,7 +946,7 @@ export const itemRecords = [
     price: 35500,
     netRate: 0.935,
     netPrice: 33193,
-    priceDate: "2024-04-28",
+    priceDate: "2025-04-28",
   },
   {
     projectId: "p11",
@@ -960,7 +960,7 @@ export const itemRecords = [
     price: 32000,
     netRate: 0.905,
     netPrice: 28960,
-    priceDate: "2024-05-12",
+    priceDate: "2025-05-12",
   },
   {
     projectId: "p12",
@@ -974,7 +974,7 @@ export const itemRecords = [
     price: 36000,
     netRate: 0.925,
     netPrice: 33300,
-    priceDate: "2024-05-25",
+    priceDate: "2025-05-25",
   },
   {
     projectId: "p13",
@@ -988,7 +988,7 @@ export const itemRecords = [
     price: 34800,
     netRate: 0.93,
     netPrice: 32364,
-    priceDate: "2024-06-08",
+    priceDate: "2025-06-08",
   },
   {
     projectId: "p14",
@@ -1002,7 +1002,7 @@ export const itemRecords = [
     price: 35200,
     netRate: 0.94,
     netPrice: 33088,
-    priceDate: "2024-06-22",
+    priceDate: "2025-06-22",
   },
   {
     projectId: "p15",
@@ -1016,7 +1016,7 @@ export const itemRecords = [
     price: 34500,
     netRate: 0.935,
     netPrice: 32258,
-    priceDate: "2024-07-10",
+    priceDate: "2025-07-10",
   },
   {
     projectId: "p16",
@@ -1030,7 +1030,7 @@ export const itemRecords = [
     price: 35800,
     netRate: 0.945,
     netPrice: 33831,
-    priceDate: "2024-07-20",
+    priceDate: "2025-07-20",
   },
   {
     projectId: "p17",
@@ -1044,7 +1044,7 @@ export const itemRecords = [
     price: 36500,
     netRate: 0.95,
     netPrice: 34675,
-    priceDate: "2024-08-02",
+    priceDate: "2025-08-02",
   },
   {
     projectId: "p18",
@@ -1058,7 +1058,7 @@ export const itemRecords = [
     price: 33800,
     netRate: 0.92,
     netPrice: 31096,
-    priceDate: "2024-08-10",
+    priceDate: "2025-08-10",
   },
   {
     projectId: "p19",
@@ -1072,7 +1072,7 @@ export const itemRecords = [
     price: 34500,
     netRate: 0.93,
     netPrice: 32085,
-    priceDate: "2024-08-25",
+    priceDate: "2025-08-25",
   },
   {
     projectId: "p20",
@@ -1086,7 +1086,7 @@ export const itemRecords = [
     price: 35500,
     netRate: 0.95,
     netPrice: 33725,
-    priceDate: "2024-09-08",
+    priceDate: "2025-09-08",
   },
   // 大規模プロジェクトの加工費
   {
@@ -1101,7 +1101,7 @@ export const itemRecords = [
     price: 31000,
     netRate: 0.895,
     netPrice: 27745,
-    priceDate: "2024-03-15",
+    priceDate: "2025-03-15",
   },
   {
     projectId: "p101",
@@ -1115,7 +1115,7 @@ export const itemRecords = [
     price: 30000,
     netRate: 0.885,
     netPrice: 26550,
-    priceDate: "2024-02-01",
+    priceDate: "2025-02-01",
   },
   {
     projectId: "p102",
@@ -1129,7 +1129,7 @@ export const itemRecords = [
     price: 31500,
     netRate: 0.9,
     netPrice: 28350,
-    priceDate: "2024-03-28",
+    priceDate: "2025-03-28",
   },
   {
     projectId: "p103",
@@ -1143,7 +1143,7 @@ export const itemRecords = [
     price: 30500,
     netRate: 0.89,
     netPrice: 27145,
-    priceDate: "2024-06-05",
+    priceDate: "2025-06-05",
   },
   {
     projectId: "p104",
@@ -1157,7 +1157,7 @@ export const itemRecords = [
     price: 32000,
     netRate: 0.905,
     netPrice: 28960,
-    priceDate: "2024-07-30",
+    priceDate: "2025-07-30",
   },
   {
     projectId: "p105",
@@ -1171,7 +1171,7 @@ export const itemRecords = [
     price: 29500,
     netRate: 0.88,
     netPrice: 25960,
-    priceDate: "2024-09-25",
+    priceDate: "2025-09-25",
   },
 
   // ===== 鉄筋工事 (rebar) - 材料運搬費 (間接費) =====
@@ -1187,7 +1187,7 @@ export const itemRecords = [
     price: 580000,
     netRate: 0.98,
     netPrice: 568400,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
   {
     projectId: "p2",
@@ -1201,7 +1201,7 @@ export const itemRecords = [
     price: 620000,
     netRate: 0.95,
     netPrice: 589000,
-    priceDate: "2024-01-15",
+    priceDate: "2025-01-15",
   },
   {
     projectId: "p4",
@@ -1215,7 +1215,7 @@ export const itemRecords = [
     price: 780000,
     netRate: 0.96,
     netPrice: 748800,
-    priceDate: "2024-02-22",
+    priceDate: "2025-02-22",
   },
   {
     projectId: "p5",
@@ -1229,7 +1229,7 @@ export const itemRecords = [
     price: 550000,
     netRate: 0.97,
     netPrice: 533500,
-    priceDate: "2024-03-08",
+    priceDate: "2025-03-08",
   },
   {
     projectId: "p6",
@@ -1243,7 +1243,7 @@ export const itemRecords = [
     price: 680000,
     netRate: 0.94,
     netPrice: 639200,
-    priceDate: "2024-03-18",
+    priceDate: "2025-03-18",
   },
   {
     projectId: "p7",
@@ -1257,7 +1257,7 @@ export const itemRecords = [
     price: 650000,
     netRate: 0.955,
     netPrice: 620750,
-    priceDate: "2024-03-28",
+    priceDate: "2025-03-28",
   },
   {
     projectId: "p8",
@@ -1271,7 +1271,7 @@ export const itemRecords = [
     price: 920000,
     netRate: 0.93,
     netPrice: 855600,
-    priceDate: "2024-04-10",
+    priceDate: "2025-04-10",
   },
   {
     projectId: "p9",
@@ -1285,7 +1285,7 @@ export const itemRecords = [
     price: 750000,
     netRate: 0.94,
     netPrice: 705000,
-    priceDate: "2024-04-20",
+    priceDate: "2025-04-20",
   },
   {
     projectId: "p10",
@@ -1299,7 +1299,7 @@ export const itemRecords = [
     price: 520000,
     netRate: 0.96,
     netPrice: 499200,
-    priceDate: "2024-04-28",
+    priceDate: "2025-04-28",
   },
   {
     projectId: "p11",
@@ -1313,7 +1313,7 @@ export const itemRecords = [
     price: 1250000,
     netRate: 0.92,
     netPrice: 1150000,
-    priceDate: "2024-05-12",
+    priceDate: "2025-05-12",
   },
   {
     projectId: "p13",
@@ -1327,7 +1327,7 @@ export const itemRecords = [
     price: 720000,
     netRate: 0.945,
     netPrice: 680400,
-    priceDate: "2024-06-08",
+    priceDate: "2025-06-08",
   },
   {
     projectId: "p15",
@@ -1341,7 +1341,7 @@ export const itemRecords = [
     price: 580000,
     netRate: 0.955,
     netPrice: 553900,
-    priceDate: "2024-07-10",
+    priceDate: "2025-07-10",
   },
   {
     projectId: "p18",
@@ -1355,7 +1355,7 @@ export const itemRecords = [
     price: 850000,
     netRate: 0.94,
     netPrice: 799000,
-    priceDate: "2024-08-10",
+    priceDate: "2025-08-10",
   },
   {
     projectId: "p23",
@@ -1369,7 +1369,7 @@ export const itemRecords = [
     price: 980000,
     netRate: 0.935,
     netPrice: 916300,
-    priceDate: "2024-10-08",
+    priceDate: "2025-10-08",
   },
   {
     projectId: "p26",
@@ -1383,7 +1383,7 @@ export const itemRecords = [
     price: 880000,
     netRate: 0.945,
     netPrice: 831600,
-    priceDate: "2024-11-08",
+    priceDate: "2025-11-08",
   },
   {
     projectId: "p30",
@@ -1397,7 +1397,7 @@ export const itemRecords = [
     price: 1050000,
     netRate: 0.93,
     netPrice: 976500,
-    priceDate: "2024-12-22",
+    priceDate: "2025-12-22",
   },
   {
     projectId: "p101",
@@ -1411,7 +1411,7 @@ export const itemRecords = [
     price: 2850000,
     netRate: 0.91,
     netPrice: 2593500,
-    priceDate: "2024-02-01",
+    priceDate: "2025-02-01",
   },
   {
     projectId: "p103",
@@ -1425,7 +1425,7 @@ export const itemRecords = [
     price: 2450000,
     netRate: 0.92,
     netPrice: 2254000,
-    priceDate: "2024-06-05",
+    priceDate: "2025-06-05",
   },
   {
     projectId: "p105",
@@ -1439,7 +1439,7 @@ export const itemRecords = [
     price: 3250000,
     netRate: 0.905,
     netPrice: 2941250,
-    priceDate: "2024-09-25",
+    priceDate: "2025-09-25",
   },
 
   // ===== 土工事 (earthwork) - 根切り工事 =====
@@ -1455,7 +1455,7 @@ export const itemRecords = [
     price: 3500,
     netRate: 0.92,
     netPrice: 3220,
-    priceDate: "2024-01-08",
+    priceDate: "2025-01-08",
   },
   {
     projectId: "p2",
@@ -1469,7 +1469,7 @@ export const itemRecords = [
     price: 3200,
     netRate: 0.94,
     netPrice: 3008,
-    priceDate: "2024-01-12",
+    priceDate: "2025-01-12",
   },
   {
     projectId: "p3",
@@ -1483,7 +1483,7 @@ export const itemRecords = [
     price: 3400,
     netRate: 0.93,
     netPrice: 3162,
-    priceDate: "2024-02-03",
+    priceDate: "2025-02-03",
   },
   {
     projectId: "p4",
@@ -1497,7 +1497,7 @@ export const itemRecords = [
     price: 3100,
     netRate: 0.945,
     netPrice: 2930,
-    priceDate: "2024-02-18",
+    priceDate: "2025-02-18",
   },
   {
     projectId: "p6",
@@ -1511,7 +1511,7 @@ export const itemRecords = [
     price: 3300,
     netRate: 0.925,
     netPrice: 3053,
-    priceDate: "2024-03-15",
+    priceDate: "2025-03-15",
   },
   {
     projectId: "p7",
@@ -1525,7 +1525,7 @@ export const itemRecords = [
     price: 3250,
     netRate: 0.935,
     netPrice: 3039,
-    priceDate: "2024-03-22",
+    priceDate: "2025-03-22",
   },
   {
     projectId: "p8",
@@ -1539,7 +1539,7 @@ export const itemRecords = [
     price: 2950,
     netRate: 0.92,
     netPrice: 2714,
-    priceDate: "2024-04-05",
+    priceDate: "2025-04-05",
   },
   {
     projectId: "p9",
@@ -1553,7 +1553,7 @@ export const itemRecords = [
     price: 3150,
     netRate: 0.94,
     netPrice: 2961,
-    priceDate: "2024-04-15",
+    priceDate: "2025-04-15",
   },
   {
     projectId: "p10",
@@ -1567,7 +1567,7 @@ export const itemRecords = [
     price: 3450,
     netRate: 0.935,
     netPrice: 3226,
-    priceDate: "2024-04-22",
+    priceDate: "2025-04-22",
   },
   {
     projectId: "p11",
@@ -1581,7 +1581,7 @@ export const itemRecords = [
     price: 2850,
     netRate: 0.915,
     netPrice: 2608,
-    priceDate: "2024-05-08",
+    priceDate: "2025-05-08",
   },
   {
     projectId: "p14",
@@ -1595,7 +1595,7 @@ export const itemRecords = [
     price: 3350,
     netRate: 0.93,
     netPrice: 3116,
-    priceDate: "2024-06-18",
+    priceDate: "2025-06-18",
   },
   {
     projectId: "p15",
@@ -1609,7 +1609,7 @@ export const itemRecords = [
     price: 3200,
     netRate: 0.94,
     netPrice: 3008,
-    priceDate: "2024-07-05",
+    priceDate: "2025-07-05",
   },
   {
     projectId: "p18",
@@ -1623,7 +1623,7 @@ export const itemRecords = [
     price: 3100,
     netRate: 0.925,
     netPrice: 2868,
-    priceDate: "2024-08-05",
+    priceDate: "2025-08-05",
   },
   {
     projectId: "p23",
@@ -1637,7 +1637,7 @@ export const itemRecords = [
     price: 2900,
     netRate: 0.92,
     netPrice: 2668,
-    priceDate: "2024-10-05",
+    priceDate: "2025-10-05",
   },
   {
     projectId: "p24",
@@ -1651,7 +1651,7 @@ export const itemRecords = [
     price: 3300,
     netRate: 0.935,
     netPrice: 3086,
-    priceDate: "2024-10-18",
+    priceDate: "2025-10-18",
   },
   {
     projectId: "p26",
@@ -1665,7 +1665,7 @@ export const itemRecords = [
     price: 2950,
     netRate: 0.925,
     netPrice: 2729,
-    priceDate: "2024-11-05",
+    priceDate: "2025-11-05",
   },
   {
     projectId: "p30",
@@ -1679,7 +1679,7 @@ export const itemRecords = [
     price: 2980,
     netRate: 0.92,
     netPrice: 2742,
-    priceDate: "2024-12-18",
+    priceDate: "2025-12-18",
   },
   {
     projectId: "p31",
@@ -1736,7 +1736,7 @@ export const itemRecords = [
     price: 2700,
     netRate: 0.905,
     netPrice: 2444,
-    priceDate: "2024-03-10",
+    priceDate: "2025-03-10",
   },
   {
     projectId: "p81",
@@ -1750,7 +1750,7 @@ export const itemRecords = [
     price: 2600,
     netRate: 0.9,
     netPrice: 2340,
-    priceDate: "2024-04-08",
+    priceDate: "2025-04-08",
   },
   {
     projectId: "p101",
@@ -1764,7 +1764,7 @@ export const itemRecords = [
     price: 2550,
     netRate: 0.895,
     netPrice: 2282,
-    priceDate: "2024-01-25",
+    priceDate: "2025-01-25",
   },
   {
     projectId: "p103",
@@ -1778,7 +1778,7 @@ export const itemRecords = [
     price: 2580,
     netRate: 0.9,
     netPrice: 2322,
-    priceDate: "2024-05-28",
+    priceDate: "2025-05-28",
   },
   {
     projectId: "p105",
@@ -1792,7 +1792,7 @@ export const itemRecords = [
     price: 2480,
     netRate: 0.89,
     netPrice: 2207,
-    priceDate: "2024-09-20",
+    priceDate: "2025-09-20",
   },
 
   // ===== 土工事 (earthwork) - 埋戻し =====
@@ -1808,7 +1808,7 @@ export const itemRecords = [
     price: 4500,
     netRate: 0.93,
     netPrice: 4185,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
   {
     projectId: "p4",
@@ -1822,7 +1822,7 @@ export const itemRecords = [
     price: 4200,
     netRate: 0.94,
     netPrice: 3948,
-    priceDate: "2024-02-20",
+    priceDate: "2025-02-20",
   },
   {
     projectId: "p8",
@@ -1836,7 +1836,7 @@ export const itemRecords = [
     price: 4100,
     netRate: 0.925,
     netPrice: 3793,
-    priceDate: "2024-04-08",
+    priceDate: "2025-04-08",
   },
   {
     projectId: "p11",
@@ -1850,7 +1850,7 @@ export const itemRecords = [
     price: 3950,
     netRate: 0.92,
     netPrice: 3634,
-    priceDate: "2024-05-10",
+    priceDate: "2025-05-10",
   },
   {
     projectId: "p23",
@@ -1864,7 +1864,7 @@ export const itemRecords = [
     price: 4050,
     netRate: 0.93,
     netPrice: 3767,
-    priceDate: "2024-10-08",
+    priceDate: "2025-10-08",
   },
   {
     projectId: "p30",
@@ -1878,7 +1878,7 @@ export const itemRecords = [
     price: 4150,
     netRate: 0.925,
     netPrice: 3839,
-    priceDate: "2024-12-20",
+    priceDate: "2025-12-20",
   },
   {
     projectId: "p37",
@@ -1906,7 +1906,7 @@ export const itemRecords = [
     price: 3800,
     netRate: 0.91,
     netPrice: 3458,
-    priceDate: "2024-03-12",
+    priceDate: "2025-03-12",
   },
   {
     projectId: "p101",
@@ -1920,7 +1920,7 @@ export const itemRecords = [
     price: 3650,
     netRate: 0.9,
     netPrice: 3285,
-    priceDate: "2024-01-28",
+    priceDate: "2025-01-28",
   },
   {
     projectId: "p105",
@@ -1934,7 +1934,7 @@ export const itemRecords = [
     price: 3580,
     netRate: 0.895,
     netPrice: 3204,
-    priceDate: "2024-09-22",
+    priceDate: "2025-09-22",
   },
 
   // ===== 土工事 (earthwork) - 残土処分 =====
@@ -1950,7 +1950,7 @@ export const itemRecords = [
     price: 8500,
     netRate: 0.94,
     netPrice: 7990,
-    priceDate: "2024-01-12",
+    priceDate: "2025-01-12",
   },
   {
     projectId: "p4",
@@ -1964,7 +1964,7 @@ export const itemRecords = [
     price: 8200,
     netRate: 0.935,
     netPrice: 7667,
-    priceDate: "2024-02-22",
+    priceDate: "2025-02-22",
   },
   {
     projectId: "p8",
@@ -1978,7 +1978,7 @@ export const itemRecords = [
     price: 8000,
     netRate: 0.92,
     netPrice: 7360,
-    priceDate: "2024-04-10",
+    priceDate: "2025-04-10",
   },
   {
     projectId: "p11",
@@ -1992,7 +1992,7 @@ export const itemRecords = [
     price: 7800,
     netRate: 0.915,
     netPrice: 7137,
-    priceDate: "2024-05-12",
+    priceDate: "2025-05-12",
   },
   {
     projectId: "p23",
@@ -2006,7 +2006,7 @@ export const itemRecords = [
     price: 7900,
     netRate: 0.925,
     netPrice: 7308,
-    priceDate: "2024-10-10",
+    priceDate: "2025-10-10",
   },
   {
     projectId: "p30",
@@ -2020,7 +2020,7 @@ export const itemRecords = [
     price: 8100,
     netRate: 0.93,
     netPrice: 7533,
-    priceDate: "2024-12-22",
+    priceDate: "2025-12-22",
   },
   {
     projectId: "p37",
@@ -2048,7 +2048,7 @@ export const itemRecords = [
     price: 7500,
     netRate: 0.905,
     netPrice: 6788,
-    priceDate: "2024-03-14",
+    priceDate: "2025-03-14",
   },
   {
     projectId: "p101",
@@ -2062,7 +2062,7 @@ export const itemRecords = [
     price: 7200,
     netRate: 0.895,
     netPrice: 6444,
-    priceDate: "2024-01-30",
+    priceDate: "2025-01-30",
   },
   {
     projectId: "p105",
@@ -2076,7 +2076,7 @@ export const itemRecords = [
     price: 7000,
     netRate: 0.89,
     netPrice: 6230,
-    priceDate: "2024-09-25",
+    priceDate: "2025-09-25",
   },
 
   // ===== 塗装工事 (painting) - 外壁塗装 シリコン樹脂 =====
@@ -2092,7 +2092,7 @@ export const itemRecords = [
     price: 2800,
     netRate: 0.93,
     netPrice: 2604,
-    priceDate: "2024-01-05",
+    priceDate: "2025-01-05",
   },
   {
     projectId: "p3",
@@ -2106,7 +2106,7 @@ export const itemRecords = [
     price: 2900,
     netRate: 0.925,
     netPrice: 2683,
-    priceDate: "2024-02-01",
+    priceDate: "2025-02-01",
   },
   {
     projectId: "p7",
@@ -2120,7 +2120,7 @@ export const itemRecords = [
     price: 2850,
     netRate: 0.92,
     netPrice: 2622,
-    priceDate: "2024-03-22",
+    priceDate: "2025-03-22",
   },
   {
     projectId: "p9",
@@ -2134,7 +2134,7 @@ export const itemRecords = [
     price: 2750,
     netRate: 0.935,
     netPrice: 2571,
-    priceDate: "2024-04-15",
+    priceDate: "2025-04-15",
   },
   {
     projectId: "p12",
@@ -2148,7 +2148,7 @@ export const itemRecords = [
     price: 2950,
     netRate: 0.925,
     netPrice: 2729,
-    priceDate: "2024-05-20",
+    priceDate: "2025-05-20",
   },
   {
     projectId: "p14",
@@ -2162,7 +2162,7 @@ export const itemRecords = [
     price: 2820,
     netRate: 0.93,
     netPrice: 2623,
-    priceDate: "2024-06-18",
+    priceDate: "2025-06-18",
   },
   {
     projectId: "p17",
@@ -2176,7 +2176,7 @@ export const itemRecords = [
     price: 2980,
     netRate: 0.94,
     netPrice: 2801,
-    priceDate: "2024-07-28",
+    priceDate: "2025-07-28",
   },
   {
     projectId: "p19",
@@ -2190,7 +2190,7 @@ export const itemRecords = [
     price: 2780,
     netRate: 0.925,
     netPrice: 2572,
-    priceDate: "2024-08-20",
+    priceDate: "2025-08-20",
   },
   {
     projectId: "p20",
@@ -2204,7 +2204,7 @@ export const itemRecords = [
     price: 2900,
     netRate: 0.935,
     netPrice: 2712,
-    priceDate: "2024-09-02",
+    priceDate: "2025-09-02",
   },
   {
     projectId: "p22",
@@ -2218,7 +2218,7 @@ export const itemRecords = [
     price: 3050,
     netRate: 0.945,
     netPrice: 2882,
-    priceDate: "2024-09-25",
+    priceDate: "2025-09-25",
   },
   {
     projectId: "p25",
@@ -2232,7 +2232,7 @@ export const itemRecords = [
     price: 2850,
     netRate: 0.93,
     netPrice: 2651,
-    priceDate: "2024-10-28",
+    priceDate: "2025-10-28",
   },
   {
     projectId: "p28",
@@ -2246,7 +2246,7 @@ export const itemRecords = [
     price: 2880,
     netRate: 0.925,
     netPrice: 2664,
-    priceDate: "2024-11-25",
+    priceDate: "2025-11-25",
   },
   {
     projectId: "p29",
@@ -2260,7 +2260,7 @@ export const itemRecords = [
     price: 2820,
     netRate: 0.92,
     netPrice: 2594,
-    priceDate: "2024-12-05",
+    priceDate: "2025-12-05",
   },
   {
     projectId: "p32",
@@ -2318,7 +2318,7 @@ export const itemRecords = [
     price: 3500,
     netRate: 0.93,
     netPrice: 3255,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
   {
     projectId: "p5",
@@ -2332,7 +2332,7 @@ export const itemRecords = [
     price: 3400,
     netRate: 0.935,
     netPrice: 3179,
-    priceDate: "2024-03-05",
+    priceDate: "2025-03-05",
   },
   {
     projectId: "p8",
@@ -2346,7 +2346,7 @@ export const itemRecords = [
     price: 3250,
     netRate: 0.92,
     netPrice: 2990,
-    priceDate: "2024-04-05",
+    priceDate: "2025-04-05",
   },
   {
     projectId: "p10",
@@ -2360,7 +2360,7 @@ export const itemRecords = [
     price: 3450,
     netRate: 0.93,
     netPrice: 3209,
-    priceDate: "2024-04-22",
+    priceDate: "2025-04-22",
   },
   {
     projectId: "p13",
@@ -2374,7 +2374,7 @@ export const itemRecords = [
     price: 3380,
     netRate: 0.925,
     netPrice: 3127,
-    priceDate: "2024-06-03",
+    priceDate: "2025-06-03",
   },
   {
     projectId: "p21",
@@ -2388,7 +2388,7 @@ export const itemRecords = [
     price: 3520,
     netRate: 0.94,
     netPrice: 3309,
-    priceDate: "2024-09-15",
+    priceDate: "2025-09-15",
   },
   {
     projectId: "p27",
@@ -2402,7 +2402,7 @@ export const itemRecords = [
     price: 3350,
     netRate: 0.925,
     netPrice: 3099,
-    priceDate: "2024-11-15",
+    priceDate: "2025-11-15",
   },
   {
     projectId: "p30",
@@ -2416,7 +2416,7 @@ export const itemRecords = [
     price: 3200,
     netRate: 0.915,
     netPrice: 2928,
-    priceDate: "2024-12-18",
+    priceDate: "2025-12-18",
   },
   {
     projectId: "p31",
@@ -2473,7 +2473,7 @@ export const itemRecords = [
     price: 3100,
     netRate: 0.905,
     netPrice: 2806,
-    priceDate: "2024-03-10",
+    priceDate: "2025-03-10",
   },
   {
     projectId: "p78",
@@ -2487,7 +2487,7 @@ export const itemRecords = [
     price: 3150,
     netRate: 0.91,
     netPrice: 2867,
-    priceDate: "2024-06-20",
+    priceDate: "2025-06-20",
   },
   {
     projectId: "p101",
@@ -2501,7 +2501,7 @@ export const itemRecords = [
     price: 3000,
     netRate: 0.895,
     netPrice: 2685,
-    priceDate: "2024-01-25",
+    priceDate: "2025-01-25",
   },
   {
     projectId: "p103",
@@ -2515,7 +2515,7 @@ export const itemRecords = [
     price: 3050,
     netRate: 0.9,
     netPrice: 2745,
-    priceDate: "2024-05-28",
+    priceDate: "2025-05-28",
   },
   {
     projectId: "p105",
@@ -2529,7 +2529,7 @@ export const itemRecords = [
     price: 2950,
     netRate: 0.89,
     netPrice: 2626,
-    priceDate: "2024-09-20",
+    priceDate: "2025-09-20",
   },
 
   // ===== 塗装工事 (painting) - 内壁塗装 =====
@@ -2545,7 +2545,7 @@ export const itemRecords = [
     price: 1850,
     netRate: 0.94,
     netPrice: 1739,
-    priceDate: "2024-01-08",
+    priceDate: "2025-01-08",
   },
   {
     projectId: "p4",
@@ -2559,7 +2559,7 @@ export const itemRecords = [
     price: 1780,
     netRate: 0.935,
     netPrice: 1664,
-    priceDate: "2024-02-20",
+    priceDate: "2025-02-20",
   },
   {
     projectId: "p9",
@@ -2573,7 +2573,7 @@ export const itemRecords = [
     price: 1820,
     netRate: 0.93,
     netPrice: 1693,
-    priceDate: "2024-04-18",
+    priceDate: "2025-04-18",
   },
   {
     projectId: "p12",
@@ -2587,7 +2587,7 @@ export const itemRecords = [
     price: 1880,
     netRate: 0.94,
     netPrice: 1767,
-    priceDate: "2024-05-22",
+    priceDate: "2025-05-22",
   },
   {
     projectId: "p19",
@@ -2601,7 +2601,7 @@ export const itemRecords = [
     price: 1800,
     netRate: 0.935,
     netPrice: 1683,
-    priceDate: "2024-08-22",
+    priceDate: "2025-08-22",
   },
   {
     projectId: "p25",
@@ -2615,7 +2615,7 @@ export const itemRecords = [
     price: 1850,
     netRate: 0.94,
     netPrice: 1739,
-    priceDate: "2024-10-30",
+    priceDate: "2025-10-30",
   },
   {
     projectId: "p30",
@@ -2629,7 +2629,7 @@ export const itemRecords = [
     price: 1750,
     netRate: 0.925,
     netPrice: 1619,
-    priceDate: "2024-12-20",
+    priceDate: "2025-12-20",
   },
   {
     projectId: "p34",
@@ -2657,7 +2657,7 @@ export const itemRecords = [
     price: 1680,
     netRate: 0.915,
     netPrice: 1537,
-    priceDate: "2024-03-12",
+    priceDate: "2025-03-12",
   },
   {
     projectId: "p101",
@@ -2671,7 +2671,7 @@ export const itemRecords = [
     price: 1650,
     netRate: 0.905,
     netPrice: 1493,
-    priceDate: "2024-01-28",
+    priceDate: "2025-01-28",
   },
   {
     projectId: "p103",
@@ -2685,7 +2685,7 @@ export const itemRecords = [
     price: 1700,
     netRate: 0.91,
     netPrice: 1547,
-    priceDate: "2024-05-30",
+    priceDate: "2025-05-30",
   },
   {
     projectId: "p105",
@@ -2699,7 +2699,7 @@ export const itemRecords = [
     price: 1620,
     netRate: 0.9,
     netPrice: 1458,
-    priceDate: "2024-09-22",
+    priceDate: "2025-09-22",
   },
 
   // ===== 塗装工事 (painting) - 下地処理 (間接費) =====
@@ -2715,7 +2715,7 @@ export const itemRecords = [
     price: 450000,
     netRate: 0.93,
     netPrice: 418500,
-    priceDate: "2024-01-05",
+    priceDate: "2025-01-05",
   },
   {
     projectId: "p3",
@@ -2729,7 +2729,7 @@ export const itemRecords = [
     price: 520000,
     netRate: 0.925,
     netPrice: 481000,
-    priceDate: "2024-02-01",
+    priceDate: "2025-02-01",
   },
   {
     projectId: "p8",
@@ -2743,7 +2743,7 @@ export const itemRecords = [
     price: 850000,
     netRate: 0.91,
     netPrice: 773500,
-    priceDate: "2024-04-05",
+    priceDate: "2025-04-05",
   },
   {
     projectId: "p9",
@@ -2757,7 +2757,7 @@ export const itemRecords = [
     price: 680000,
     netRate: 0.92,
     netPrice: 625600,
-    priceDate: "2024-04-15",
+    priceDate: "2025-04-15",
   },
   {
     projectId: "p19",
@@ -2771,7 +2771,7 @@ export const itemRecords = [
     price: 580000,
     netRate: 0.925,
     netPrice: 536500,
-    priceDate: "2024-08-20",
+    priceDate: "2025-08-20",
   },
   {
     projectId: "p25",
@@ -2785,7 +2785,7 @@ export const itemRecords = [
     price: 480000,
     netRate: 0.935,
     netPrice: 448800,
-    priceDate: "2024-10-28",
+    priceDate: "2025-10-28",
   },
   {
     projectId: "p30",
@@ -2799,7 +2799,7 @@ export const itemRecords = [
     price: 920000,
     netRate: 0.91,
     netPrice: 837200,
-    priceDate: "2024-12-18",
+    priceDate: "2025-12-18",
   },
   {
     projectId: "p31",
@@ -2827,7 +2827,7 @@ export const itemRecords = [
     price: 1450000,
     netRate: 0.895,
     netPrice: 1297750,
-    priceDate: "2024-03-10",
+    priceDate: "2025-03-10",
   },
   {
     projectId: "p101",
@@ -2841,7 +2841,7 @@ export const itemRecords = [
     price: 1850000,
     netRate: 0.885,
     netPrice: 1637250,
-    priceDate: "2024-01-25",
+    priceDate: "2025-01-25",
   },
   {
     projectId: "p103",
@@ -2855,7 +2855,7 @@ export const itemRecords = [
     price: 1680000,
     netRate: 0.89,
     netPrice: 1495200,
-    priceDate: "2024-05-28",
+    priceDate: "2025-05-28",
   },
   {
     projectId: "p105",
@@ -2869,7 +2869,7 @@ export const itemRecords = [
     price: 2150000,
     netRate: 0.88,
     netPrice: 1892000,
-    priceDate: "2024-09-20",
+    priceDate: "2025-09-20",
   },
 
   // ===== 追加プロジェクトのデータ =====
@@ -2886,7 +2886,7 @@ export const itemRecords = [
     price: 109500,
     netRate: 0.96,
     netPrice: 105120,
-    priceDate: "2024-02-18",
+    priceDate: "2025-02-18",
   },
   {
     projectId: "p107",
@@ -2900,7 +2900,7 @@ export const itemRecords = [
     price: 108000,
     netRate: 0.955,
     netPrice: 103140,
-    priceDate: "2024-04-15",
+    priceDate: "2025-04-15",
   },
   {
     projectId: "p108",
@@ -2914,7 +2914,7 @@ export const itemRecords = [
     price: 2920,
     netRate: 0.935,
     netPrice: 2730,
-    priceDate: "2024-06-10",
+    priceDate: "2025-06-10",
   },
   {
     projectId: "p109",
@@ -2928,7 +2928,7 @@ export const itemRecords = [
     price: 3100,
     netRate: 0.925,
     netPrice: 2868,
-    priceDate: "2024-08-15",
+    priceDate: "2025-08-15",
   },
   {
     projectId: "p110",
@@ -2942,7 +2942,7 @@ export const itemRecords = [
     price: 2850,
     netRate: 0.91,
     netPrice: 2594,
-    priceDate: "2024-10-10",
+    priceDate: "2025-10-10",
   },
 
   // 埼玉県プロジェクト
@@ -2958,7 +2958,7 @@ export const itemRecords = [
     price: 107500,
     netRate: 0.965,
     netPrice: 103738,
-    priceDate: "2024-03-15",
+    priceDate: "2025-03-15",
   },
   {
     projectId: "p112",
@@ -2972,7 +2972,7 @@ export const itemRecords = [
     price: 2850,
     netRate: 0.93,
     netPrice: 2651,
-    priceDate: "2024-05-20",
+    priceDate: "2025-05-20",
   },
   {
     projectId: "p113",
@@ -2986,7 +2986,7 @@ export const itemRecords = [
     price: 108500,
     netRate: 0.955,
     netPrice: 103618,
-    priceDate: "2024-07-10",
+    priceDate: "2025-07-10",
   },
   {
     projectId: "p114",
@@ -3000,7 +3000,7 @@ export const itemRecords = [
     price: 3150,
     netRate: 0.93,
     netPrice: 2930,
-    priceDate: "2024-09-08",
+    priceDate: "2025-09-08",
   },
   {
     projectId: "p115",
@@ -3014,7 +3014,7 @@ export const itemRecords = [
     price: 2900,
     netRate: 0.915,
     netPrice: 2654,
-    priceDate: "2024-11-15",
+    priceDate: "2025-11-15",
   },
 
   // 千葉県プロジェクト
@@ -3030,7 +3030,7 @@ export const itemRecords = [
     price: 110000,
     netRate: 0.95,
     netPrice: 104500,
-    priceDate: "2024-02-25",
+    priceDate: "2025-02-25",
   },
   {
     projectId: "p117",
@@ -3044,7 +3044,7 @@ export const itemRecords = [
     price: 108000,
     netRate: 0.96,
     netPrice: 103680,
-    priceDate: "2024-05-01",
+    priceDate: "2025-05-01",
   },
   {
     projectId: "p118",
@@ -3058,7 +3058,7 @@ export const itemRecords = [
     price: 2880,
     netRate: 0.935,
     netPrice: 2693,
-    priceDate: "2024-06-18",
+    priceDate: "2025-06-18",
   },
   {
     projectId: "p119",
@@ -3072,7 +3072,7 @@ export const itemRecords = [
     price: 1850,
     netRate: 0.94,
     netPrice: 1739,
-    priceDate: "2024-08-10",
+    priceDate: "2025-08-10",
   },
   {
     projectId: "p120",
@@ -3086,7 +3086,7 @@ export const itemRecords = [
     price: 116500,
     netRate: 0.94,
     netPrice: 109510,
-    priceDate: "2024-10-28",
+    priceDate: "2025-10-28",
   },
 
   // 追加: 2025年後半のプロジェクト
@@ -3400,7 +3400,7 @@ export const itemRecords = [
     price: 95000, // 最安値
     netRate: 0.95,
     netPrice: 90250,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
   {
     projectId: "p3",
@@ -3414,7 +3414,7 @@ export const itemRecords = [
     price: 125000, // 最高値
     netRate: 0.92,
     netPrice: 115000,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
   {
     projectId: "p4",
@@ -3428,7 +3428,7 @@ export const itemRecords = [
     price: 102000, // 中間値
     netRate: 0.96,
     netPrice: 97920,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
 
   // --- 2024-02-05: 異形棒鋼 SD295A D13 追加データ（既存: 109000円） ---
@@ -3444,7 +3444,7 @@ export const itemRecords = [
     price: 98000, // 最安値
     netRate: 0.94,
     netPrice: 92120,
-    priceDate: "2024-02-05",
+    priceDate: "2025-02-05",
   },
   {
     projectId: "p6",
@@ -3458,7 +3458,7 @@ export const itemRecords = [
     price: 118000, // 最高値
     netRate: 0.93,
     netPrice: 109740,
-    priceDate: "2024-02-05",
+    priceDate: "2025-02-05",
   },
 
   // --- 2024-03-15: 異形棒鋼 SD295A D13 追加データ（既存: 106000円） ---
@@ -3474,7 +3474,7 @@ export const itemRecords = [
     price: 88000, // 最安値
     netRate: 0.97,
     netPrice: 85360,
-    priceDate: "2024-03-15",
+    priceDate: "2025-03-15",
   },
   {
     projectId: "p8",
@@ -3488,7 +3488,7 @@ export const itemRecords = [
     price: 132000, // 最高値
     netRate: 0.9,
     netPrice: 118800,
-    priceDate: "2024-03-15",
+    priceDate: "2025-03-15",
   },
   {
     projectId: "p9",
@@ -3502,7 +3502,7 @@ export const itemRecords = [
     price: 115000, // 中間高め
     netRate: 0.94,
     netPrice: 108100,
-    priceDate: "2024-03-15",
+    priceDate: "2025-03-15",
   },
 
   // --- 2024-01-10: 外壁塗装 フッ素樹脂塗料 追加データ（既存: 3500円） ---
@@ -3518,7 +3518,7 @@ export const itemRecords = [
     price: 2800, // 最安値
     netRate: 0.95,
     netPrice: 2660,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
   {
     projectId: "p11",
@@ -3532,7 +3532,7 @@ export const itemRecords = [
     price: 4200, // 最高値
     netRate: 0.92,
     netPrice: 3864,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
 
   // --- 2024-01-10: 埋戻し 良質土 追加データ（既存: 4500円） ---
@@ -3548,7 +3548,7 @@ export const itemRecords = [
     price: 3800, // 最安値
     netRate: 0.94,
     netPrice: 3572,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
   {
     projectId: "p13",
@@ -3562,7 +3562,7 @@ export const itemRecords = [
     price: 5500, // 最高値
     netRate: 0.91,
     netPrice: 5005,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
   {
     projectId: "p14",
@@ -3576,7 +3576,7 @@ export const itemRecords = [
     price: 4200, // 中間値
     netRate: 0.93,
     netPrice: 3906,
-    priceDate: "2024-01-10",
+    priceDate: "2025-01-10",
   },
 
   // --- 2024-06-05: 型枠 スラブ 追加データ ---
@@ -3592,7 +3592,7 @@ export const itemRecords = [
     price: 3200, // 安め
     netRate: 0.95,
     netPrice: 3040,
-    priceDate: "2024-06-05",
+    priceDate: "2025-06-05",
   },
   {
     projectId: "p16",
@@ -3606,7 +3606,7 @@ export const itemRecords = [
     price: 4500, // 高め
     netRate: 0.92,
     netPrice: 4140,
-    priceDate: "2024-06-05",
+    priceDate: "2025-06-05",
   },
 
   // --- 2024-09-25: 生コンクリート Fc24 S15 追加データ ---
@@ -3622,7 +3622,7 @@ export const itemRecords = [
     price: 15500, // 安め
     netRate: 0.96,
     netPrice: 14880,
-    priceDate: "2024-09-25",
+    priceDate: "2025-09-25",
   },
   {
     projectId: "p18",
@@ -3636,7 +3636,7 @@ export const itemRecords = [
     price: 19800, // 高め
     netRate: 0.93,
     netPrice: 18414,
-    priceDate: "2024-09-25",
+    priceDate: "2025-09-25",
   },
   {
     projectId: "p19",
@@ -3650,6 +3650,6 @@ export const itemRecords = [
     price: 17200, // 中間
     netRate: 0.94,
     netPrice: 16168,
-    priceDate: "2024-09-25",
+    priceDate: "2025-09-25",
   },
 ];
