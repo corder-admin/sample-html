@@ -3384,4 +3384,272 @@ export const itemRecords = [
     netPrice: 2744,
     priceDate: "2025-10-28",
   },
+
+  // ===== 同一日付テストデータ（統計値検証用） =====
+
+  // --- 2024-01-10: 異形棒鋼 SD295A D13 追加データ（既存: 108000円） ---
+  {
+    projectId: "p2",
+    categoryKey: "rebar",
+    type: "direct",
+    company: "株式会社 B社",
+    item: "異形棒鋼 SD295A",
+    spec: "D13",
+    qty: 35.0,
+    unit: "t",
+    price: 95000, // 最安値
+    netRate: 0.95,
+    netPrice: 90250,
+    priceDate: "2024-01-10",
+  },
+  {
+    projectId: "p3",
+    categoryKey: "rebar",
+    type: "direct",
+    company: "株式会社 C社",
+    item: "異形棒鋼 SD295A",
+    spec: "D13",
+    qty: 48.0,
+    unit: "t",
+    price: 125000, // 最高値
+    netRate: 0.92,
+    netPrice: 115000,
+    priceDate: "2024-01-10",
+  },
+  {
+    projectId: "p4",
+    categoryKey: "rebar",
+    type: "direct",
+    company: "株式会社 M社",
+    item: "異形棒鋼 SD295A",
+    spec: "D13",
+    qty: 52.5,
+    unit: "t",
+    price: 102000, // 中間値
+    netRate: 0.96,
+    netPrice: 97920,
+    priceDate: "2024-01-10",
+  },
+
+  // --- 2024-02-05: 異形棒鋼 SD295A D13 追加データ（既存: 109000円） ---
+  {
+    projectId: "p5",
+    categoryKey: "rebar",
+    type: "direct",
+    company: "株式会社 B社",
+    item: "異形棒鋼 SD295A",
+    spec: "D13",
+    qty: 40.0,
+    unit: "t",
+    price: 98000, // 最安値
+    netRate: 0.94,
+    netPrice: 92120,
+    priceDate: "2024-02-05",
+  },
+  {
+    projectId: "p6",
+    categoryKey: "rebar",
+    type: "direct",
+    company: "株式会社 N社",
+    item: "異形棒鋼 SD295A",
+    spec: "D13",
+    qty: 60.0,
+    unit: "t",
+    price: 118000, // 最高値
+    netRate: 0.93,
+    netPrice: 109740,
+    priceDate: "2024-02-05",
+  },
+
+  // --- 2024-03-15: 異形棒鋼 SD295A D13 追加データ（既存: 106000円） ---
+  {
+    projectId: "p7",
+    categoryKey: "rebar",
+    type: "direct",
+    company: "株式会社 P社",
+    item: "異形棒鋼 SD295A",
+    spec: "D13",
+    qty: 45.0,
+    unit: "t",
+    price: 88000, // 最安値
+    netRate: 0.97,
+    netPrice: 85360,
+    priceDate: "2024-03-15",
+  },
+  {
+    projectId: "p8",
+    categoryKey: "rebar",
+    type: "direct",
+    company: "株式会社 Q社",
+    item: "異形棒鋼 SD295A",
+    spec: "D13",
+    qty: 38.0,
+    unit: "t",
+    price: 132000, // 最高値
+    netRate: 0.9,
+    netPrice: 118800,
+    priceDate: "2024-03-15",
+  },
+  {
+    projectId: "p9",
+    categoryKey: "rebar",
+    type: "direct",
+    company: "株式会社 R社",
+    item: "異形棒鋼 SD295A",
+    spec: "D13",
+    qty: 55.0,
+    unit: "t",
+    price: 115000, // 中間高め
+    netRate: 0.94,
+    netPrice: 108100,
+    priceDate: "2024-03-15",
+  },
+
+  // --- 2024-01-10: 外壁塗装 フッ素樹脂塗料 追加データ（既存: 3500円） ---
+  {
+    projectId: "p10",
+    categoryKey: "painting",
+    type: "direct",
+    company: "株式会社 S社",
+    item: "外壁塗装",
+    spec: "フッ素樹脂塗料",
+    qty: 4800,
+    unit: "㎡",
+    price: 2800, // 最安値
+    netRate: 0.95,
+    netPrice: 2660,
+    priceDate: "2024-01-10",
+  },
+  {
+    projectId: "p11",
+    categoryKey: "painting",
+    type: "direct",
+    company: "株式会社 T社",
+    item: "外壁塗装",
+    spec: "フッ素樹脂塗料",
+    qty: 3500,
+    unit: "㎡",
+    price: 4200, // 最高値
+    netRate: 0.92,
+    netPrice: 3864,
+    priceDate: "2024-01-10",
+  },
+
+  // --- 2024-01-10: 埋戻し 良質土 追加データ（既存: 4500円） ---
+  {
+    projectId: "p12",
+    categoryKey: "earthwork",
+    type: "direct",
+    company: "株式会社 U社",
+    item: "埋戻し",
+    spec: "良質土",
+    qty: 1500,
+    unit: "㎥",
+    price: 3800, // 最安値
+    netRate: 0.94,
+    netPrice: 3572,
+    priceDate: "2024-01-10",
+  },
+  {
+    projectId: "p13",
+    categoryKey: "earthwork",
+    type: "direct",
+    company: "株式会社 V社",
+    item: "埋戻し",
+    spec: "良質土",
+    qty: 900,
+    unit: "㎥",
+    price: 5500, // 最高値
+    netRate: 0.91,
+    netPrice: 5005,
+    priceDate: "2024-01-10",
+  },
+  {
+    projectId: "p14",
+    categoryKey: "earthwork",
+    type: "direct",
+    company: "株式会社 W社",
+    item: "埋戻し",
+    spec: "良質土",
+    qty: 1100,
+    unit: "㎥",
+    price: 4200, // 中間値
+    netRate: 0.93,
+    netPrice: 3906,
+    priceDate: "2024-01-10",
+  },
+
+  // --- 2024-06-05: 型枠 スラブ 追加データ ---
+  {
+    projectId: "p15",
+    categoryKey: "formwork",
+    type: "direct",
+    company: "株式会社 X社",
+    item: "型枠",
+    spec: "スラブ",
+    qty: 2200,
+    unit: "㎡",
+    price: 3200, // 安め
+    netRate: 0.95,
+    netPrice: 3040,
+    priceDate: "2024-06-05",
+  },
+  {
+    projectId: "p16",
+    categoryKey: "formwork",
+    type: "direct",
+    company: "株式会社 Y社",
+    item: "型枠",
+    spec: "スラブ",
+    qty: 1800,
+    unit: "㎡",
+    price: 4500, // 高め
+    netRate: 0.92,
+    netPrice: 4140,
+    priceDate: "2024-06-05",
+  },
+
+  // --- 2024-09-25: 生コンクリート Fc24 S15 追加データ ---
+  {
+    projectId: "p17",
+    categoryKey: "concrete",
+    type: "direct",
+    company: "株式会社 Z社",
+    item: "生コンクリート",
+    spec: "Fc24 S15",
+    qty: 800,
+    unit: "㎥",
+    price: 15500, // 安め
+    netRate: 0.96,
+    netPrice: 14880,
+    priceDate: "2024-09-25",
+  },
+  {
+    projectId: "p18",
+    categoryKey: "concrete",
+    type: "direct",
+    company: "株式会社 AA社",
+    item: "生コンクリート",
+    spec: "Fc24 S15",
+    qty: 650,
+    unit: "㎥",
+    price: 19800, // 高め
+    netRate: 0.93,
+    netPrice: 18414,
+    priceDate: "2024-09-25",
+  },
+  {
+    projectId: "p19",
+    categoryKey: "concrete",
+    type: "direct",
+    company: "株式会社 BB社",
+    item: "生コンクリート",
+    spec: "Fc24 S15",
+    qty: 720,
+    unit: "㎥",
+    price: 17200, // 中間
+    netRate: 0.94,
+    netPrice: 16168,
+    priceDate: "2024-09-25",
+  },
 ];
