@@ -275,6 +275,11 @@ function renderGroupCard(g, idx) {
                     </h6>
                     <div class="timeline-container">
                         ${records
+                          .sort((a, b) =>
+                            a.projectPeriodStart.localeCompare(
+                              b.projectPeriodStart
+                            )
+                          )
                           .map((r) => {
                             const [year, month] =
                               r.projectPeriodStart.split("-");
