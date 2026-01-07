@@ -102,19 +102,20 @@ body {
   gap: 0.375rem;
 }
 /* 協力会社セクション開閉 */
-.vendor-section-header {
+.cursor-pointer {
   cursor: pointer;
-  border-radius: 0.375rem 0.375rem 0 0;
-  transition: background-color 0.15s;
 }
-.vendor-section-header:hover {
-  background-color: #e9ecef !important;
+
+.rotate-90 {
+  transform: rotate(90deg);
 }
-.vendor-chevron {
+
+.transition-transform {
   transition: transform 0.2s;
 }
-.vendor-chevron.rotated {
-  transform: rotate(90deg);
+
+.vendor-chevron {
+  transition: transform 0.2s;
 }
 .transition-collapse {
   transition: all 0.3s ease;
@@ -140,12 +141,16 @@ body {
   color: #dc3545;
 }
 
-@media (max-width: 576px) {
-  .company-prices {
-    padding-top: 0.25rem;
-    border-top: 1px dashed #dee2e6;
-  }
+/* 会社名: 2行まで表示、それ以上は省略 */
+.company-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-width: 0;
+  word-break: break-all;
 }
+
 
 /* タイムライン表示 */
 .timeline-container {

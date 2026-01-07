@@ -195,9 +195,9 @@ function renderGroupCard(g, idx) {
                     </div>
                 </div>
 
-                <div class="vendor-section border rounded mb-3">
-                    <div class="vendor-section-header d-flex align-items-center gap-2 p-2 bg-light" onclick="event.stopPropagation(); toggleVendorSection(${idx})">
-                        <svg class="vendor-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <div class="bg-white rounded-3 border overflow-hidden mb-3">
+                    <div class="p-2 d-flex align-items-center gap-2 cursor-pointer border-bottom" onclick="event.stopPropagation(); toggleVendorSection(${idx})">
+                        <svg class="vendor-chevron transition-transform" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -206,29 +206,20 @@ function renderGroupCard(g, idx) {
                         <span class="small fw-semibold text-secondary">業者別 NET単価レンジ（/${g.unit}）</span>
                         <span class="badge bg-secondary rounded-pill small ms-auto">${companyStats.length}社</span>
                     </div>
-                    <div class="vendor-section-content transition-collapse collapse-hidden" id="vendorSection-${idx}">
-                        <div class="d-flex flex-column gap-2 p-2 p-md-3">
+                    <div class="vendor-section-content transition-collapse collapse-hidden p-2 p-md-3" id="vendorSection-${idx}">
+                        <div class="d-flex flex-column gap-2">
                             ${companyStats
                               .map(
                                 (stat) => `
-                            <div class="company-summary-item d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 p-2 bg-light rounded border">
-                                <div class="company-header d-flex align-items-center gap-2 w-100 w-sm-auto">
-                                    <span class="fw-semibold small text-dark">${stat.name}</span>
-                                    <span class="badge bg-secondary rounded-pill small">${stat.count}件</span>
+                            <div class="company-summary-item py-1 px-2 bg-light rounded border">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fw-semibold small text-dark company-name">${stat.name}</span>
+                                    <span class="badge bg-secondary rounded-pill small flex-shrink-0">${stat.count}件</span>
                                 </div>
-                                <div class="company-prices d-flex align-items-center gap-2 gap-sm-3 ms-0 ms-sm-auto w-100 w-sm-auto flex-wrap">
-                                    <div class="d-flex align-items-baseline gap-1">
-                                        <span class="small text-secondary">最小</span>
-                                        <span class="small fw-semibold tabular-nums company-price-value min">¥${fmt(stat.minPrice)}</span>
-                                    </div>
-                                    <div class="d-flex align-items-baseline gap-1">
-                                        <span class="small text-secondary">平均</span>
-                                        <span class="small fw-semibold tabular-nums text-dark">¥${fmt(stat.avgPrice)}</span>
-                                    </div>
-                                    <div class="d-flex align-items-baseline gap-1">
-                                        <span class="small text-secondary">最大</span>
-                                        <span class="small fw-semibold tabular-nums company-price-value max">¥${fmt(stat.maxPrice)}</span>
-                                    </div>
+                                <div class="d-flex align-items-center gap-3 mt-1">
+                                    <span class="small"><span class="text-secondary">最小</span> <span class="fw-semibold tabular-nums company-price-value min">¥${fmt(stat.minPrice)}</span></span>
+                                    <span class="small"><span class="text-secondary">平均</span> <span class="fw-semibold tabular-nums text-dark">¥${fmt(stat.avgPrice)}</span></span>
+                                    <span class="small"><span class="text-secondary">最大</span> <span class="fw-semibold tabular-nums company-price-value max">¥${fmt(stat.maxPrice)}</span></span>
                                 </div>
                             </div>`
                               )
@@ -376,11 +367,11 @@ export function toggleVendorSection(idx) {
   if (section.classList.contains("collapse-hidden")) {
     section.classList.remove("collapse-hidden");
     section.classList.add("collapse-shown");
-    chevron.classList.add("rotated");
+    chevron.classList.add("rotate-90");
   } else {
     section.classList.remove("collapse-shown");
     section.classList.add("collapse-hidden");
-    chevron.classList.remove("rotated");
+    chevron.classList.remove("rotate-90");
   }
 }
 
