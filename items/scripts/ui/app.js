@@ -3,25 +3,21 @@
  * UI操作とビジネスロジックを統合
  */
 
-import { projects } from "../../data/projects.js";
+import { catNames, typeBadges, typeNames } from "../../data/constants.js";
 import { itemRecords } from "../../data/itemRecords.js";
-import { catNames, typeNames, typeBadges } from "../../data/constants.js";
-import { fmt, getCompanyColor } from "../utils/utils.js";
+import { projects } from "../../data/projects.js";
+import { buildChartOptions } from "../core/chartData.js";
 import {
-  flattenData,
-  groupByItem,
-  groupByCompany,
   calculateCompanyStats,
+  flattenData,
+  groupByCompany,
+  groupByItem,
 } from "../core/dataProcessor.js";
 import {
   applyFilterCriteria,
   buildActiveFilterLabels,
 } from "../core/filterLogic.js";
-import {
-  buildChartDatasets,
-  buildPeriodLabels,
-  buildChartOptions,
-} from "../core/chartData.js";
+import { formatNumber } from "../utils/utils.js";
 
 // アプリケーション状態
 let allItems = [];
@@ -46,9 +42,7 @@ function getFilterCriteria() {
   const projectKeyword = document
     .getElementById("filterProject")
     .value.toLowerCase();
-  const itemKeyword = document
-    .getElementById("filterItem")
-    .value.toLowerCase();
+  const itemKeyword = document.getElementById("filterItem").value.toLowerCase();
   const category = document.getElementById("filterCategory").value;
   const usage = document.getElementById("filterUsage").value;
   const structures = Array.from(
@@ -191,9 +185,9 @@ function renderGroupCard(g, idx) {
                     </div>
                     <div class="text-end">
                         <small class="text-muted d-block mb-1">NET単価レンジ</small>
-                        <div class="fw-bold text-primary fs-5 tabular-nums">¥${fmt(
+                        <div class="fw-bold text-primary fs-5 tabular-nums">¥${formatNumber(
                           g.minNetPrice
-                        )} ~ ¥${fmt(g.maxNetPrice)}</div>
+                        )} ~ ¥${formatNumber(g.maxNetPrice)}</div>
                     </div>
                 </div>
 
@@ -205,8 +199,12 @@ function renderGroupCard(g, idx) {
                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                         </svg>
-                        <span class="small fw-semibold text-secondary">業者別 NET単価レンジ（/${g.unit}）</span>
-                        <span class="badge bg-secondary rounded-pill small ms-auto">${companyStats.length}社</span>
+                        <span class="small fw-semibold text-secondary">業者別 NET単価レンジ（/${
+                          g.unit
+                        }）</span>
+                        <span class="badge bg-secondary rounded-pill small ms-auto">${
+                          companyStats.length
+                        }社</span>
                     </div>
                     <div class="vendor-section-content transition-collapse collapse-hidden p-2 p-md-3" id="vendorSection-${idx}">
                         <div class="d-flex flex-column gap-2">
@@ -215,13 +213,23 @@ function renderGroupCard(g, idx) {
                                 (stat) => `
                             <div class="company-summary-item py-1 px-2 bg-light rounded border">
                                 <div class="d-flex align-items-center gap-2">
-                                    <span class="fw-semibold small text-dark company-name">${stat.name}</span>
-                                    <span class="badge bg-secondary rounded-pill small flex-shrink-0">${stat.count}件</span>
+                                    <span class="fw-semibold small text-dark company-name">${
+                                      stat.name
+                                    }</span>
+                                    <span class="badge bg-secondary rounded-pill small flex-shrink-0">${
+                                      stat.count
+                                    }件</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-3 mt-1">
-                                    <span class="small"><span class="text-secondary">最小</span> <span class="fw-semibold tabular-nums company-price-value min">¥${fmt(stat.minPrice)}</span></span>
-                                    <span class="small"><span class="text-secondary">平均</span> <span class="fw-semibold tabular-nums text-dark">¥${fmt(stat.avgPrice)}</span></span>
-                                    <span class="small"><span class="text-secondary">最大</span> <span class="fw-semibold tabular-nums company-price-value max">¥${fmt(stat.maxPrice)}</span></span>
+                                    <span class="small"><span class="text-secondary">最小</span> <span class="fw-semibold tabular-nums company-price-value min">¥${formatNumber(
+                                      stat.minPrice
+                                    )}</span></span>
+                                    <span class="small"><span class="text-secondary">平均</span> <span class="fw-semibold tabular-nums text-dark">¥${formatNumber(
+                                      stat.avgPrice
+                                    )}</span></span>
+                                    <span class="small"><span class="text-secondary">最大</span> <span class="fw-semibold tabular-nums company-price-value max">¥${formatNumber(
+                                      stat.maxPrice
+                                    )}</span></span>
                                 </div>
                             </div>`
                               )
@@ -259,9 +267,8 @@ function renderGroupCard(g, idx) {
                     <div class="timeline-container">
                         ${records
                           .map((r) => {
-                            const [year, month] = r.projectPeriodStart.split(
-                              "-"
-                            );
+                            const [year, month] =
+                              r.projectPeriodStart.split("-");
                             return `
                             <div class="timeline-item">
                                 <div class="timeline-date">
@@ -281,7 +288,7 @@ function renderGroupCard(g, idx) {
                                                 <span class="badge bg-secondary">${
                                                   r.projectStructure
                                                 }</span>
-                                                <span class="badge bg-light text-dark">${fmt(
+                                                <span class="badge bg-light text-dark">${formatNumber(
                                                   r.projectArea
                                                 )} ㎡</span>
                                             </div>
@@ -290,7 +297,7 @@ function renderGroupCard(g, idx) {
                                             }</div>
                                         </div>
                                         <div class="price-display">
-                                            <div class="price-main tabular-nums">¥${fmt(
+                                            <div class="price-main tabular-nums">¥${formatNumber(
                                               r.netPrice
                                             )}</div>
                                             <div class="price-sub">NET率 ${r.netRate.toFixed(
@@ -307,25 +314,25 @@ function renderGroupCard(g, idx) {
                                         </div>
                                         <div class="detail-item">
                                             <div class="detail-label">数量</div>
-                                            <div class="detail-value tabular-nums">${fmt(
+                                            <div class="detail-value tabular-nums">${formatNumber(
                                               r.qty
                                             )} ${r.unit}</div>
                                         </div>
                                         <div class="detail-item">
                                             <div class="detail-label">見積単価</div>
-                                            <div class="detail-value tabular-nums">¥${fmt(
+                                            <div class="detail-value tabular-nums">¥${formatNumber(
                                               r.price
                                             )}</div>
                                         </div>
                                         <div class="detail-item">
                                             <div class="detail-label">見積金額</div>
-                                            <div class="detail-value tabular-nums">¥${fmt(
+                                            <div class="detail-value tabular-nums">¥${formatNumber(
                                               r.amount
                                             )}</div>
                                         </div>
                                         <div class="detail-item">
                                             <div class="detail-label">NET金額</div>
-                                            <div class="detail-value tabular-nums highlight">¥${fmt(
+                                            <div class="detail-value tabular-nums highlight">¥${formatNumber(
                                               Math.round(r.netAmount)
                                             )}</div>
                                         </div>
@@ -458,12 +465,18 @@ function updateChartWithFilters() {
   // 統計情報を更新
   const stats = calculateStats(records);
   document.getElementById("chartRecordCount").textContent = `${stats.count}件`;
-  document.getElementById("chartMinPrice").textContent = `¥${fmt(stats.min)}`;
-  document.getElementById("chartAvgPrice").textContent = `¥${fmt(stats.avg)}`;
-  document.getElementById("chartMedianPrice").textContent = `¥${fmt(
+  document.getElementById("chartMinPrice").textContent = `¥${formatNumber(
+    stats.min
+  )}`;
+  document.getElementById("chartAvgPrice").textContent = `¥${formatNumber(
+    stats.avg
+  )}`;
+  document.getElementById("chartMedianPrice").textContent = `¥${formatNumber(
     stats.median
   )}`;
-  document.getElementById("chartMaxPrice").textContent = `¥${fmt(stats.max)}`;
+  document.getElementById("chartMaxPrice").textContent = `¥${formatNumber(
+    stats.max
+  )}`;
 
   // テーブルデータ更新
   const tbody = document.querySelector("#chartDataTable tbody");
@@ -474,7 +487,7 @@ function updateChartWithFilters() {
             <td class="text-center">${r.projectPeriodStart}</td>
             <td>${r.projectName}</td>
             <td>${r.company}</td>
-            <td class="text-end tabular-nums">¥${fmt(r.netPrice)}</td>
+            <td class="text-end tabular-nums">¥${formatNumber(r.netPrice)}</td>
             <td class="text-end tabular-nums">${r.netRate.toFixed(3)}</td>
         </tr>
     `

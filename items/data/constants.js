@@ -21,6 +21,9 @@ export const typeBadges = {
   indirect: "warning",
 };
 
+// デフォルトの会社カラー（未登録会社用）
+export const DEFAULT_COMPANY_COLOR = "#6c757d";
+
 // 協力会社カラーマッピング
 export const companyColors = {
   A社: "#0d6efd",

@@ -263,7 +263,9 @@
             <div class="d-flex align-items-center gap-3 flex-wrap">
               <!-- Date Range Filter -->
               <div class="d-flex align-items-center gap-1">
-                <label class="form-label small mb-0 text-muted fw-semibold">期間:</label>
+                <label class="form-label small mb-0 text-muted fw-semibold"
+                  >期間:</label
+                >
                 <div class="input-group input-group-sm" style="width: auto">
                   <input
                     type="date"
@@ -280,8 +282,14 @@
               </div>
               <!-- Time Unit Filter -->
               <div class="d-flex align-items-center gap-1">
-                <label class="form-label small mb-0 text-muted fw-semibold">時間軸:</label>
-                <select class="form-select form-select-sm" style="width: auto" id="chartTimeUnit">
+                <label class="form-label small mb-0 text-muted fw-semibold"
+                  >時間軸:</label
+                >
+                <select
+                  class="form-select form-select-sm"
+                  style="width: auto"
+                  id="chartTimeUnit"
+                >
                   <option value="yearly">年次</option>
                   <option value="monthly" selected>月次</option>
                   <option value="weekly">週次</option>
@@ -290,8 +298,14 @@
               </div>
               <!-- Display Mode Filter -->
               <div class="d-flex align-items-center gap-1">
-                <label class="form-label small mb-0 text-muted fw-semibold">表示:</label>
-                <select class="form-select form-select-sm" style="width: auto" id="chartDisplayMode">
+                <label class="form-label small mb-0 text-muted fw-semibold"
+                  >表示:</label
+                >
+                <select
+                  class="form-select form-select-sm"
+                  style="width: auto"
+                  id="chartDisplayMode"
+                >
                   <option value="line" selected>折れ線</option>
                   <option value="table">テーブル</option>
                 </select>
@@ -305,16 +319,28 @@
                 クリア
               </button>
               <!-- KPI Summary (right side) -->
-              <div class="d-flex gap-2 gap-md-3 align-items-center flex-wrap ms-auto">
+              <div
+                class="d-flex gap-2 gap-md-3 align-items-center flex-wrap ms-auto"
+              >
                 <span class="badge bg-info" id="chartRecordCount">0件</span>
                 <small class="text-muted">最小:</small>
-                <span class="fw-semibold text-success small" id="chartMinPrice">-</span>
+                <span class="fw-semibold text-success small" id="chartMinPrice"
+                  >-</span
+                >
                 <small class="text-muted">平均:</small>
-                <span class="fw-semibold text-primary small" id="chartAvgPrice">-</span>
+                <span class="fw-semibold text-primary small" id="chartAvgPrice"
+                  >-</span
+                >
                 <small class="text-muted">中央値:</small>
-                <span class="fw-semibold text-warning small" id="chartMedianPrice">-</span>
+                <span
+                  class="fw-semibold text-warning small"
+                  id="chartMedianPrice"
+                  >-</span
+                >
                 <small class="text-muted">最大:</small>
-                <span class="fw-semibold text-danger small" id="chartMaxPrice">-</span>
+                <span class="fw-semibold text-danger small" id="chartMaxPrice"
+                  >-</span
+                >
               </div>
             </div>
           </div>
@@ -323,9 +349,20 @@
           <div class="modal-body p-3 bg-body-secondary overflow-auto">
             <!-- Chart Section -->
             <div class="card shadow-sm mb-3" id="chartSection">
-              <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold text-secondary d-flex align-items-center gap-2">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <div
+                class="card-header bg-white py-2 d-flex justify-content-between align-items-center"
+              >
+                <h6
+                  class="mb-0 fw-bold text-secondary d-flex align-items-center gap-2"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                   </svg>
                   NET単価推移グラフ
@@ -344,9 +381,20 @@
 
             <!-- Table Section -->
             <div class="card shadow-sm" id="tableSection">
-              <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold text-secondary d-flex align-items-center gap-2">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <div
+                class="card-header bg-white py-2 d-flex justify-content-between align-items-center"
+              >
+                <h6
+                  class="mb-0 fw-bold text-secondary d-flex align-items-center gap-2"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
                     <rect x="3" y="3" width="18" height="18" rx="2" />
                     <path d="M3 9h18" />
                     <path d="M9 21V9" />
@@ -356,7 +404,10 @@
               </div>
               <div class="card-body p-0">
                 <div class="table-responsive">
-                  <table class="table table-sm table-bordered table-hover mb-0" id="chartDataTable">
+                  <table
+                    class="table table-sm table-bordered table-hover mb-0"
+                    id="chartDataTable"
+                  >
                     <thead class="table-light">
                       <tr>
                         <th class="text-center">見積時期</th>
