@@ -530,7 +530,7 @@ function updateChartWithFilters() {
     isMobile,
     isSmallMobile,
     currentChartGroup.unit,
-    fmt
+    formatNumber
   );
 
   chartInstance = new Chart(ctx, {

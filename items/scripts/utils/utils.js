@@ -65,3 +65,25 @@ export const getCompanyColor = (company) => {
   const name = normalizeCompanyName(company);
   return companyColors[name] || DEFAULT_COMPANY_COLOR;
 };
+
+// ========================================
+// 統計計算関数
+// ========================================
+
+/**
+ * 数値配列の統計情報を計算
+ * @param {number[]} values - 数値の配列
+ * @returns {{ min: number, max: number, avg: number, sum: number }} 統計情報
+ */
+export const calculateArrayStats = (values) => {
+  if (!values || values.length === 0) {
+    return { min: 0, max: 0, avg: 0, sum: 0 };
+  }
+  const sum = values.reduce((a, b) => a + b, 0);
+  return {
+    min: Math.min(...values),
+    max: Math.max(...values),
+    avg: Math.round(sum / values.length),
+    sum,
+  };
+};
