@@ -3,31 +3,33 @@
  * UI操作とビジネスロジックを統合
  */
 
-import { projects } from "../../data/projects.js";
+import { catNames, typeBadges, typeNames } from "../../data/constants.js";
 import { itemRecords } from "../../data/itemRecords.js";
-import { catNames, typeNames, typeBadges } from "../../data/constants.js";
-import { fmt, getCompanyColor } from "../utils/utils.js";
+import { projects } from "../../data/projects.js";
 import {
-  flattenData,
-  groupByItem,
-  groupByCompany,
+  buildChartOptions,
+  buildPeriodStatistics,
+  buildStatisticsDatasets,
+} from "../core/chartData.js";
+import {
   calculateCompanyStats,
+  flattenData,
+  groupByCompany,
+  groupByItem,
 } from "../core/dataProcessor.js";
 import {
   applyFilterCriteria,
   buildActiveFilterLabels,
 } from "../core/filterLogic.js";
-import {
-  buildChartDatasets,
-  buildPeriodLabels,
-  buildChartOptions,
-} from "../core/chartData.js";
+import { formatNumber } from "../utils/utils.js";
 
 // アプリケーション状態
 let allItems = [];
 let groupedItems = [];
 let filteredGroups = [];
 let chartInstance = null;
+let currentChartGroup = null;
+let currentChartRecords = [];
 
 /**
  * データを初期化
@@ -44,9 +46,7 @@ function getFilterCriteria() {
   const projectKeyword = document
     .getElementById("filterProject")
     .value.toLowerCase();
-  const itemKeyword = document
-    .getElementById("filterItem")
-    .value.toLowerCase();
+  const itemKeyword = document.getElementById("filterItem").value.toLowerCase();
   const category = document.getElementById("filterCategory").value;
   const usage = document.getElementById("filterUsage").value;
   const structures = Array.from(
@@ -100,10 +100,12 @@ export function clearFilters() {
   document.getElementById("filterCompany").value = "";
   document.getElementById("filterDateFrom").value = "";
   document.getElementById("filterDateTo").value = "";
-  filteredGroups = groupedItems.map((g) => ({
-    ...g,
-    filteredRecords: g.records,
-  }));
+  filteredGroups = groupedItems
+    .map((g) => ({
+      ...g,
+      filteredRecords: g.records,
+    }))
+    .sort((a, b) => b.filteredRecords.length - a.filteredRecords.length);
   renderResults();
   renderActiveFilters();
 }
@@ -185,70 +187,80 @@ function renderGroupCard(g, idx) {
                                   `<span class="badge bg-${typeBadges[t]} small">${typeNames[t]}</span>`
                               )
                               .join("")}
+                            <span class="badge bg-info small">${
+                              records.length
+                            }件</span>
                         </div>
                     </div>
                     <div class="text-end">
                         <small class="text-muted d-block mb-1">NET単価レンジ</small>
-                        <div class="fw-bold text-primary fs-5 tabular-nums">¥${fmt(
+                        <div class="fw-bold text-primary fs-5 tabular-nums">¥${formatNumber(
                           g.minNetPrice
-                        )} ~ ¥${fmt(g.maxNetPrice)}</div>
+                        )} ~ ¥${formatNumber(g.maxNetPrice)}</div>
                     </div>
                 </div>
 
-                <div class="list-group list-group-flush mb-3 border rounded">
-                    <div class="list-group-item">
-                        <div class="summary-section-title">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                            協力会社別 NET単価レンジ（/${g.unit}）
-                        </div>
-                        <div class="list-group list-group-flush">
+                <div class="bg-white rounded-3 border overflow-hidden mb-3">
+                    <div class="p-2 d-flex align-items-center gap-2 cursor-pointer border-bottom" onclick="event.stopPropagation(); toggleVendorSection(${idx})">
+                        <svg class="vendor-chevron transition-transform" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                        </svg>
+                        <span class="small fw-semibold text-secondary">業者別 NET単価レンジ（/${
+                          g.unit
+                        }）</span>
+                        <span class="badge bg-secondary rounded-pill small ms-auto">${
+                          companyStats.length
+                        }社</span>
+                    </div>
+                    <div class="vendor-section-content transition-collapse collapse-hidden p-2 p-md-3" id="vendorSection-${idx}">
+                        <div class="d-flex flex-column gap-2">
                             ${companyStats
                               .map(
                                 (stat) => `
-                                <div class="list-group-item bg-light company-summary-item">
-                                    <div class="company-header">
-                                        <span class="company-name">${stat.name}</span>
-                                        <span class="company-count">${stat.count}件</span>
-                                    </div>
-                                    <div class="company-prices">
-                                        <div class="company-price-item">
-                                            <span class="company-price-label">最安</span>
-                                            <span class="company-price-value min">¥${fmt(
-                                              stat.minPrice
-                                            )}</span>
-                                        </div>
-                                        <div class="company-price-item">
-                                            <span class="company-price-label">平均</span>
-                                            <span class="company-price-value avg">¥${fmt(
-                                              stat.avgPrice
-                                            )}</span>
-                                        </div>
-                                        <div class="company-price-item">
-                                            <span class="company-price-label">最高</span>
-                                            <span class="company-price-value max">¥${fmt(
-                                              stat.maxPrice
-                                            )}</span>
-                                        </div>
-                                    </div>
-                                </div>`
+                            <div class="company-summary-item py-1 px-2 bg-light rounded border">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fw-semibold small text-dark company-name">${
+                                      stat.name
+                                    }</span>
+                                    <span class="badge bg-secondary rounded-pill small flex-shrink-0">${
+                                      stat.count
+                                    }件</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3 mt-1">
+                                    <span class="small"><span class="text-secondary">最小</span> <span class="fw-semibold tabular-nums company-price-value min">¥${formatNumber(
+                                      stat.minPrice
+                                    )}</span></span>
+                                    <span class="small"><span class="text-secondary">平均</span> <span class="fw-semibold tabular-nums text-dark">¥${formatNumber(
+                                      stat.avgPrice
+                                    )}</span></span>
+                                    <span class="small"><span class="text-secondary">最大</span> <span class="fw-semibold tabular-nums company-price-value max">¥${formatNumber(
+                                      stat.maxPrice
+                                    )}</span></span>
+                                </div>
+                            </div>`
                               )
                               .join("")}
                         </div>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-center gap-3 align-items-center flex-wrap">
-                    <small class="text-muted">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-3px">
-                            <polyline points="6 9 12 15 18 9"/>
+                <div class="d-flex justify-content-center gap-2 align-items-center flex-wrap">
+                    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
                         </svg>
-                        クリックして実績詳細を表示
-                    </small>
-                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); showChart(${idx})">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px">
+                        <span class="d-none d-sm-inline">時系列一覧</span>
+                        <span class="d-inline d-sm-none">時系列</span>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" onclick="event.stopPropagation(); showChart(${idx})">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
                         </svg>
-                        NET単価実績チャート
+                        <span class="d-none d-sm-inline">NET単価推移</span>
+                        <span class="d-inline d-sm-none">推移</span>
                     </button>
                 </div>
             </div>
@@ -263,10 +275,14 @@ function renderGroupCard(g, idx) {
                     </h6>
                     <div class="timeline-container">
                         ${records
+                          .sort((a, b) =>
+                            a.projectPeriodStart.localeCompare(
+                              b.projectPeriodStart
+                            )
+                          )
                           .map((r) => {
-                            const [year, month] = r.projectPeriodStart.split(
-                              "-"
-                            );
+                            const [year, month] =
+                              r.projectPeriodStart.split("-");
                             return `
                             <div class="timeline-item">
                                 <div class="timeline-date">
@@ -286,7 +302,7 @@ function renderGroupCard(g, idx) {
                                                 <span class="badge bg-secondary">${
                                                   r.projectStructure
                                                 }</span>
-                                                <span class="badge bg-light text-dark">${fmt(
+                                                <span class="badge bg-light text-dark">${formatNumber(
                                                   r.projectArea
                                                 )} ㎡</span>
                                             </div>
@@ -295,7 +311,7 @@ function renderGroupCard(g, idx) {
                                             }</div>
                                         </div>
                                         <div class="price-display">
-                                            <div class="price-main tabular-nums">¥${fmt(
+                                            <div class="price-main tabular-nums">¥${formatNumber(
                                               r.netPrice
                                             )}</div>
                                             <div class="price-sub">NET率 ${r.netRate.toFixed(
@@ -312,25 +328,25 @@ function renderGroupCard(g, idx) {
                                         </div>
                                         <div class="detail-item">
                                             <div class="detail-label">数量</div>
-                                            <div class="detail-value tabular-nums">${fmt(
+                                            <div class="detail-value tabular-nums">${formatNumber(
                                               r.qty
                                             )} ${r.unit}</div>
                                         </div>
                                         <div class="detail-item">
                                             <div class="detail-label">見積単価</div>
-                                            <div class="detail-value tabular-nums">¥${fmt(
+                                            <div class="detail-value tabular-nums">¥${formatNumber(
                                               r.price
                                             )}</div>
                                         </div>
                                         <div class="detail-item">
                                             <div class="detail-label">見積金額</div>
-                                            <div class="detail-value tabular-nums">¥${fmt(
+                                            <div class="detail-value tabular-nums">¥${formatNumber(
                                               r.amount
                                             )}</div>
                                         </div>
                                         <div class="detail-item">
                                             <div class="detail-label">NET金額</div>
-                                            <div class="detail-value tabular-nums highlight">¥${fmt(
+                                            <div class="detail-value tabular-nums highlight">¥${formatNumber(
                                               Math.round(r.netAmount)
                                             )}</div>
                                         </div>
@@ -364,70 +380,397 @@ export function toggleGroup(idx) {
 }
 
 /**
- * チャートを表示
+ * 協力会社セクションの展開/折りたたみ
  */
-export function showChart(idx) {
-  const group = filteredGroups[idx];
-  const records = group.filteredRecords;
+export function toggleVendorSection(idx) {
+  const section = document.getElementById(`vendorSection-${idx}`);
+  const header = section.previousElementSibling;
+  const chevron = header.querySelector(".vendor-chevron");
 
-  document.getElementById(
-    "chartModalTitle"
-  ).textContent = `NET単価実績チャート - ${group.item}`;
-  document.getElementById("chartItemName").textContent =
-    group.item + (group.spec ? ` / ${group.spec}` : "");
-  document.getElementById("chartUnit").textContent = group.unit;
+  if (section.classList.contains("collapse-hidden")) {
+    section.classList.remove("collapse-hidden");
+    section.classList.add("collapse-shown");
+    chevron.classList.add("rotate-90");
+  } else {
+    section.classList.remove("collapse-shown");
+    section.classList.add("collapse-hidden");
+    chevron.classList.remove("rotate-90");
+  }
+}
 
-  // テーブルデータ作成
-  const tbody = document.querySelector("#chartDataTable tbody");
-  tbody.innerHTML = records
+/**
+ * 統計情報を計算
+ */
+function calculateStats(records) {
+  if (!records.length) {
+    return { count: 0, min: 0, max: 0, avg: 0, median: 0 };
+  }
+  const prices = records.map((r) => r.netPrice).sort((a, b) => a - b);
+  const count = prices.length;
+  const min = prices[0];
+  const max = prices[count - 1];
+  const avg = Math.round(prices.reduce((a, b) => a + b, 0) / count);
+  const median =
+    count % 2 === 0
+      ? Math.round((prices[count / 2 - 1] + prices[count / 2]) / 2)
+      : prices[Math.floor(count / 2)];
+  return { count, min, max, avg, median };
+}
+
+/**
+ * 時間軸に基づいてラベルをフォーマット
+ */
+function formatPeriodByTimeUnit(period, timeUnit) {
+  const [year, month, day] = period.split("-");
+  switch (timeUnit) {
+    case "yearly":
+      return year;
+    case "monthly":
+      return `${year}-${month}`;
+    case "weekly":
+      const date = new Date(period);
+      const dayOfWeek = date.getDay(); // 0=日曜日, 1=月曜日, ...
+      const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 月曜日までの日数差
+      const monday = new Date(date);
+      monday.setDate(date.getDate() + diff);
+      const weekYear = monday.getFullYear();
+      const weekMonth = String(monday.getMonth() + 1).padStart(2, "0");
+      const weekDay = String(monday.getDate()).padStart(2, "0");
+      return `${weekYear}-${weekMonth}-${weekDay}`;
+    case "daily":
+    default:
+      return period;
+  }
+}
+
+/**
+ * 時間軸ラベルを日本語で取得
+ */
+function getTimeUnitLabel(timeUnit) {
+  const labels = {
+    yearly: "年",
+    monthly: "月",
+    weekly: "週",
+    daily: "日",
+  };
+  return labels[timeUnit] || "";
+}
+
+/**
+ * グループ化テーブルをレンダリング
+ */
+function renderGroupedTables(groupedData, timeUnit) {
+  const container = document.getElementById("groupedTablesContainer");
+
+  if (!groupedData.length) {
+    container.innerHTML = `
+      <div class="text-center py-5 text-muted">
+        <p>データがありません</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = groupedData
     .map(
-      (r) => `
-        <tr>
-            <td>${r.projectPeriodStart}</td>
-            <td>${r.projectName}</td>
-            <td>${r.company}</td>
-            <td class="text-end tabular-nums">¥${fmt(r.netPrice)}</td>
-            <td class="text-end tabular-nums">${r.netRate.toFixed(3)}</td>
-        </tr>
+      (group) => `
+      <div class="mb-4">
+        <!-- Group Header -->
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2 mb-2 pb-2 border-bottom">
+          <div class="d-flex align-items-center gap-2">
+            <h6 class="fw-bold mb-0">${group.period}</h6>
+            <span class="badge bg-secondary">${group.count}件</span>
+          </div>
+          <div class="ms-0 ms-md-auto small d-flex flex-wrap gap-2 gap-md-3">
+            <span class="text-success">
+              <span class="d-none d-sm-inline">最小:</span>
+              <span class="d-inline d-sm-none">小:</span>
+              <span class="fw-semibold">¥${formatNumber(group.minPrice)}</span>
+            </span>
+            <span class="text-muted d-none d-md-inline">|</span>
+            <span class="text-primary">
+              <span class="d-none d-sm-inline">平均:</span>
+              <span class="d-inline d-sm-none">均:</span>
+              <span class="fw-semibold">¥${formatNumber(group.avgPrice)}</span>
+            </span>
+            <span class="text-muted d-none d-md-inline">|</span>
+            <span class="text-warning">
+              <span class="d-none d-sm-inline">中央値:</span>
+              <span class="d-inline d-sm-none">央:</span>
+              <span class="fw-semibold">¥${formatNumber(
+                group.medianPrice
+              )}</span>
+            </span>
+            <span class="text-muted d-none d-md-inline">|</span>
+            <span class="text-danger">
+              <span class="d-none d-sm-inline">最大:</span>
+              <span class="d-inline d-sm-none">大:</span>
+              <span class="fw-semibold">¥${formatNumber(group.maxPrice)}</span>
+            </span>
+          </div>
+        </div>
+        <!-- Group Table -->
+        <div class="card shadow-sm">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered table-hover mb-0" style="min-width: 1200px; table-layout: fixed;">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 180px">案件名</th>
+                  <th style="width: 80px">工種名</th>
+                  <th style="width: 120px">協力会社名</th>
+                  <th style="width: 150px">品目名称</th>
+                  <th class="text-end" style="width: 70px">数量</th>
+                  <th class="text-center" style="width: 50px">単位</th>
+                  <th class="text-end" style="width: 70px">NET率</th>
+                  <th class="text-end" style="width: 90px">NET単価</th>
+                  <th class="text-end" style="width: 100px">NET金額</th>
+                  <th class="text-center" style="width: 70px">用途</th>
+                  <th class="text-end" style="width: 90px">延床面積</th>
+                  <th class="text-center" style="width: 100px">見積日付</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${group.records
+                  .map(
+                    (r) => `
+                  <tr>
+                    <td class="text-truncate" title="${r.projectName}">${
+                      r.projectName
+                    }</td>
+                    <td>${r.categoryName}</td>
+                    <td class="text-truncate" title="${r.company}">${
+                      r.company
+                    }</td>
+                    <td class="text-truncate" title="${r.item}${
+                      r.spec ? ` / ${r.spec}` : ""
+                    }">${r.item}${r.spec ? ` / ${r.spec}` : ""}</td>
+                    <td class="text-end tabular-nums">${formatNumber(
+                      r.qty
+                    )}</td>
+                    <td class="text-center">${r.unit}</td>
+                    <td class="text-end tabular-nums">${r.netRate.toFixed(
+                      3
+                    )}</td>
+                    <td class="text-end tabular-nums">¥${formatNumber(
+                      r.netPrice
+                    )}</td>
+                    <td class="text-end tabular-nums">¥${formatNumber(
+                      Math.round(r.netAmount)
+                    )}</td>
+                    <td class="text-center"><span class="badge bg-${
+                      r.projectTypeColor
+                    }">${r.projectType}</span></td>
+                    <td class="text-end tabular-nums">${formatNumber(
+                      r.projectArea
+                    )} ㎡</td>
+                    <td class="text-center">${r.priceDate}</td>
+                  </tr>
+                `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     `
     )
     .join("");
+}
 
-  // チャート作成
+/**
+ * 表示モードを更新
+ */
+function updateDisplayMode() {
+  const displayMode = document.getElementById("chartDisplayMode").value;
+  const chartSection = document.getElementById("chartSection");
+  const tableSection = document.getElementById("tableSection");
+
+  if (displayMode === "line") {
+    chartSection.style.display = "block";
+    tableSection.style.display = "none";
+  } else {
+    chartSection.style.display = "none";
+    tableSection.style.display = "block";
+  }
+}
+
+/**
+ * フィルタ適用後のチャートを更新
+ */
+function updateChartWithFilters() {
+  if (!currentChartGroup) return;
+
+  const dateFrom = document.getElementById("chartDateFrom").value;
+  const dateTo = document.getElementById("chartDateTo").value;
+  const timeUnit = document.getElementById("chartTimeUnit").value;
+
+  // 表示モードを更新
+  updateDisplayMode();
+
+  // フィルタリング（単価基準日ベース）
+  let records = currentChartRecords.filter((r) => {
+    if (dateFrom && r.priceDate < dateFrom) return false;
+    if (dateTo && r.priceDate > dateTo) return false;
+    return true;
+  });
+
+  // 統計情報を更新
+  const stats = calculateStats(records);
+  document.getElementById("chartRecordCount").textContent = `${stats.count}件`;
+  document.getElementById("chartMinPrice").textContent = `¥${formatNumber(
+    stats.min
+  )}`;
+  document.getElementById("chartAvgPrice").textContent = `¥${formatNumber(
+    stats.avg
+  )}`;
+  document.getElementById("chartMedianPrice").textContent = `¥${formatNumber(
+    stats.median
+  )}`;
+  document.getElementById("chartMaxPrice").textContent = `¥${formatNumber(
+    stats.max
+  )}`;
+
+  // 時間軸でグルーピング（単価基準日ベース）
+  const groupedByPeriod = {};
+  records.forEach((r) => {
+    const periodKey = formatPeriodByTimeUnit(r.priceDate, timeUnit);
+    if (!groupedByPeriod[periodKey]) {
+      groupedByPeriod[periodKey] = [];
+    }
+    groupedByPeriod[periodKey].push(r);
+  });
+
+  // グループ化テーブルデータを生成
+  const sortedPeriods = Object.keys(groupedByPeriod).sort();
+  const groupedTableData = sortedPeriods.map((period) => {
+    const periodRecords = groupedByPeriod[period];
+    const prices = periodRecords.map((r) => r.netPrice);
+    const periodStats = calculateStats(periodRecords);
+    return {
+      period,
+      count: periodRecords.length,
+      minPrice: periodStats.min,
+      maxPrice: periodStats.max,
+      avgPrice: periodStats.avg,
+      medianPrice: periodStats.median,
+      records: periodRecords,
+    };
+  });
+
+  // グループ化テーブルをレンダリング
+  renderGroupedTables(groupedTableData, timeUnit);
+
+  // チャート更新
   const ctx = document.getElementById("netPriceChart").getContext("2d");
 
   if (chartInstance) {
     chartInstance.destroy();
   }
 
-  const datasets = buildChartDatasets(records, getCompanyColor);
-  const allPeriods = buildPeriodLabels(records);
+  // 時間軸ごとの統計データを生成（平均、中央値、最小、最大）
+  const periodStats = buildPeriodStatistics(groupedByPeriod);
+  const datasets = buildStatisticsDatasets(periodStats);
 
   // レスポンシブ設定の判定
   const isMobile = window.innerWidth < 768;
   const isSmallMobile = window.innerWidth < 576;
 
-  const options = buildChartOptions(isMobile, isSmallMobile, group.unit, fmt);
+  const options = buildChartOptions(
+    isMobile,
+    isSmallMobile,
+    currentChartGroup.unit,
+    formatNumber
+  );
 
   chartInstance = new Chart(ctx, {
     type: "line",
     data: {
-      labels: allPeriods,
+      labels: periodStats.periods,
       datasets: datasets,
     },
     options: options,
   });
+}
+
+/**
+ * チャートフィルタをクリア
+ */
+function clearChartFilters() {
+  // 日付はデータの範囲を初期値に設定
+  const dates = currentChartRecords.map((r) => r.priceDate).sort();
+  const minDate = dates[0] || "";
+  const maxDate = dates[dates.length - 1] || "";
+  document.getElementById("chartDateFrom").value = minDate;
+  document.getElementById("chartDateTo").value = maxDate;
+  document.getElementById("chartTimeUnit").value = "monthly";
+  document.getElementById("chartDisplayMode").value = "line";
+  updateChartWithFilters();
+}
+
+/**
+ * チャートを表示
+ */
+export function showChart(idx) {
+  const group = filteredGroups[idx];
+  const records = group.filteredRecords;
+
+  // 状態を保存
+  currentChartGroup = group;
+  currentChartRecords = [...records];
+
+  // タイトル設定
+  document.getElementById(
+    "chartModalTitle"
+  ).textContent = `NET単価推移 - ${group.item}`;
+  document.getElementById("chartItemName").textContent =
+    group.item + (group.spec ? ` / ${group.spec}` : "");
+  document.getElementById("chartUnit").textContent = group.unit;
+
+  // フィルタをリセット（日付はデータの範囲を初期値に設定）
+  const dates = records.map((r) => r.priceDate).sort();
+  const minDate = dates[0] || "";
+  const maxDate = dates[dates.length - 1] || "";
+  document.getElementById("chartDateFrom").value = minDate;
+  document.getElementById("chartDateTo").value = maxDate;
+  document.getElementById("chartTimeUnit").value = "monthly";
+  document.getElementById("chartDisplayMode").value = "line";
+
+  // 初回描画
+  updateChartWithFilters();
 
   const modal = new bootstrap.Modal(document.getElementById("chartModal"));
   modal.show();
 }
 
+/**
+ * チャートフィルタのイベントリスナーを設定
+ */
+function setupChartFilterListeners() {
+  document
+    .getElementById("chartDateFrom")
+    .addEventListener("change", updateChartWithFilters);
+  document
+    .getElementById("chartDateTo")
+    .addEventListener("change", updateChartWithFilters);
+  document
+    .getElementById("chartTimeUnit")
+    .addEventListener("change", updateChartWithFilters);
+  document
+    .getElementById("chartDisplayMode")
+    .addEventListener("change", updateChartWithFilters);
+  document
+    .getElementById("chartClearFilters")
+    .addEventListener("click", clearChartFilters);
+}
+
 // 初期化実行
 initializeData();
 clearFilters();
+setupChartFilterListeners();
 
 // グローバルスコープに公開
 window.applyFilters = applyFilters;
 window.clearFilters = clearFilters;
 window.toggleGroup = toggleGroup;
+window.toggleVendorSection = toggleVendorSection;
 window.showChart = showChart;

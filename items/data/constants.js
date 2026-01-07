@@ -21,6 +21,12 @@ export const typeBadges = {
   indirect: "warning",
 };
 
+// デフォルトの会社カラー（未登録会社用）
+export const DEFAULT_COMPANY_COLOR = "#6c757d";
+
+// チャート設定
+export const CHART_BACKGROUND_OPACITY = "33"; // 20% opacity in hex
+
 // 協力会社カラーマッピング
 export const companyColors = {
   A社: "#0d6efd",

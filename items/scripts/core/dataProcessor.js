@@ -3,6 +3,8 @@
  * これらの関数は外部状態に依存せず、同じ入力に対して常に同じ出力を返す
  */
 
+import { calculateArrayStats, normalizeCompanyName } from "../utils/utils.js";
+
 /**
  * 案件データとアイテムレコードを統合してフラット化する
  * @param {Array} itemRecords - アイテムレコードの配列
@@ -51,17 +53,18 @@ export function groupByItem(items) {
   });
 
   return Object.values(groups).map((g) => {
-    g.records.sort((a, b) => a.projectDate.localeCompare(b.projectDate));
+    g.records.sort((a, b) => a.priceDate.localeCompare(b.priceDate));
     const netPrices = g.records.map((r) => r.netPrice);
+    const stats = calculateArrayStats(netPrices);
     const types = [...new Set(g.records.map((r) => r.type))];
     const categories = [...new Set(g.records.map((r) => r.categoryName))];
 
     return {
       ...g,
       recordCount: g.records.length,
-      minNetPrice: Math.min(...netPrices),
-      maxNetPrice: Math.max(...netPrices),
-      avgNetPrice: netPrices.reduce((a, b) => a + b, 0) / netPrices.length,
+      minNetPrice: stats.min,
+      maxNetPrice: stats.max,
+      avgNetPrice: stats.avg,
       types,
       categories,
     };
@@ -74,15 +77,17 @@ export function groupByItem(items) {
  * @returns {Object} 統計情報（用途カウント、構造カウント、平均面積）
  */
 export function calculateStats(records) {
-  const usageCount = {},
-    structureCount = {};
+  const usageCount = {};
+  const structureCount = {};
   let totalArea = 0;
+
   records.forEach((r) => {
     usageCount[r.projectType] = (usageCount[r.projectType] || 0) + 1;
     structureCount[r.projectStructureCode] =
       (structureCount[r.projectStructureCode] || 0) + 1;
     totalArea += r.projectArea;
   });
+
   return {
     usageCount,
     structureCount,
@@ -98,7 +103,7 @@ export function calculateStats(records) {
 export function groupByCompany(records) {
   const companyData = {};
   records.forEach((r) => {
-    const name = r.company.replace("株式会社 ", "");
+    const name = normalizeCompanyName(r.company);
     if (!companyData[name]) {
       companyData[name] = { prices: [], count: 0 };
     }
@@ -115,17 +120,13 @@ export function groupByCompany(records) {
  */
 export function calculateCompanyStats(companyData) {
   return Object.entries(companyData).map(([name, data]) => {
-    const minPrice = Math.min(...data.prices);
-    const maxPrice = Math.max(...data.prices);
-    const avgPrice = Math.round(
-      data.prices.reduce((a, b) => a + b, 0) / data.prices.length
-    );
+    const stats = calculateArrayStats(data.prices);
     return {
       name,
       count: data.count,
-      minPrice,
-      maxPrice,
-      avgPrice,
+      minPrice: stats.min,
+      maxPrice: stats.max,
+      avgPrice: stats.avg,
     };
   });
 }
