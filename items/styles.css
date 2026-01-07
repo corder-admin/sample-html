@@ -314,17 +314,53 @@ body {
   }
 }
 
-/* チャートモーダルのレスポンシブ対応 */
+/* チャートモーダル - フルスクリーンデザイン */
+.modal-fullscreen .modal-body.bg-body-secondary {
+  background-color: #f8f9fa !important;
+}
+
 .chart-container {
-  height: 400px;
+  height: 350px;
   position: relative;
 }
+
+/* アイコンの垂直調整 */
+.icon-inline {
+  vertical-align: -4px;
+}
+
+/* フィルターバー */
+.modal-fullscreen .bg-light.border-bottom {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* カードヘッダー */
+.modal-fullscreen .card-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.075);
+}
+
+/* テーブル行ホバー効果 */
+#chartDataTable tbody tr {
+  transition: background-color 0.15s;
+}
+#chartDataTable tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* KPIサマリー */
+#chartRecordCount,
+#chartMinPrice,
+#chartAvgPrice,
+#chartMedianPrice,
+#chartMaxPrice {
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 768px) {
   .chart-container {
-    height: 300px;
-  }
-  .modal-dialog.modal-xl {
-    margin: 0.5rem;
+    height: 280px;
   }
   #chartDataTable {
     font-size: 0.8rem;
@@ -334,12 +370,18 @@ body {
     padding: 0.5rem 0.25rem;
     white-space: nowrap;
   }
+  /* フィルターバーをスクロール可能に */
+  .modal-fullscreen .bg-light.border-bottom .d-flex {
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
 }
 @media (max-width: 576px) {
   .chart-container {
-    height: 250px;
+    height: 220px;
   }
-  .modal-body .row .col-md-6 {
-    margin-bottom: 0.5rem;
+  /* 小さい画面でKPIを非表示 */
+  .modal-fullscreen .bg-light .ms-auto {
+    display: none !important;
   }
 }

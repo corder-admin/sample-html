@@ -56,6 +56,7 @@ export function buildChartOptions(isMobile, isSmallMobile, unit, fmt) {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    animation: false,
     interaction: {
       intersect: false,
       mode: "index",

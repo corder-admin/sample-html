@@ -28,6 +28,8 @@ let allItems = [];
 let groupedItems = [];
 let filteredGroups = [];
 let chartInstance = null;
+let currentChartGroup = null;
+let currentChartRecords = [];
 
 /**
  * データを初期化
@@ -376,26 +378,100 @@ export function toggleVendorSection(idx) {
 }
 
 /**
- * チャートを表示
+ * 統計情報を計算
  */
-export function showChart(idx) {
-  const group = filteredGroups[idx];
-  const records = group.filteredRecords;
+function calculateStats(records) {
+  if (!records.length) {
+    return { count: 0, min: 0, max: 0, avg: 0, median: 0 };
+  }
+  const prices = records.map((r) => r.netPrice).sort((a, b) => a - b);
+  const count = prices.length;
+  const min = prices[0];
+  const max = prices[count - 1];
+  const avg = Math.round(prices.reduce((a, b) => a + b, 0) / count);
+  const median =
+    count % 2 === 0
+      ? Math.round((prices[count / 2 - 1] + prices[count / 2]) / 2)
+      : prices[Math.floor(count / 2)];
+  return { count, min, max, avg, median };
+}
 
-  document.getElementById(
-    "chartModalTitle"
-  ).textContent = `NET単価推移 - ${group.item}`;
-  document.getElementById("chartItemName").textContent =
-    group.item + (group.spec ? ` / ${group.spec}` : "");
-  document.getElementById("chartUnit").textContent = group.unit;
+/**
+ * 時間軸に基づいてラベルをフォーマット
+ */
+function formatPeriodByTimeUnit(period, timeUnit) {
+  const [year, month, day] = period.split("-");
+  switch (timeUnit) {
+    case "yearly":
+      return year;
+    case "monthly":
+      return `${year}-${month}`;
+    case "weekly":
+      const date = new Date(period);
+      const weekNum = Math.ceil(
+        ((date - new Date(date.getFullYear(), 0, 1)) / 86400000 + 1) / 7
+      );
+      return `${year}-W${String(weekNum).padStart(2, "0")}`;
+    case "daily":
+    default:
+      return period;
+  }
+}
 
-  // テーブルデータ作成
+/**
+ * 表示モードを更新
+ */
+function updateDisplayMode() {
+  const displayMode = document.getElementById("chartDisplayMode").value;
+  const chartSection = document.getElementById("chartSection");
+  const tableSection = document.getElementById("tableSection");
+
+  if (displayMode === "line") {
+    chartSection.style.display = "block";
+    tableSection.style.display = "none";
+  } else {
+    chartSection.style.display = "none";
+    tableSection.style.display = "block";
+  }
+}
+
+/**
+ * フィルタ適用後のチャートを更新
+ */
+function updateChartWithFilters() {
+  if (!currentChartGroup) return;
+
+  const dateFrom = document.getElementById("chartDateFrom").value;
+  const dateTo = document.getElementById("chartDateTo").value;
+  const timeUnit = document.getElementById("chartTimeUnit").value;
+
+  // 表示モードを更新
+  updateDisplayMode();
+
+  // フィルタリング
+  let records = currentChartRecords.filter((r) => {
+    if (dateFrom && r.projectPeriodStart < dateFrom) return false;
+    if (dateTo && r.projectPeriodStart > dateTo) return false;
+    return true;
+  });
+
+  // 統計情報を更新
+  const stats = calculateStats(records);
+  document.getElementById("chartRecordCount").textContent = `${stats.count}件`;
+  document.getElementById("chartMinPrice").textContent = `¥${fmt(stats.min)}`;
+  document.getElementById("chartAvgPrice").textContent = `¥${fmt(stats.avg)}`;
+  document.getElementById("chartMedianPrice").textContent = `¥${fmt(
+    stats.median
+  )}`;
+  document.getElementById("chartMaxPrice").textContent = `¥${fmt(stats.max)}`;
+
+  // テーブルデータ更新
   const tbody = document.querySelector("#chartDataTable tbody");
   tbody.innerHTML = records
     .map(
       (r) => `
         <tr>
-            <td>${r.projectPeriodStart}</td>
+            <td class="text-center">${r.projectPeriodStart}</td>
             <td>${r.projectName}</td>
             <td>${r.company}</td>
             <td class="text-end tabular-nums">¥${fmt(r.netPrice)}</td>
@@ -405,38 +481,135 @@ export function showChart(idx) {
     )
     .join("");
 
-  // チャート作成
+  // チャート更新
   const ctx = document.getElementById("netPriceChart").getContext("2d");
 
   if (chartInstance) {
     chartInstance.destroy();
   }
 
-  const datasets = buildChartDatasets(records, getCompanyColor);
-  const allPeriods = buildPeriodLabels(records);
+  // 時間軸でグルーピング
+  const groupedByPeriod = {};
+  records.forEach((r) => {
+    const periodKey = formatPeriodByTimeUnit(r.projectPeriodStart, timeUnit);
+    if (!groupedByPeriod[periodKey]) {
+      groupedByPeriod[periodKey] = [];
+    }
+    groupedByPeriod[periodKey].push(r);
+  });
+
+  // 平均値で折れ線グラフ用データを作成
+  const sortedPeriods = Object.keys(groupedByPeriod).sort();
+  const avgData = sortedPeriods.map((period) => {
+    const periodRecords = groupedByPeriod[period];
+    const avgPrice = Math.round(
+      periodRecords.reduce((sum, r) => sum + r.netPrice, 0) /
+        periodRecords.length
+    );
+    return avgPrice;
+  });
 
   // レスポンシブ設定の判定
   const isMobile = window.innerWidth < 768;
   const isSmallMobile = window.innerWidth < 576;
 
-  const options = buildChartOptions(isMobile, isSmallMobile, group.unit, fmt);
+  const options = buildChartOptions(
+    isMobile,
+    isSmallMobile,
+    currentChartGroup.unit,
+    fmt
+  );
 
   chartInstance = new Chart(ctx, {
     type: "line",
     data: {
-      labels: allPeriods,
-      datasets: datasets,
+      labels: sortedPeriods,
+      datasets: [
+        {
+          label: "平均NET単価",
+          data: avgData,
+          borderColor: "#0d6efd",
+          backgroundColor: "rgba(13, 110, 253, 0.1)",
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: true,
+          tension: 0.3,
+        },
+      ],
     },
     options: options,
   });
+}
+
+/**
+ * チャートフィルタをクリア
+ */
+function clearChartFilters() {
+  document.getElementById("chartDateFrom").value = "";
+  document.getElementById("chartDateTo").value = "";
+  document.getElementById("chartTimeUnit").value = "monthly";
+  document.getElementById("chartDisplayMode").value = "line";
+  updateChartWithFilters();
+}
+
+/**
+ * チャートを表示
+ */
+export function showChart(idx) {
+  const group = filteredGroups[idx];
+  const records = group.filteredRecords;
+
+  // 状態を保存
+  currentChartGroup = group;
+  currentChartRecords = [...records];
+
+  // タイトル設定
+  document.getElementById(
+    "chartModalTitle"
+  ).textContent = `NET単価推移 - ${group.item}`;
+  document.getElementById("chartItemName").textContent =
+    group.item + (group.spec ? ` / ${group.spec}` : "");
+  document.getElementById("chartUnit").textContent = group.unit;
+
+  // フィルタをリセット
+  document.getElementById("chartDateFrom").value = "";
+  document.getElementById("chartDateTo").value = "";
+  document.getElementById("chartTimeUnit").value = "monthly";
+  document.getElementById("chartDisplayMode").value = "line";
+
+  // 初回描画
+  updateChartWithFilters();
 
   const modal = new bootstrap.Modal(document.getElementById("chartModal"));
   modal.show();
 }
 
+/**
+ * チャートフィルタのイベントリスナーを設定
+ */
+function setupChartFilterListeners() {
+  document
+    .getElementById("chartDateFrom")
+    .addEventListener("change", updateChartWithFilters);
+  document
+    .getElementById("chartDateTo")
+    .addEventListener("change", updateChartWithFilters);
+  document
+    .getElementById("chartTimeUnit")
+    .addEventListener("change", updateChartWithFilters);
+  document
+    .getElementById("chartDisplayMode")
+    .addEventListener("change", updateChartWithFilters);
+  document
+    .getElementById("chartClearFilters")
+    .addEventListener("click", clearChartFilters);
+}
+
 // 初期化実行
 initializeData();
 clearFilters();
+setupChartFilterListeners();
 
 // グローバルスコープに公開
 window.applyFilters = applyFilters;
