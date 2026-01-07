@@ -100,10 +100,12 @@ export function clearFilters() {
   document.getElementById("filterCompany").value = "";
   document.getElementById("filterDateFrom").value = "";
   document.getElementById("filterDateTo").value = "";
-  filteredGroups = groupedItems.map((g) => ({
-    ...g,
-    filteredRecords: g.records,
-  }));
+  filteredGroups = groupedItems
+    .map((g) => ({
+      ...g,
+      filteredRecords: g.records,
+    }))
+    .sort((a, b) => b.filteredRecords.length - a.filteredRecords.length);
   renderResults();
   renderActiveFilters();
 }
@@ -185,6 +187,9 @@ function renderGroupCard(g, idx) {
                                   `<span class="badge bg-${typeBadges[t]} small">${typeNames[t]}</span>`
                               )
                               .join("")}
+                            <span class="badge bg-info small">${
+                              records.length
+                            }件</span>
                         </div>
                     </div>
                     <div class="text-end">

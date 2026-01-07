@@ -84,10 +84,9 @@ export function applyFilterCriteria(groupedItems, criteria) {
       return { ...g, filteredRecords: matchingRecords };
     })
     .filter((g) => {
-      return (
-        matchesGroupCriteria(g, criteria) && g.filteredRecords.length > 0
-      );
-    });
+      return matchesGroupCriteria(g, criteria) && g.filteredRecords.length > 0;
+    })
+    .sort((a, b) => b.filteredRecords.length - a.filteredRecords.length);
 }
 
 /**
@@ -98,14 +97,8 @@ export function applyFilterCriteria(groupedItems, criteria) {
  */
 export function buildActiveFilterLabels(filterValues, catNames) {
   const filters = [];
-  const {
-    projectKeyword,
-    usage,
-    structures,
-    itemKeyword,
-    category,
-    company,
-  } = filterValues;
+  const { projectKeyword, usage, structures, itemKeyword, category, company } =
+    filterValues;
 
   if (projectKeyword) filters.push(`案件名: ${projectKeyword}`);
   if (usage) filters.push(`建物用途: ${usage}`);
