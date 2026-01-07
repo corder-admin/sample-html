@@ -684,7 +684,7 @@ function updateChartWithFilters() {
 function clearChartFilters() {
   document.getElementById("chartDateFrom").value = "";
   document.getElementById("chartDateTo").value = "";
-  document.getElementById("chartTimeUnit").value = "yearly";
+  document.getElementById("chartTimeUnit").value = "monthly";
   document.getElementById("chartDisplayMode").value = "line";
   updateChartWithFilters();
 }
@@ -711,7 +711,7 @@ export function showChart(idx) {
   // フィルタをリセット
   document.getElementById("chartDateFrom").value = "";
   document.getElementById("chartDateTo").value = "";
-  document.getElementById("chartTimeUnit").value = "yearly";
+  document.getElementById("chartTimeUnit").value = "monthly";
   document.getElementById("chartDisplayMode").value = "line";
 
   // 初回描画
