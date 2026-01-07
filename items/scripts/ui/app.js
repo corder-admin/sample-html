@@ -530,6 +530,7 @@ function renderGroupedTables(groupedData, timeUnit) {
               </thead>
               <tbody>
                 ${group.records
+                  .sort((a, b) => a.priceDate.localeCompare(b.priceDate))
                   .map(
                     (r) => `
                   <tr>
