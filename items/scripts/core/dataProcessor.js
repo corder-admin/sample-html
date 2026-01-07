@@ -53,7 +53,7 @@ export function groupByItem(items) {
   });
 
   return Object.values(groups).map((g) => {
-    g.records.sort((a, b) => a.projectDate.localeCompare(b.projectDate));
+    g.records.sort((a, b) => a.priceDate.localeCompare(b.priceDate));
     const netPrices = g.records.map((r) => r.netPrice);
     const stats = calculateArrayStats(netPrices);
     const types = [...new Set(g.records.map((r) => r.type))];

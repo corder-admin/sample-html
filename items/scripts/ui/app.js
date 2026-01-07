@@ -6,7 +6,11 @@
 import { catNames, typeBadges, typeNames } from "../../data/constants.js";
 import { itemRecords } from "../../data/itemRecords.js";
 import { projects } from "../../data/projects.js";
-import { buildChartOptions } from "../core/chartData.js";
+import {
+  buildChartOptions,
+  buildPeriodStatistics,
+  buildStatisticsDatasets,
+} from "../core/chartData.js";
 import {
   calculateCompanyStats,
   flattenData,
@@ -426,6 +430,140 @@ function formatPeriodByTimeUnit(period, timeUnit) {
 }
 
 /**
+ * 時間軸ラベルを日本語で取得
+ */
+function getTimeUnitLabel(timeUnit) {
+  const labels = {
+    yearly: "年",
+    monthly: "月",
+    weekly: "週",
+    daily: "日",
+  };
+  return labels[timeUnit] || "";
+}
+
+/**
+ * グループ化テーブルをレンダリング
+ */
+function renderGroupedTables(groupedData, timeUnit) {
+  const container = document.getElementById("groupedTablesContainer");
+
+  if (!groupedData.length) {
+    container.innerHTML = `
+      <div class="text-center py-5 text-muted">
+        <p>データがありません</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = groupedData
+    .map(
+      (group) => `
+      <div class="mb-4">
+        <!-- Group Header -->
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2 mb-2 pb-2 border-bottom">
+          <div class="d-flex align-items-center gap-2">
+            <h6 class="fw-bold mb-0">${group.period}</h6>
+            <span class="badge bg-secondary">${group.count}件</span>
+          </div>
+          <div class="ms-0 ms-md-auto small d-flex flex-wrap gap-2 gap-md-3">
+            <span class="text-success">
+              <span class="d-none d-sm-inline">最小:</span>
+              <span class="d-inline d-sm-none">小:</span>
+              <span class="fw-semibold">¥${formatNumber(group.minPrice)}</span>
+            </span>
+            <span class="text-muted d-none d-md-inline">|</span>
+            <span class="text-primary">
+              <span class="d-none d-sm-inline">平均:</span>
+              <span class="d-inline d-sm-none">均:</span>
+              <span class="fw-semibold">¥${formatNumber(group.avgPrice)}</span>
+            </span>
+            <span class="text-muted d-none d-md-inline">|</span>
+            <span class="text-warning">
+              <span class="d-none d-sm-inline">中央値:</span>
+              <span class="d-inline d-sm-none">央:</span>
+              <span class="fw-semibold">¥${formatNumber(
+                group.medianPrice
+              )}</span>
+            </span>
+            <span class="text-muted d-none d-md-inline">|</span>
+            <span class="text-danger">
+              <span class="d-none d-sm-inline">最大:</span>
+              <span class="d-inline d-sm-none">大:</span>
+              <span class="fw-semibold">¥${formatNumber(group.maxPrice)}</span>
+            </span>
+          </div>
+        </div>
+        <!-- Group Table -->
+        <div class="card shadow-sm">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered table-hover mb-0" style="min-width: 1200px; table-layout: fixed;">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 180px">案件名</th>
+                  <th style="width: 80px">工種名</th>
+                  <th style="width: 120px">協力会社名</th>
+                  <th style="width: 150px">品目名称</th>
+                  <th class="text-end" style="width: 70px">数量</th>
+                  <th class="text-center" style="width: 50px">単位</th>
+                  <th class="text-end" style="width: 70px">NET率</th>
+                  <th class="text-end" style="width: 90px">NET単価</th>
+                  <th class="text-end" style="width: 100px">NET金額</th>
+                  <th class="text-center" style="width: 70px">用途</th>
+                  <th class="text-end" style="width: 90px">延床面積</th>
+                  <th class="text-center" style="width: 100px">見積日付</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${group.records
+                  .map(
+                    (r) => `
+                  <tr>
+                    <td class="text-truncate" title="${r.projectName}">${
+                      r.projectName
+                    }</td>
+                    <td>${r.categoryName}</td>
+                    <td class="text-truncate" title="${r.company}">${
+                      r.company
+                    }</td>
+                    <td class="text-truncate" title="${r.item}${
+                      r.spec ? ` / ${r.spec}` : ""
+                    }">${r.item}${r.spec ? ` / ${r.spec}` : ""}</td>
+                    <td class="text-end tabular-nums">${formatNumber(
+                      r.qty
+                    )}</td>
+                    <td class="text-center">${r.unit}</td>
+                    <td class="text-end tabular-nums">${r.netRate.toFixed(
+                      3
+                    )}</td>
+                    <td class="text-end tabular-nums">¥${formatNumber(
+                      r.netPrice
+                    )}</td>
+                    <td class="text-end tabular-nums">¥${formatNumber(
+                      Math.round(r.netAmount)
+                    )}</td>
+                    <td class="text-center"><span class="badge bg-${
+                      r.projectTypeColor
+                    }">${r.projectType}</span></td>
+                    <td class="text-end tabular-nums">${formatNumber(
+                      r.projectArea
+                    )} ㎡</td>
+                    <td class="text-center">${r.priceDate}</td>
+                  </tr>
+                `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+}
+
+/**
  * 表示モードを更新
  */
 function updateDisplayMode() {
@@ -455,10 +593,10 @@ function updateChartWithFilters() {
   // 表示モードを更新
   updateDisplayMode();
 
-  // フィルタリング
+  // フィルタリング（単価基準日ベース）
   let records = currentChartRecords.filter((r) => {
-    if (dateFrom && r.projectPeriodStart < dateFrom) return false;
-    if (dateTo && r.projectPeriodStart > dateTo) return false;
+    if (dateFrom && r.priceDate < dateFrom) return false;
+    if (dateTo && r.priceDate > dateTo) return false;
     return true;
   });
 
@@ -478,21 +616,35 @@ function updateChartWithFilters() {
     stats.max
   )}`;
 
-  // テーブルデータ更新
-  const tbody = document.querySelector("#chartDataTable tbody");
-  tbody.innerHTML = records
-    .map(
-      (r) => `
-        <tr>
-            <td class="text-center">${r.projectPeriodStart}</td>
-            <td>${r.projectName}</td>
-            <td>${r.company}</td>
-            <td class="text-end tabular-nums">¥${formatNumber(r.netPrice)}</td>
-            <td class="text-end tabular-nums">${r.netRate.toFixed(3)}</td>
-        </tr>
-    `
-    )
-    .join("");
+  // 時間軸でグルーピング（単価基準日ベース）
+  const groupedByPeriod = {};
+  records.forEach((r) => {
+    const periodKey = formatPeriodByTimeUnit(r.priceDate, timeUnit);
+    if (!groupedByPeriod[periodKey]) {
+      groupedByPeriod[periodKey] = [];
+    }
+    groupedByPeriod[periodKey].push(r);
+  });
+
+  // グループ化テーブルデータを生成
+  const sortedPeriods = Object.keys(groupedByPeriod).sort();
+  const groupedTableData = sortedPeriods.map((period) => {
+    const periodRecords = groupedByPeriod[period];
+    const prices = periodRecords.map((r) => r.netPrice);
+    const periodStats = calculateStats(periodRecords);
+    return {
+      period,
+      count: periodRecords.length,
+      minPrice: periodStats.min,
+      maxPrice: periodStats.max,
+      avgPrice: periodStats.avg,
+      medianPrice: periodStats.median,
+      records: periodRecords,
+    };
+  });
+
+  // グループ化テーブルをレンダリング
+  renderGroupedTables(groupedTableData, timeUnit);
 
   // チャート更新
   const ctx = document.getElementById("netPriceChart").getContext("2d");
@@ -501,26 +653,9 @@ function updateChartWithFilters() {
     chartInstance.destroy();
   }
 
-  // 時間軸でグルーピング
-  const groupedByPeriod = {};
-  records.forEach((r) => {
-    const periodKey = formatPeriodByTimeUnit(r.projectPeriodStart, timeUnit);
-    if (!groupedByPeriod[periodKey]) {
-      groupedByPeriod[periodKey] = [];
-    }
-    groupedByPeriod[periodKey].push(r);
-  });
-
-  // 平均値で折れ線グラフ用データを作成
-  const sortedPeriods = Object.keys(groupedByPeriod).sort();
-  const avgData = sortedPeriods.map((period) => {
-    const periodRecords = groupedByPeriod[period];
-    const avgPrice = Math.round(
-      periodRecords.reduce((sum, r) => sum + r.netPrice, 0) /
-        periodRecords.length
-    );
-    return avgPrice;
-  });
+  // 時間軸ごとの統計データを生成（平均、中央値、最小、最大）
+  const periodStats = buildPeriodStatistics(groupedByPeriod);
+  const datasets = buildStatisticsDatasets(periodStats);
 
   // レスポンシブ設定の判定
   const isMobile = window.innerWidth < 768;
@@ -536,20 +671,8 @@ function updateChartWithFilters() {
   chartInstance = new Chart(ctx, {
     type: "line",
     data: {
-      labels: sortedPeriods,
-      datasets: [
-        {
-          label: "平均NET単価",
-          data: avgData,
-          borderColor: "#0d6efd",
-          backgroundColor: "rgba(13, 110, 253, 0.1)",
-          borderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          fill: true,
-          tension: 0.3,
-        },
-      ],
+      labels: periodStats.periods,
+      datasets: datasets,
     },
     options: options,
   });
@@ -561,7 +684,7 @@ function updateChartWithFilters() {
 function clearChartFilters() {
   document.getElementById("chartDateFrom").value = "";
   document.getElementById("chartDateTo").value = "";
-  document.getElementById("chartTimeUnit").value = "monthly";
+  document.getElementById("chartTimeUnit").value = "yearly";
   document.getElementById("chartDisplayMode").value = "line";
   updateChartWithFilters();
 }
@@ -588,7 +711,7 @@ export function showChart(idx) {
   // フィルタをリセット
   document.getElementById("chartDateFrom").value = "";
   document.getElementById("chartDateTo").value = "";
-  document.getElementById("chartTimeUnit").value = "monthly";
+  document.getElementById("chartTimeUnit").value = "yearly";
   document.getElementById("chartDisplayMode").value = "line";
 
   // 初回描画

@@ -290,8 +290,8 @@
                   style="width: auto"
                   id="chartTimeUnit"
                 >
-                  <option value="yearly">年次</option>
-                  <option value="monthly" selected>月次</option>
+                  <option value="yearly" selected>年次</option>
+                  <option value="monthly">月次</option>
                   <option value="weekly">週次</option>
                   <option value="daily">日次</option>
                 </select>
@@ -379,48 +379,13 @@
               </div>
             </div>
 
-            <!-- Table Section -->
-            <div class="card shadow-sm" id="tableSection">
-              <div
-                class="card-header bg-white py-2 d-flex justify-content-between align-items-center"
-              >
-                <h6
-                  class="mb-0 fw-bold text-secondary d-flex align-items-center gap-2"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M3 9h18" />
-                    <path d="M9 21V9" />
-                  </svg>
-                  見積詳細データ
-                </h6>
-              </div>
-              <div class="card-body p-0">
-                <div class="table-responsive">
-                  <table
-                    class="table table-sm table-bordered table-hover mb-0"
-                    id="chartDataTable"
-                  >
-                    <thead class="table-light">
-                      <tr>
-                        <th class="text-center">見積時期</th>
-                        <th>案件名</th>
-                        <th>協力会社</th>
-                        <th class="text-end">NET単価</th>
-                        <th class="text-end">NET率</th>
-                      </tr>
-                    </thead>
-                    <tbody></tbody>
-                  </table>
-                </div>
-              </div>
+            <!-- Table Section (Time-grouped) -->
+            <div
+              class="bg-body-secondary p-3 overflow-auto"
+              id="tableSection"
+              style="max-height: calc(100vh - 200px)"
+            >
+              <div id="groupedTablesContainer"></div>
             </div>
           </div>
 
