@@ -127,87 +127,82 @@ export function summaryToJson(summary: ProcessingSummary): string {
 export function summaryToMarkdown(summary: ProcessingSummary): string {
   const lines: string[] = [];
   const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
+  const outputPct = ((summary.outputCount / summary.inputCount) * 100).toFixed(
+    2
+  );
+  const reducedCount =
+    summary.aggregation.beforeCount - summary.aggregation.afterCount;
 
+  // ヘッダー
   lines.push("# TSV → data.js 変換レポート");
   lines.push("");
   lines.push(`生成日時: ${timestamp}`);
   lines.push("");
 
-  // ファイル情報
-  lines.push("## ファイル情報");
+  // 変換概要
+  lines.push("## 概要");
   lines.push("");
-  lines.push("| 項目 | 値 |");
-  lines.push("|------|-----|");
-  lines.push(`| 入力ファイル | \`${summary.inputFile}\` |`);
-  lines.push(`| 出力ファイル | \`${summary.outputFile}\` |`);
+  lines.push("### 処理結果");
+  lines.push("");
+  lines.push("| 項目 | 値 | 変化率 |");
+  lines.push("|------|-----:|:------|");
   lines.push(
-    `| 処理時間 | ${(summary.processingTimeMs / 1000).toFixed(2)} 秒 |`
-  );
-  lines.push("");
-
-  // 処理結果サマリー
-  lines.push("## 処理結果サマリー");
-  lines.push("");
-  lines.push("| 項目 | 件数 | 割合 |");
-  lines.push("|------|-----:|-----:|");
-  lines.push(
-    `| 入力レコード数 | ${summary.inputCount.toLocaleString()} | 100.00% |`
-  );
-
-  const outputPct = ((summary.outputCount / summary.inputCount) * 100).toFixed(
-    2
+    `| 入力レコード数 | ${summary.inputCount.toLocaleString()} | ベースライン |`
   );
   lines.push(
-    `| **出力レコード数** | **${summary.outputCount.toLocaleString()}** | **${outputPct}%** |`
+    `| 出力レコード数 | ${summary.outputCount.toLocaleString()} | ${outputPct}% |`
+  );
+  lines.push(
+    `| 処理時間 | ${(summary.processingTimeMs / 1000).toFixed(2)}秒 | - |`
   );
   lines.push("");
 
-  // 除外詳細
-  const hasExclusions =
-    Object.values(summary.exclusionDetails).some((c) => c > 0) ||
-    summary.duplicateCount > 0;
+  // データクレンジング効果
+  const totalExcluded =
+    Object.values(summary.exclusionDetails).reduce(
+      (sum, count) => sum + count,
+      0
+    ) + summary.duplicateCount;
+  const excludedPct = ((totalExcluded / summary.inputCount) * 100).toFixed(2);
 
-  if (hasExclusions) {
-    lines.push("## 除外レコード詳細");
-    lines.push("");
-    lines.push("| 除外理由 | 件数 | 割合 |");
-    lines.push("|----------|-----:|-----:|");
+  lines.push("### データクレンジング結果");
+  lines.push("");
+  lines.push("| 項目 | 除外件数 | 除外率 |");
+  lines.push("|------|--------:|------:|");
 
-    for (const [reason, count] of Object.entries(summary.exclusionDetails)) {
-      if (count > 0) {
-        const label = EXCLUSION_LABELS[reason as ExclusionReason];
-        const pct = ((count / summary.inputCount) * 100).toFixed(2);
-        lines.push(`| ${label} | ${count.toLocaleString()} | ${pct}% |`);
-      }
+  for (const [reason, count] of Object.entries(summary.exclusionDetails)) {
+    if (count > 0) {
+      const label = EXCLUSION_LABELS[reason as ExclusionReason];
+      const pct = ((count / summary.inputCount) * 100).toFixed(2);
+      lines.push(`| ${label} | ${count.toLocaleString()} | ${pct}% |`);
     }
-
-    if (summary.duplicateCount > 0) {
-      const pct = ((summary.duplicateCount / summary.inputCount) * 100).toFixed(
-        2
-      );
-      lines.push(
-        `| 重複レコード | ${summary.duplicateCount.toLocaleString()} | ${pct}% |`
-      );
-    }
-    lines.push("");
   }
 
-  // 集約情報
+  if (summary.duplicateCount > 0) {
+    const pct = ((summary.duplicateCount / summary.inputCount) * 100).toFixed(
+      2
+    );
+    lines.push(
+      `| 重複レコード | ${summary.duplicateCount.toLocaleString()} | ${pct}% |`
+    );
+  }
+
+  lines.push(
+    `| 合計除外 | ${totalExcluded.toLocaleString()} | ${excludedPct}% |`
+  );
+  lines.push("");
+
+  // データ集約効果
   if (summary.aggregation.aggregatedGroups > 0) {
-    lines.push("## 工事細目集約");
-    lines.push("");
-    lines.push("同一キーを持つレコードを集約し、数量・金額を合算しました。");
-    lines.push("");
-    lines.push("### 集約キー");
-    lines.push("");
-    lines.push("```");
-    lines.push("工事名 + 業者 + 発注日 + 小工事項目コード");
-    lines.push("```");
-    lines.push("");
-    lines.push("### 集約結果");
+    const aggregationEfficiency = (
+      (reducedCount / summary.aggregation.beforeCount) *
+      100
+    ).toFixed(2);
+
+    lines.push("### データ集約結果");
     lines.push("");
     lines.push("| 項目 | 値 |");
-    lines.push("|------|-----|");
+    lines.push("|------|-----:|");
     lines.push(
       `| 集約グループ数 | ${summary.aggregation.aggregatedGroups.toLocaleString()} |`
     );
@@ -217,16 +212,62 @@ export function summaryToMarkdown(summary: ProcessingSummary): string {
     lines.push(
       `| 統合後レコード数 | ${summary.aggregation.afterCount.toLocaleString()} |`
     );
-    const reducedCount =
-      summary.aggregation.beforeCount - summary.aggregation.afterCount;
     lines.push(`| 削減レコード数 | ${reducedCount.toLocaleString()} |`);
+    lines.push(`| 集約効率 | ${aggregationEfficiency}% |`);
     lines.push("");
-    lines.push("### 集約処理内容");
+    lines.push(
+      "> ※ 集約グループ数：同じ集約キー（工事名+業者+発注日+小工事項目コード）を持つ2件以上のレコードが統合されたグループの数"
+    );
     lines.push("");
-    lines.push("- **実行数量**: 合算");
-    lines.push("- **実行予算金額**: 合算");
-    lines.push("- **実行単価**: 再計算（実行予算金額 ÷ 実行数量）");
-    lines.push("- **摘要**: 結合（重複除去、`／`区切り）");
+  }
+
+  // 処理フローの詳細
+  lines.push("## 処理フロー詳細");
+  lines.push("");
+  lines.push("### ファイル情報");
+  lines.push("");
+  lines.push("| 項目 | 値 |");
+  lines.push("|------|-----|");
+  lines.push(`| 入力ファイル | \`${summary.inputFile}\` |`);
+  lines.push(`| 出力ファイル | \`${summary.outputFile}\` |`);
+  lines.push("");
+
+  lines.push("### データパイプライン");
+  lines.push("");
+  lines.push("```mermaid");
+  lines.push("flowchart LR");
+  lines.push(
+    `    A[入力: ${summary.inputCount.toLocaleString()}件] --> B[クレンジング]`
+  );
+  lines.push(`    B -->|除外: ${totalExcluded.toLocaleString()}件| C[集約]`);
+  if (summary.aggregation.aggregatedGroups > 0) {
+    lines.push(
+      `    C -->|削減: ${reducedCount.toLocaleString()}件| D[出力: ${summary.outputCount.toLocaleString()}件]`
+    );
+  } else {
+    lines.push(`    C --> D[出力: ${summary.outputCount.toLocaleString()}件]`);
+  }
+  lines.push("```");
+  lines.push("");
+
+  // 集約処理の詳細
+  if (summary.aggregation.aggregatedGroups > 0) {
+    lines.push("### 集約処理詳細");
+    lines.push("");
+    lines.push("集約キー定義");
+    lines.push("");
+    lines.push("```");
+    lines.push("工事名 + 業者 + 発注日 + 小工事項目コード");
+    lines.push("```");
+    lines.push("");
+    lines.push("集約処理内容");
+    lines.push("");
+    lines.push("| 項目 | 処理方法 |");
+    lines.push("|-----------|---------|");
+    lines.push("| 実行数量 | 合算 |");
+    lines.push("| 実行予算金額 | 合算 |");
+    lines.push("| 実行単価 | 再計算（実行予算金額 ÷ 実行数量） |");
+    lines.push("| 摘要 | 結合（重複除去、`／`区切り） |");
     lines.push("");
   }
 
