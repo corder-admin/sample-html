@@ -65,7 +65,7 @@ export function printSummary(summary: ProcessingSummary): void {
       `║ 集約: 工事細目統合   ${summary.aggregation.aggregatedGroups.toLocaleString().padStart(10)} グループ${" ".repeat(17)}║`
     );
     console.log(
-      `║       キー: 契約支店名 + 工事名 + 業者 + 発注日 + 小工事項目コード${" ".repeat(1)}║`
+      `║       キー: 契約支店名 + 工事名 + 業者 + 発注日 + 大工事項目コード + 小工事項目コード${" ".repeat(1)}║`
     );
     const reducedCount =
       summary.aggregation.beforeCount - summary.aggregation.afterCount;
@@ -216,7 +216,7 @@ export function summaryToMarkdown(summary: ProcessingSummary): string {
     lines.push(`| 集約効率 | ${aggregationEfficiency}% |`);
     lines.push("");
     lines.push(
-      "> ※ 集約グループ数：同じ集約キー（契約支店名+工事名+業者+発注日+小工事項目コード）を持つ2件以上のレコードが統合されたグループの数"
+      "> ※ 集約グループ数：同じ集約キー（契約支店名+工事名+業者+発注日+大工事項目コード+小工事項目コード）を持つ2件以上のレコードが統合されたグループの数"
     );
     lines.push("");
   }
@@ -257,7 +257,9 @@ export function summaryToMarkdown(summary: ProcessingSummary): string {
     lines.push("集約キー定義");
     lines.push("");
     lines.push("```");
-    lines.push("契約支店名 + 工事名 + 業者 + 発注日 + 小工事項目コード");
+    lines.push(
+      "契約支店名 + 工事名 + 業者 + 発注日 + 大工事項目コード + 小工事項目コード"
+    );
     lines.push("```");
     lines.push("");
     lines.push("集約処理内容");

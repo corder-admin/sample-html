@@ -46,7 +46,7 @@ describe("transformer", () => {
         expect(stats.aggregatedGroups).toBe(0);
       });
 
-      it("同一キー（契約支店+工事名+業者+発注日+minorCode）で集約される", () => {
+      it("同一キー（契約支店+工事名+業者+発注日+majorCode+minorCode）で集約される", () => {
         // テストデータ: 同一キーで工事細目連番のみ異なる2件
         const records = [
           CleanedRecordFactory.build({
@@ -185,6 +185,34 @@ describe("transformer", () => {
         const { aggregated } = aggregateByMinorCode(records);
 
         // 検証: 契約支店が異なるため集約されない
+        expect(aggregated).toHaveLength(2);
+      });
+
+      it("異なる大工事項目コードは集約されない", () => {
+        // テストデータ: 同一minorCode・業者・工事名・発注日だが大工事項目コードが異なる
+        const records = [
+          CleanedRecordFactory.build({
+            region: "厚木",
+            projectName: "A工事",
+            vendor: "業者X",
+            orderDate: "20240101",
+            majorCode: "026",
+            minorCode: "001",
+          }),
+          CleanedRecordFactory.build({
+            region: "厚木",
+            projectName: "A工事",
+            vendor: "業者X",
+            orderDate: "20240101",
+            majorCode: "027",
+            minorCode: "001",
+          }),
+        ];
+
+        // 実行
+        const { aggregated } = aggregateByMinorCode(records);
+
+        // 検証: 大工事項目コードが異なるため集約されない
         expect(aggregated).toHaveLength(2);
       });
 
