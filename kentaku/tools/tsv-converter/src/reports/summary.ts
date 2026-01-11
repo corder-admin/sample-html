@@ -28,7 +28,7 @@ export function printSummary(summary: ProcessingSummary): void {
 
   console.log();
   console.log(`╔${line}╗`);
-  console.log(`║${"TSV → data.js 変換レポート".padStart(40).padEnd(60)}║`);
+  console.log(`║${"データ変換レポート".padStart(40).padEnd(60)}║`);
   console.log(`╠${line}╣`);
   console.log(`║ 入力ファイル: ${summary.inputFile.slice(-43).padEnd(44)}║`);
   console.log(`║ 出力ファイル: ${summary.outputFile.slice(-43).padEnd(44)}║`);
@@ -134,7 +134,7 @@ export function summaryToMarkdown(summary: ProcessingSummary): string {
     summary.aggregation.beforeCount - summary.aggregation.afterCount;
 
   // ヘッダー
-  lines.push("# TSV → data.js 変換レポート");
+  lines.push("# データ変換レポート");
   lines.push("");
   lines.push(`生成日時: ${timestamp}`);
   lines.push("");
