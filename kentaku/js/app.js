@@ -85,6 +85,33 @@ const CHART_CONFIG = {
 };
 
 /**
+ * 支店の表示順序定義（比較分析用）
+ */
+const REGION_ORDER = [
+  "旭川", "札幌", "苫小牧千歳", "長野", "上田", "松本", "富山", "金沢", "福井", "甲府",
+  "青森", "八戸", "秋田", "盛岡", "仙台", "仙台南", "庄内", "山形", "福島", "郡山",
+  "いわき", "宇都宮", "小山", "太田", "前橋", "高崎", "新潟", "長岡", "埼玉北", "春日部",
+  "越谷", "熊谷", "上尾", "さいたま", "浦和", "川口", "川越", "狭山", "埼玉南", "所沢",
+  "日立", "水戸", "つくば", "守谷", "柏", "成田", "千葉", "千葉南", "千葉北", "松戸",
+  "船橋", "三郷", "御殿場", "沼津", "富士", "静岡東", "静岡", "静岡西", "浜松", "浜松北",
+  "豊橋", "豊川", "岡崎", "足立", "足立南", "江戸川", "墨田", "江東", "台東", "東京北",
+  "板橋", "練馬", "品川", "目黒", "世田谷", "三鷹", "国分寺", "立川", "多摩", "青梅",
+  "八王子", "相模原", "町田", "川崎西", "川崎", "川崎東", "横浜", "横浜青葉", "横浜南", "横須賀",
+  "大和", "鎌倉", "藤沢", "厚木", "平塚", "小田原", "名古屋", "名古屋北", "名古屋西", "名古屋港",
+  "春日井", "小牧", "一宮", "多治見", "岐阜東", "岐阜", "大垣", "豊田", "安城", "刈谷",
+  "半田", "名古屋東", "名古屋天白", "名古屋南", "桑名", "四日市", "津", "彦根", "滋賀", "福知山",
+  "京都西", "京都東", "京都", "枚方", "枚方南", "尼崎", "芦屋", "神戸", "加古川", "奈良",
+  "奈良南", "池田", "大阪鶴見", "高槻", "大阪", "東大阪", "南大阪", "堺", "大阪りんくう", "和歌山",
+  "姫路", "姫路西", "徳島", "高松", "坂出", "松山", "高知", "岡山", "岡山中央", "倉敷",
+  "鳥取", "松江", "福山", "福山西", "東広島", "広島南", "広島", "徳山", "山口", "下関",
+  "小倉", "北九州", "福岡", "福岡東", "福岡西", "福岡南", "久留米", "久留米南", "沖縄中部", "沖縄",
+  "佐賀", "長崎", "佐世保", "大分", "熊本北", "熊本", "熊本南", "延岡", "宮崎", "鹿児島",
+  "流通札幌", "流通仙台", "流通新潟", "流通宇都宮", "流通大宮", "流通千葉", "流通東京", "流通西首都圏", "流通川崎", "流通横浜",
+  "流通静岡", "流通沖縄", "流通名古屋", "流通四日市", "流通京都", "流通神戸", "流通大阪", "流通高松", "流通岡山", "流通広島",
+  "流通福岡", "流通熊本"
+];
+
+/**
  * デフォルトフィルター値 - 単一の信頼できる情報源
  */
 const DEFAULT_FILTERS = {
@@ -372,7 +399,18 @@ function appData() {
           regionSet[record.region] = true;
         }
         this.projectNames = Object.keys(projectSet).sort();
-        this.regionNames = Object.keys(regionSet).sort();
+
+        // Sort regions using predefined order
+        const regions = Object.keys(regionSet);
+        this.regionNames = regions.sort((a, b) => {
+          const indexA = REGION_ORDER.indexOf(a);
+          const indexB = REGION_ORDER.indexOf(b);
+          // If not in predefined order, sort alphabetically at the end
+          if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        });
       } catch (error) {
         console.error("App initialization failed:", error);
         this.loadError = error.message;
@@ -1159,7 +1197,15 @@ function appData() {
      */
     get detailModalRegionOptions() {
       const records = this.detailModal.currentGroup?.filteredRecords || [];
-      return [...new Set(records.map((record) => record.region))].sort();
+      const regions = [...new Set(records.map((record) => record.region))];
+      return regions.sort((a, b) => {
+        const indexA = REGION_ORDER.indexOf(a);
+        const indexB = REGION_ORDER.indexOf(b);
+        if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
     },
 
     /**
@@ -1428,8 +1474,22 @@ function appData() {
       }[groupBy];
 
       const grouped = groupRecordsBy(records, keyFn);
+
+      // Sort labels based on groupBy type
       const labels = Object.keys(grouped).sort((a, b) => {
-        return grouped[b].length - grouped[a].length;
+        if (groupBy === "region") {
+          // Use predefined region order
+          const indexA = REGION_ORDER.indexOf(a);
+          const indexB = REGION_ORDER.indexOf(b);
+          // If not in predefined order, sort alphabetically at the end
+          if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        } else {
+          // For other types, sort by count (descending)
+          return grouped[b].length - grouped[a].length;
+        }
       });
 
       const data = labels.map((key) => {
