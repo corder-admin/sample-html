@@ -144,18 +144,6 @@ export function summaryToMarkdown(summary: ProcessingSummary): string {
   lines.push("");
   lines.push("### 処理結果");
   lines.push("");
-  lines.push("| 項目 | 値 | 変化率 |");
-  lines.push("|------|-----:|:------|");
-  lines.push(
-    `| 入力レコード数 | ${summary.inputCount.toLocaleString()} | ベースライン |`
-  );
-  lines.push(
-    `| 出力レコード数 | ${summary.outputCount.toLocaleString()} | ${outputPct}% |`
-  );
-  lines.push(
-    `| 処理時間 | ${(summary.processingTimeMs / 1000).toFixed(2)}秒 | - |`
-  );
-  lines.push("");
 
   // データクレンジング効果
   const totalExcluded =
@@ -164,60 +152,82 @@ export function summaryToMarkdown(summary: ProcessingSummary): string {
       0
     ) + summary.duplicateCount;
   const excludedPct = ((totalExcluded / summary.inputCount) * 100).toFixed(2);
+  const aggregationEfficiency =
+    summary.aggregation.aggregatedGroups > 0
+      ? ((reducedCount / summary.aggregation.beforeCount) * 100).toFixed(2)
+      : "0.00";
 
-  lines.push("### データクレンジング結果");
-  lines.push("");
-  lines.push("| 項目 | 除外件数 | 除外率 |");
-  lines.push("|------|--------:|------:|");
+  lines.push("| ステップ | 入力件数 | 除外/削減件数 | 出力件数 | 処理内容 |");
+  lines.push("|:---------|--------:|-----------:|--------:|:---------|");
+  lines.push(
+    `| 1. 入力 | ${summary.inputCount.toLocaleString()} | - | ${summary.inputCount.toLocaleString()} | TSVファイル読み込み |`
+  );
+  lines.push(
+    `| 2. クレンジング | ${summary.inputCount.toLocaleString()} | ${totalExcluded.toLocaleString()} (${excludedPct}%) | ${(summary.inputCount - totalExcluded).toLocaleString()} | データ品質チェック・除外 |`
+  );
 
-  for (const [reason, count] of Object.entries(summary.exclusionDetails)) {
-    if (count > 0) {
-      const label = EXCLUSION_LABELS[reason as ExclusionReason];
-      const pct = ((count / summary.inputCount) * 100).toFixed(2);
-      lines.push(`| ${label} | ${count.toLocaleString()} | ${pct}% |`);
-    }
-  }
-
-  if (summary.duplicateCount > 0) {
-    const pct = ((summary.duplicateCount / summary.inputCount) * 100).toFixed(
-      2
-    );
+  if (summary.aggregation.aggregatedGroups > 0) {
     lines.push(
-      `| 重複レコード | ${summary.duplicateCount.toLocaleString()} | ${pct}% |`
+      `| 3. 集約 | ${summary.aggregation.beforeCount.toLocaleString()} | ${reducedCount.toLocaleString()} (${aggregationEfficiency}%) | ${summary.aggregation.afterCount.toLocaleString()} | 工事細目統合（${summary.aggregation.aggregatedGroups.toLocaleString()}グループ） |`
+    );
+  } else {
+    lines.push(
+      `| 3. 集約 | ${(summary.inputCount - totalExcluded).toLocaleString()} | 0 | ${summary.outputCount.toLocaleString()} | 集約対象なし |`
     );
   }
 
   lines.push(
-    `| 合計除外 | ${totalExcluded.toLocaleString()} | ${excludedPct}% |`
+    `| **最終出力** | - | - | **${summary.outputCount.toLocaleString()}** (${outputPct}%) | data.js書き出し |`
   );
   lines.push("");
+  lines.push(`**処理時間:** ${(summary.processingTimeMs / 1000).toFixed(2)}秒`);
+  lines.push("");
 
-  // データ集約効果
+  // クレンジング詳細
+  const hasExcludedRecords = totalExcluded > 0;
+  if (hasExcludedRecords) {
+    lines.push("#### クレンジング詳細");
+    lines.push("");
+    lines.push("| 除外理由 | 除外件数 | 除外率 |");
+    lines.push("|:---------|--------:|------:|");
+
+    for (const [reason, count] of Object.entries(summary.exclusionDetails)) {
+      if (count > 0) {
+        const label = EXCLUSION_LABELS[reason as ExclusionReason];
+        const pct = ((count / summary.inputCount) * 100).toFixed(2);
+        lines.push(`| ${label} | ${count.toLocaleString()} | ${pct}% |`);
+      }
+    }
+
+    if (summary.duplicateCount > 0) {
+      const pct = ((summary.duplicateCount / summary.inputCount) * 100).toFixed(
+        2
+      );
+      lines.push(
+        `| 重複レコード | ${summary.duplicateCount.toLocaleString()} | ${pct}% |`
+      );
+    }
+
+    lines.push(
+      `| **合計** | **${totalExcluded.toLocaleString()}** | **${excludedPct}%** |`
+    );
+    lines.push("");
+  }
+
+  // 集約詳細
   if (summary.aggregation.aggregatedGroups > 0) {
-    const aggregationEfficiency = (
-      (reducedCount / summary.aggregation.beforeCount) *
-      100
-    ).toFixed(2);
-
-    lines.push("### データ集約結果");
-    lines.push("");
-    lines.push("| 項目 | 値 |");
-    lines.push("|------|-----:|");
-    lines.push(
-      `| 集約グループ数 | ${summary.aggregation.aggregatedGroups.toLocaleString()} |`
-    );
-    lines.push(
-      `| 統合前レコード数 | ${summary.aggregation.beforeCount.toLocaleString()} |`
-    );
-    lines.push(
-      `| 統合後レコード数 | ${summary.aggregation.afterCount.toLocaleString()} |`
-    );
-    lines.push(`| 削減レコード数 | ${reducedCount.toLocaleString()} |`);
-    lines.push(`| 集約効率 | ${aggregationEfficiency}% |`);
+    lines.push("#### 集約詳細");
     lines.push("");
     lines.push(
-      "> ※ 集約グループ数：同じ集約キー（契約支店名+工事名+業者+発注日+大工事項目コード+小工事項目コード）を持つ2件以上のレコードが統合されたグループの数"
+      "> 集約キー: 契約支店名 + 工事名 + 業者 + 発注日 + 大工事項目コード + 小工事項目コード"
     );
+    lines.push("");
+    lines.push("| 集約項目 | 処理方法 |");
+    lines.push("|:---------|:---------|");
+    lines.push("| 実行数量 | 合算 |");
+    lines.push("| 実行予算金額 | 合算 |");
+    lines.push("| 実行単価 | 再計算（実行予算金額 ÷ 実行数量） |");
+    lines.push("| 摘要 | 結合（重複除去、`／`区切り） |");
     lines.push("");
   }
 
@@ -249,29 +259,6 @@ export function summaryToMarkdown(summary: ProcessingSummary): string {
   }
   lines.push("```");
   lines.push("");
-
-  // 集約処理の詳細
-  if (summary.aggregation.aggregatedGroups > 0) {
-    lines.push("### 集約処理詳細");
-    lines.push("");
-    lines.push("集約キー定義");
-    lines.push("");
-    lines.push("```");
-    lines.push(
-      "契約支店名 + 工事名 + 業者 + 発注日 + 大工事項目コード + 小工事項目コード"
-    );
-    lines.push("```");
-    lines.push("");
-    lines.push("集約処理内容");
-    lines.push("");
-    lines.push("| 項目 | 処理方法 |");
-    lines.push("|-----------|---------|");
-    lines.push("| 実行数量 | 合算 |");
-    lines.push("| 実行予算金額 | 合算 |");
-    lines.push("| 実行単価 | 再計算（実行予算金額 ÷ 実行数量） |");
-    lines.push("| 摘要 | 結合（重複除去、`／`区切り） |");
-    lines.push("");
-  }
 
   return lines.join("\n");
 }
