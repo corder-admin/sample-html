@@ -41,7 +41,7 @@ export interface AggregationStats {
 }
 
 /**
- * 同一キー（工事名+業者+発注日+小工事項目コード）のレコードを集約
+ * 同一キー（施工支店+工事名+業者+発注日+小工事項目コード）のレコードを集約
  * - 実行数量（qty）と実行予算金額（amount）を合算
  * - 実行単価（price）を再計算（amount / qty）
  */
@@ -49,11 +49,11 @@ export function aggregateByMinorCode(records: CleanedRecord[]): {
   aggregated: CleanedRecord[];
   stats: AggregationStats;
 } {
-  // グループ化キー: projectName + vendor + orderDate + minorCode
+  // グループ化キー: region + projectName + vendor + orderDate + minorCode
   const groups = new Map<string, CleanedRecord[]>();
 
   for (const record of records) {
-    const key = `${record.projectName}|${record.vendor}|${record.orderDate}|${record.minorCode}`;
+    const key = `${record.region}|${record.projectName}|${record.vendor}|${record.orderDate}|${record.minorCode}`;
     const group = groups.get(key);
     if (group) {
       group.push(record);

@@ -46,10 +46,11 @@ describe("transformer", () => {
         expect(stats.aggregatedGroups).toBe(0);
       });
 
-      it("同一キー（工事名+業者+発注日+minorCode）で集約される", () => {
+      it("同一キー（施工支店+工事名+業者+発注日+minorCode）で集約される", () => {
         // テストデータ: 同一キーで工事細目連番のみ異なる2件
         const records = [
           CleanedRecordFactory.build({
+            region: "厚木",
             projectName: "A工事",
             vendor: "業者X",
             orderDate: "20240101",
@@ -60,6 +61,7 @@ describe("transformer", () => {
             spec: "仕様A",
           }),
           CleanedRecordFactory.build({
+            region: "厚木",
             projectName: "A工事",
             vendor: "業者X",
             orderDate: "20240101",
@@ -109,6 +111,80 @@ describe("transformer", () => {
         const { aggregated } = aggregateByMinorCode(records);
 
         // 検証: 業者が異なるため集約されない
+        expect(aggregated).toHaveLength(2);
+      });
+
+      it("異なる工事名は集約されない", () => {
+        // テストデータ: 同一minorCode・業者・発注日だが工事名が異なる
+        const records = [
+          CleanedRecordFactory.build({
+            projectName: "A工事",
+            vendor: "業者X",
+            orderDate: "20240101",
+            minorCode: "001",
+          }),
+          CleanedRecordFactory.build({
+            projectName: "B工事",
+            vendor: "業者X",
+            orderDate: "20240101",
+            minorCode: "001",
+          }),
+        ];
+
+        // 実行
+        const { aggregated } = aggregateByMinorCode(records);
+
+        // 検証: 工事名が異なるため集約されない
+        expect(aggregated).toHaveLength(2);
+      });
+
+      it("異なる発注日は集約されない", () => {
+        // テストデータ: 同一minorCode・業者・工事名だが発注日が異なる
+        const records = [
+          CleanedRecordFactory.build({
+            projectName: "A工事",
+            vendor: "業者X",
+            orderDate: "20240101",
+            minorCode: "001",
+          }),
+          CleanedRecordFactory.build({
+            projectName: "A工事",
+            vendor: "業者X",
+            orderDate: "20240201",
+            minorCode: "001",
+          }),
+        ];
+
+        // 実行
+        const { aggregated } = aggregateByMinorCode(records);
+
+        // 検証: 発注日が異なるため集約されない
+        expect(aggregated).toHaveLength(2);
+      });
+
+      it("異なる施工支店は集約されない", () => {
+        // テストデータ: 同一minorCode・業者・工事名・発注日だが支店が異なる
+        const records = [
+          CleanedRecordFactory.build({
+            region: "厚木",
+            projectName: "A工事",
+            vendor: "業者X",
+            orderDate: "20240101",
+            minorCode: "001",
+          }),
+          CleanedRecordFactory.build({
+            region: "横浜",
+            projectName: "A工事",
+            vendor: "業者X",
+            orderDate: "20240101",
+            minorCode: "001",
+          }),
+        ];
+
+        // 実行
+        const { aggregated } = aggregateByMinorCode(records);
+
+        // 検証: 施工支店が異なるため集約されない
         expect(aggregated).toHaveLength(2);
       });
 
