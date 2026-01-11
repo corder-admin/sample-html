@@ -41,6 +41,35 @@ export interface AggregationStats {
 }
 
 /**
+ * グループ化キーを生成
+ */
+function createAggregationKey(record: CleanedRecord): string {
+  return `${record.region}|${record.projectName}|${record.vendor}|${record.orderDate}|${record.minorCode}`;
+}
+
+/**
+ * 複数レコードを1つに集約
+ */
+function aggregateGroup(group: CleanedRecord[]): CleanedRecord {
+  const base = group[0];
+  const totalQty = group.reduce((sum, r) => sum + r.qty, 0);
+  const totalAmount = group.reduce((sum, r) => sum + r.amount, 0);
+  const recalculatedPrice =
+    totalQty > 0 ? Math.round(totalAmount / totalQty) : 0;
+
+  // 摘要（spec）は結合（重複除去）
+  const specs = [...new Set(group.map((r) => r.spec).filter(Boolean))];
+
+  return {
+    ...base,
+    qty: totalQty,
+    amount: totalAmount,
+    price: recalculatedPrice,
+    spec: specs.join("／"),
+  };
+}
+
+/**
  * 同一キー（施工支店+工事名+業者+発注日+小工事項目コード）のレコードを集約
  * - 実行数量（qty）と実行予算金額（amount）を合算
  * - 実行単価（price）を再計算（amount / qty）
@@ -53,7 +82,7 @@ export function aggregateByMinorCode(records: CleanedRecord[]): {
   const groups = new Map<string, CleanedRecord[]>();
 
   for (const record of records) {
-    const key = `${record.region}|${record.projectName}|${record.vendor}|${record.orderDate}|${record.minorCode}`;
+    const key = createAggregationKey(record);
     const group = groups.get(key);
     if (group) {
       group.push(record);
@@ -72,22 +101,7 @@ export function aggregateByMinorCode(records: CleanedRecord[]): {
     } else {
       // 複数レコードを集約
       aggregatedGroups++;
-      const base = group[0];
-      const totalQty = group.reduce((sum, r) => sum + r.qty, 0);
-      const totalAmount = group.reduce((sum, r) => sum + r.amount, 0);
-      const recalculatedPrice =
-        totalQty > 0 ? Math.round(totalAmount / totalQty) : 0;
-
-      // 摘要（spec）は結合（重複除去）
-      const specs = [...new Set(group.map((r) => r.spec).filter(Boolean))];
-
-      aggregated.push({
-        ...base,
-        qty: totalQty,
-        amount: totalAmount,
-        price: recalculatedPrice,
-        spec: specs.join("／"),
-      });
+      aggregated.push(aggregateGroup(group));
     }
   }
 

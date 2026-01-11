@@ -2,25 +2,18 @@
  * データクレンジング
  */
 
-import type { RawTsvRecord } from "../types/raw.js";
 import type {
   CleanedRecord,
-  RejectedRecord,
   ExclusionReason,
+  RejectedRecord,
 } from "../types/clean.js";
+import type { RawTsvRecord } from "../types/raw.js";
 import {
   checkExclusion,
   normalizeWhitespace,
-  parseNumber,
   parseInteger,
+  parseNumber,
 } from "../validators/rules.js";
-
-/** クレンジング結果 */
-export interface CleanResult {
-  cleaned: CleanedRecord[];
-  rejected: RejectedRecord[];
-  stats: CleaningStats;
-}
 
 /** クレンジング統計 */
 export interface CleaningStats {
@@ -30,33 +23,63 @@ export interface CleaningStats {
   byReason: Record<ExclusionReason, number>;
 }
 
+/** クレンジング結果 */
+export interface CleanResult {
+  cleaned: CleanedRecord[];
+  rejected: RejectedRecord[];
+  stats: CleaningStats;
+}
+
+/** TSVヘッダー行を考慮した行番号オフセット */
+const LINE_NUMBER_OFFSET = 2; // ヘッダー行 + 1-indexed
+
 /**
- * 生レコードをクレンジング
+ * 除外理由別のカウンターを初期化
  */
-export function cleanRecords(records: RawTsvRecord[]): CleanResult {
-  const cleaned: CleanedRecord[] = [];
-  const rejected: RejectedRecord[] = [];
-  const byReason: Record<ExclusionReason, number> = {
+function initializeReasonCounts(): Record<ExclusionReason, number> {
+  return {
     ZERO_QUANTITY: 0,
     NO_VENDOR: 0,
     INVALID_DATE: 0,
     ZERO_PRICE: 0,
     INVALID_DATA: 0,
   };
+}
+
+/**
+ * 除外レコードを記録
+ */
+function recordRejection(
+  rejected: RejectedRecord[],
+  byReason: Record<ExclusionReason, number>,
+  lineNumber: number,
+  reason: ExclusionReason,
+  rawData: RawTsvRecord
+): void {
+  byReason[reason]++;
+  rejected.push({
+    lineNumber,
+    reason,
+    rawData: rawData as unknown as Record<string, string>,
+  });
+}
+
+/**
+ * TSVレコード配列をクレンジング
+ */
+export function cleanRecords(records: RawTsvRecord[]): CleanResult {
+  const cleaned: CleanedRecord[] = [];
+  const rejected: RejectedRecord[] = [];
+  const byReason = initializeReasonCounts();
 
   for (let i = 0; i < records.length; i++) {
     const raw = records[i];
-    const lineNumber = i + 2; // ヘッダー行 + 1-indexed
+    const lineNumber = i + LINE_NUMBER_OFFSET;
 
     // 除外判定
     const exclusion = checkExclusion(raw);
     if (exclusion.excluded && exclusion.reason) {
-      byReason[exclusion.reason]++;
-      rejected.push({
-        lineNumber,
-        reason: exclusion.reason,
-        rawData: raw as unknown as Record<string, string>,
-      });
+      recordRejection(rejected, byReason, lineNumber, exclusion.reason, raw);
       continue;
     }
 
@@ -65,12 +88,7 @@ export function cleanRecords(records: RawTsvRecord[]): CleanResult {
       const cleanedRecord = transformRecord(raw);
       cleaned.push(cleanedRecord);
     } catch {
-      byReason.INVALID_DATA++;
-      rejected.push({
-        lineNumber,
-        reason: "INVALID_DATA",
-        rawData: raw as unknown as Record<string, string>,
-      });
+      recordRejection(rejected, byReason, lineNumber, "INVALID_DATA", raw);
     }
   }
 
