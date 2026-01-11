@@ -63,7 +63,7 @@ describe("pipeline/cleaner", () => {
       // テストデータ: 特定の値を持つレコード
       const records = [
         RawTsvRecordFactory.build({
-          施工支店名: "  横浜  ",
+          契約支店名: "  横浜  ",
           工事名称: "テスト　工事", // 全角スペース含む
           実行数量: "1,500",
           実行単価: "2,500.50",

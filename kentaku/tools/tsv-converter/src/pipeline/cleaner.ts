@@ -109,7 +109,7 @@ export function cleanRecords(records: RawTsvRecord[]): CleanResult {
  */
 function transformRecord(raw: RawTsvRecord): CleanedRecord {
   return {
-    region: normalizeWhitespace(raw.施工支店名),
+    region: normalizeWhitespace(raw.契約支店名),
     projectName: normalizeWhitespace(raw.工事名称),
     majorCode: raw["大工事項目ｺｰﾄﾞ"]?.trim() || "",
     minorCode: raw["小工事項目ｺｰﾄﾞ"]?.trim() || "",

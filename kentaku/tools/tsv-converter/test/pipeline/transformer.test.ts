@@ -46,7 +46,7 @@ describe("transformer", () => {
         expect(stats.aggregatedGroups).toBe(0);
       });
 
-      it("同一キー（施工支店+工事名+業者+発注日+minorCode）で集約される", () => {
+      it("同一キー（契約支店+工事名+業者+発注日+minorCode）で集約される", () => {
         // テストデータ: 同一キーで工事細目連番のみ異なる2件
         const records = [
           CleanedRecordFactory.build({
@@ -162,7 +162,7 @@ describe("transformer", () => {
         expect(aggregated).toHaveLength(2);
       });
 
-      it("異なる施工支店は集約されない", () => {
+      it("異なる契約支店は集約されない", () => {
         // テストデータ: 同一minorCode・業者・工事名・発注日だが支店が異なる
         const records = [
           CleanedRecordFactory.build({
@@ -184,7 +184,7 @@ describe("transformer", () => {
         // 実行
         const { aggregated } = aggregateByMinorCode(records);
 
-        // 検証: 施工支店が異なるため集約されない
+        // 検証: 契約支店が異なるため集約されない
         expect(aggregated).toHaveLength(2);
       });
 
