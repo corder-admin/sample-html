@@ -29,16 +29,16 @@ const DataLoader = (function () {
   // [開発用] データ削減フィルタ - 本番では ACTIVE_REGIONS を null に設定
   // 復元方法: ACTIVE_REGIONS = null; に変更するだけ
   // ==========================================================================
-  const ACTIVE_REGIONS = [
-    "千葉",
-    "さいたま",
-    "高松",
-    "名古屋",
-    "岐阜",
-    "大分",
-    "長野",
-  ]; // 7地域 約17,000件 (26.6%)
-  // const ACTIVE_REGIONS = null; // ← 本番用: 全データ使用
+  // const ACTIVE_REGIONS = [
+  //   "千葉",
+  //   "さいたま",
+  //   "高松",
+  //   "名古屋",
+  //   "岐阜",
+  //   "大分",
+  //   "長野",
+  // ]; // 7地域 約17,000件 (26.6%)
+  const ACTIVE_REGIONS = null; // ← 本番用: 全データ使用
 
   // [Performance] Set を事前生成して applyRegionFilter での繰り返し生成を回避
   const REGION_SET = ACTIVE_REGIONS ? new Set(ACTIVE_REGIONS) : null;
