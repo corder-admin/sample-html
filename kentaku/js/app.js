@@ -1788,6 +1788,12 @@ function appData() {
         return;
       }
 
+      // Calculate Y-axis max based on whisker max values (excluding outliers)
+      // This ensures all boxes and whiskers are visible while outliers may be off-screen
+      const groupStats = boxplotData.map((prices) => calcBoxplotStats(prices));
+      const maxWhiskerValue = Math.max(...groupStats.map((stats) => stats.max));
+      const yMax = maxWhiskerValue * 1.15; // Add 15% margin above max whisker
+
       this.detailChartInstance = new Chart(ctx, {
         type: "boxplot",
         data: {
@@ -1807,11 +1813,17 @@ function appData() {
           responsive: true,
           maintainAspectRatio: false,
           animation: false,
+          layout: {
+            padding: {
+              top: 20,
+              right: 10,
+            },
+          },
           plugins: {
             legend: { display: false },
             subtitle: {
               display: true,
-              text: "※ 箱はデータの中央50%の範囲、ひげは通常範囲（箱の1.5倍まで）、灰色の点は各データ、赤い点は外れ値を表示",
+              text: "※ 箱：データの中央50%範囲（Q1=下位25%点、Q3=上位75%点）、中央線は中央値。ひげ：外れ値を除く最小〜最大（Q1-1.5×IQR 〜 Q3+1.5×IQR）。赤点：外れ値。",
               font: { size: 11 },
               color: "#6c757d",
               padding: { bottom: 10 },
@@ -1832,9 +1844,18 @@ function appData() {
             },
           },
           scales: {
+            x: {
+              ticks: {
+                autoSkip: false,
+                maxRotation: 45,
+                minRotation: 45,
+                font: { size: 10 },
+              },
+            },
             y: {
               title: { display: true, text: `実行単価 (円/${unit})` },
               ticks: { callback: (value) => "¥" + formatNumber(value) },
+              max: yMax,
             },
           },
         },
