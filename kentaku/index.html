@@ -246,18 +246,22 @@
               >大工事項目コード</label
             >
             <div class="d-flex flex-wrap gap-2">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  value="026"
-                  id="code026"
-                  x-model="filters.majorCodes"
-                  @change="applyFilters()"
-                /><label class="form-check-label small" for="code026"
-                  >026</label
-                >
-              </div>
+              <template x-for="code in majorCodeNames" :key="code">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    :value="code"
+                    :id="'code' + code"
+                    x-model="filters.majorCodes"
+                    @change="applyFilters()"
+                  /><label
+                    class="form-check-label small"
+                    :for="'code' + code"
+                    x-text="code"
+                  ></label>
+                </div>
+              </template>
             </div>
           </div>
           <div class="mb-3">
@@ -568,18 +572,22 @@
               >大工事項目コード</label
             >
             <div class="d-flex flex-wrap gap-2">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  value="026"
-                  id="code026-mobile"
-                  x-model="filters.majorCodes"
-                  @change="applyFilters()"
-                /><label class="form-check-label small" for="code026-mobile"
-                  >026</label
-                >
-              </div>
+              <template x-for="code in majorCodeNames" :key="code">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    :value="code"
+                    :id="'code-mobile-' + code"
+                    x-model="filters.majorCodes"
+                    @change="applyFilters()"
+                  /><label
+                    class="form-check-label small"
+                    :for="'code-mobile-' + code"
+                    x-text="code"
+                  ></label>
+                </div>
+              </template>
             </div>
           </div>
           <div class="mb-3">

@@ -5,6 +5,7 @@
 import { parse } from "csv-parse";
 import { createReadStream } from "node:fs";
 import type { RawTsvRecord } from "../types/raw.js";
+import { TSV_COLUMNS } from "../types/raw.js";
 
 /** 読み込み結果 */
 export interface ReadResult {
@@ -15,7 +16,7 @@ export interface ReadResult {
 /** Parser設定オプション */
 interface ParserOptions {
   delimiter: string;
-  columns: boolean;
+  columns: string[] | boolean;
   skip_empty_lines: boolean;
   relax_column_count: boolean;
   trim: boolean;
@@ -27,7 +28,7 @@ interface ParserOptions {
 function createParserOptions(): ParserOptions {
   return {
     delimiter: "\t",
-    columns: true, // ヘッダー行をキーとして使用
+    columns: TSV_COLUMNS, // types/raw.tsで定義された列名を使用
     skip_empty_lines: true,
     relax_column_count: true, // カラム数の不一致を許容
     trim: false, // トリムは後でクレンジングで行う
@@ -56,10 +57,6 @@ async function readTsvFileCore(
       .pipe(parser)
       .on("data", (row: Record<string, string>) => {
         totalLines++;
-
-        // 摘要_2カラムを空文字で初期化
-        // 注: 2つ目の摘要カラムが存在する場合は別途処理が必要
-        row["摘要_2"] = row["摘要"] || "";
 
         records.push(row as unknown as RawTsvRecord);
 
