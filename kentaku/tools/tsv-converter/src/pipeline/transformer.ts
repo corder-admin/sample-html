@@ -131,7 +131,7 @@ export function sortByOrderDate(
 
 /**
  * 重複レコードを除去
- * （同一の工事名称・品目・業者・発注日の組み合わせ）
+ * （同一の工事名称・品目・業者・発注日・数量・単価の組み合わせ）
  */
 export function deduplicateRecords(records: OutputRecord[]): {
   unique: OutputRecord[];
