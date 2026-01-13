@@ -1880,8 +1880,33 @@
                         x-model="detailModal.comparison.metric"
                         @change="renderDetailChart()"
                       >
-                        <option value="avg">平均</option>
-                        <option value="median">中央値</option>
+                        <optgroup label="単価">
+                          <option value="avgPrice">平均単価</option>
+                          <option value="medianPrice">中央単価</option>
+                          <option value="minPrice">最小単価</option>
+                          <option value="maxPrice">最大単価</option>
+                        </optgroup>
+                        <optgroup label="数量">
+                          <option value="sumQty">合計数量</option>
+                          <option value="avgQty">平均数量</option>
+                          <option value="medianQty">中央数量</option>
+                        </optgroup>
+                      </select>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                      <label
+                        class="form-label small mb-0 text-muted fw-semibold"
+                        >並び順:</label
+                      >
+                      <select
+                        class="form-select form-select-sm"
+                        style="width: auto"
+                        x-model="detailModal.comparison.sortOrder"
+                        @change="renderDetailChart()"
+                      >
+                        <option value="default">指定なし</option>
+                        <option value="asc">昇順</option>
+                        <option value="desc">降順</option>
                       </select>
                     </div>
                     <div class="d-flex align-items-center gap-1">
@@ -2320,34 +2345,65 @@
                           <div
                             class="ms-0 ms-md-auto small d-flex flex-wrap gap-2 gap-md-3"
                           >
-                            <span class="text-success"
-                              >最小:
-                              <span
-                                class="fw-semibold"
-                                x-text="`¥${formatNumber(group.minPrice)}`"
-                              ></span
-                            ></span>
-                            <span class="text-primary"
-                              >平均:
-                              <span
-                                class="fw-semibold"
-                                x-text="`¥${formatNumber(group.avgPrice)}`"
-                              ></span
-                            ></span>
-                            <span class="text-warning"
-                              >中央値:
-                              <span
-                                class="fw-semibold"
-                                x-text="`¥${formatNumber(group.medianPrice)}`"
-                              ></span
-                            ></span>
-                            <span class="text-danger"
-                              >最大:
-                              <span
-                                class="fw-semibold"
-                                x-text="`¥${formatNumber(group.maxPrice)}`"
-                              ></span
-                            ></span>
+                            <!-- 単価統計 (単価指標選択時) -->
+                            <template x-if="detailModal.comparison.metric.includes('Price')">
+                              <div class="d-flex flex-wrap gap-2 gap-md-3">
+                                <span class="text-success"
+                                  >最小単価:
+                                  <span
+                                    class="fw-semibold"
+                                    x-text="`¥${formatNumber(group.minPrice)}`"
+                                  ></span
+                                ></span>
+                                <span class="text-primary"
+                                  >平均単価:
+                                  <span
+                                    class="fw-semibold"
+                                    x-text="`¥${formatNumber(group.avgPrice)}`"
+                                  ></span
+                                ></span>
+                                <span class="text-warning"
+                                  >中央単価:
+                                  <span
+                                    class="fw-semibold"
+                                    x-text="`¥${formatNumber(group.medianPrice)}`"
+                                  ></span
+                                ></span>
+                                <span class="text-danger"
+                                  >最大単価:
+                                  <span
+                                    class="fw-semibold"
+                                    x-text="`¥${formatNumber(group.maxPrice)}`"
+                                  ></span
+                                ></span>
+                              </div>
+                            </template>
+                            <!-- 数量統計 (数量指標選択時) -->
+                            <template x-if="detailModal.comparison.metric.includes('Qty')">
+                              <div class="d-flex flex-wrap gap-2 gap-md-3">
+                                <span class="text-success"
+                                  >合計数量:
+                                  <span
+                                    class="fw-semibold"
+                                    x-text="formatNumber(group.sumQty)"
+                                  ></span
+                                ></span>
+                                <span class="text-primary"
+                                  >平均数量:
+                                  <span
+                                    class="fw-semibold"
+                                    x-text="formatNumber(group.avgQty)"
+                                  ></span
+                                ></span>
+                                <span class="text-warning"
+                                  >中央数量:
+                                  <span
+                                    class="fw-semibold"
+                                    x-text="formatNumber(group.medianQty)"
+                                  ></span
+                                ></span>
+                              </div>
+                            </template>
                           </div>
                         </div>
                         <div class="card shadow-sm">

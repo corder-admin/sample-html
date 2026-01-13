@@ -502,8 +502,9 @@ function appData() {
       // タブ2: 比較分析
       comparison: {
         groupBy: "region", // 'region' | 'vendor' | 'majorCode' | 'building'
-        metric: "avg", // 'avg' | 'median'
+        metric: "avgPrice", // 'sumQty' | 'avgQty' | 'medianQty' | 'avgPrice' | 'medianPrice' | 'minPrice' | 'maxPrice'
         chartType: "bar", // 'bar' | 'boxplot' | 'radar' | 'table'
+        sortOrder: "default", // 'default' | 'asc' | 'desc'
       },
 
       // タブ3: 傾向分析
@@ -1261,8 +1262,9 @@ function appData() {
         },
         comparison: {
           groupBy: "region",
-          metric: "avg",
+          metric: "avgPrice",
           chartType: "bar",
+          sortOrder: "default",
         },
         trend: {
           xAxis: "resUnits",
@@ -1432,18 +1434,18 @@ function appData() {
         vendor: (record) => record.vendor,
       }[groupBy];
 
-      const groups = groupRecordsBy(records, keyFn);
+      const grouped = groupRecordsBy(records, keyFn);
 
       // Sort by key for timeline
       if (groupBy === "timeline") {
         return Object.fromEntries(
-          Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
+          Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b))
         );
       }
 
       // Sort groups by record count (descending) for others
       return Object.fromEntries(
-        Object.entries(groups).sort(([, a], [, b]) => b.length - a.length)
+        Object.entries(grouped).sort(([, a], [, b]) => b.length - a.length)
       );
     },
 
@@ -1532,6 +1534,9 @@ function appData() {
      * @returns {Array} グループ化データ（統計付き）
      */
     prepareComparisonTableData(records, groupBy) {
+      const metric = this.detailModal.comparison.metric;
+      const sortOrder = this.detailModal.comparison.sortOrder;
+
       const keyFn = {
         region: (record) => record.region,
         vendor: (record) => record.vendor,
@@ -1541,22 +1546,48 @@ function appData() {
 
       const grouped = groupRecordsBy(records, keyFn);
 
-      return Object.entries(grouped)
-        .map(([key, groupRecords]) => {
-          const prices = groupRecords.map((record) => record.price);
-          const stats = calcPriceStats(prices);
+      const entries = Object.entries(grouped).map(([key, groupRecords]) => {
+        const prices = groupRecords.map((record) => record.price);
+        const qtys = groupRecords.map((record) => record.qty);
+        const priceStats = calcPriceStats(prices);
+        const qtyStats = calcPriceStats(qtys);
+        const sumQty = qtys.reduce((sum, q) => sum + q, 0);
 
-          return {
-            label: key,
-            count: groupRecords.length,
-            minPrice: stats.min,
-            avgPrice: stats.avg,
-            maxPrice: stats.max,
-            medianPrice: calcMedian(prices),
-            records: groupRecords,
-          };
-        })
-        .sort((a, b) => b.count - a.count);
+        return {
+          label: key,
+          count: groupRecords.length,
+          minPrice: priceStats.min,
+          avgPrice: priceStats.avg,
+          maxPrice: priceStats.max,
+          medianPrice: calcMedian(prices),
+          sumQty: sumQty,
+          avgQty: qtyStats.avg,
+          medianQty: calcMedian(qtys),
+          records: groupRecords,
+        };
+      });
+
+      // Sort based on sortOrder and metric
+      return entries.sort((a, b) => {
+        if (sortOrder === "default") {
+          if (groupBy === "region") {
+            const indexA = REGION_ORDER.indexOf(a.label);
+            const indexB = REGION_ORDER.indexOf(b.label);
+            if (indexA === -1 && indexB === -1) return a.label.localeCompare(b.label);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+          } else {
+            // 指定なし: 並び替えなし（データ順のまま）
+            return 0;
+          }
+        } else if (sortOrder === "asc") {
+          return (a[metric] || 0) - (b[metric] || 0);
+        } else {
+          // desc
+          return (b[metric] || 0) - (a[metric] || 0);
+        }
+      });
     },
 
     /**
@@ -1662,6 +1693,7 @@ function appData() {
     prepareComparisonChartData(records) {
       const groupBy = this.detailModal.comparison.groupBy;
       const metric = this.detailModal.comparison.metric;
+      const sortOrder = this.detailModal.comparison.sortOrder;
 
       const keyFn = {
         region: (record) => record.region,
@@ -1672,35 +1704,70 @@ function appData() {
 
       const grouped = groupRecordsBy(records, keyFn);
 
-      // Sort labels based on groupBy type
-      const labels = Object.keys(grouped).sort((a, b) => {
-        if (groupBy === "region") {
-          // Use predefined region order
-          const indexA = REGION_ORDER.indexOf(a);
-          const indexB = REGION_ORDER.indexOf(b);
-          // If not in predefined order, sort alphabetically at the end
-          if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-          if (indexA === -1) return 1;
-          if (indexB === -1) return -1;
-          return indexA - indexB;
+      // Calculate metric value for each group
+      const calcMetricValue = (groupRecords) => {
+        const prices = groupRecords.map((r) => r.price);
+        const qtys = groupRecords.map((r) => r.qty);
+        const priceStats = calcPriceStats(prices);
+        const qtyStats = calcPriceStats(qtys);
+
+        switch (metric) {
+          case "sumQty":
+            return qtys.reduce((sum, q) => sum + q, 0);
+          case "avgQty":
+            return qtyStats.avg;
+          case "medianQty":
+            return calcMedian(qtys);
+          case "avgPrice":
+            return priceStats.avg;
+          case "medianPrice":
+            return calcMedian(prices);
+          case "minPrice":
+            return priceStats.min;
+          case "maxPrice":
+            return priceStats.max;
+          default:
+            return priceStats.avg;
+        }
+      };
+
+      // Build entries with calculated metric values
+      const entries = Object.keys(grouped).map((key) => ({
+        key,
+        records: grouped[key],
+        metricValue: calcMetricValue(grouped[key]),
+      }));
+
+      // Sort entries based on sortOrder
+      entries.sort((a, b) => {
+        if (sortOrder === "default") {
+          // Default: region uses REGION_ORDER, others keep data order
+          if (groupBy === "region") {
+            const indexA = REGION_ORDER.indexOf(a.key);
+            const indexB = REGION_ORDER.indexOf(b.key);
+            if (indexA === -1 && indexB === -1) return a.key.localeCompare(b.key);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+          } else {
+            // 指定なし: 並び替えなし（データ順のまま）
+            return 0;
+          }
+        } else if (sortOrder === "asc") {
+          return a.metricValue - b.metricValue;
         } else {
-          // For other types, sort by count (descending)
-          return grouped[b].length - grouped[a].length;
+          // desc
+          return b.metricValue - a.metricValue;
         }
       });
 
-      const data = labels.map((key) => {
-        const prices = grouped[key].map((record) => record.price);
-        const stats = calcPriceStats(prices);
+      const labels = entries.map((e) => e.key);
+      const data = entries.map((e) => e.metricValue);
 
-        if (metric === "avg") return stats.avg;
-        if (metric === "median") return calcMedian(prices);
-        return stats.avg;
-      });
-
-      // For boxplot, we need the raw prices per group
-      const boxplotData = labels.map((key) =>
-        grouped[key].map((record) => record.price)
+      // For boxplot, we need the raw values per group based on metric type
+      const isQtyMetric = metric.includes("Qty");
+      const boxplotData = entries.map((e) =>
+        e.records.map((record) => isQtyMetric ? record.qty : record.price)
       );
 
       return { labels, data, boxplotData };
@@ -1941,20 +2008,36 @@ function appData() {
       const unit = this.detailModal.currentGroup?.unit || "";
       const { labels, data: chartData, boxplotData } = data;
 
+      // Metric labels and Y-axis configuration
+      const metricLabels = {
+        sumQty: "合計数量",
+        avgQty: "平均数量",
+        medianQty: "中央数量",
+        avgPrice: "平均単価",
+        medianPrice: "中央単価",
+        minPrice: "最小単価",
+        maxPrice: "最大単価",
+      };
+      const isQtyMetric = metric.includes("Qty");
+      const yAxisTitle = isQtyMetric ? `数量 (${unit})` : `実行単価 (円/${unit})`;
+      const tooltipFormat = (value) =>
+        isQtyMetric ? formatNumber(value) : `¥${formatNumber(value)}`;
+      const tickFormat = (value) =>
+        isQtyMetric ? formatNumber(value) : "¥" + formatNumber(value);
+
       if (chartType === "boxplot") {
-        this.renderBoxplotChart(ctx, labels, boxplotData, unit);
+        this.renderBoxplotChart(ctx, labels, boxplotData, unit, isQtyMetric);
       } else if (chartType === "radar") {
         this.renderRadarChart(ctx, labels, chartData, metric);
       } else {
         // Default bar chart
-        const metricLabels = { avg: "平均", median: "中央値" };
         this.detailChartInstance = new Chart(ctx, {
           type: "bar",
           data: {
             labels,
             datasets: [
               {
-                label: metricLabels[metric] || "平均",
+                label: metricLabels[metric] || "平均単価",
                 data: chartData,
                 backgroundColor: CHART_COLORS.avg.border,
               },
@@ -1969,15 +2052,15 @@ function appData() {
               tooltip: {
                 callbacks: {
                   label: (context) =>
-                    `${context.dataset.label}: ¥${formatNumber(context.raw)}`,
+                    `${context.dataset.label}: ${tooltipFormat(context.raw)}`,
                 },
               },
             },
             scales: {
               x: { grid: { display: false } },
               y: {
-                title: { display: true, text: `実行単価 (円/${unit})` },
-                ticks: { callback: (value) => "¥" + formatNumber(value) },
+                title: { display: true, text: yAxisTitle },
+                ticks: { callback: tickFormat },
               },
             },
           },
@@ -1989,15 +2072,23 @@ function appData() {
      * ボックスプロットチャートを描画
      * @param {CanvasRenderingContext2D} ctx - Canvas context
      * @param {Array} labels - グループラベル
-     * @param {Array} boxplotData - 各グループの価格配列
+     * @param {Array} boxplotData - 各グループの値配列
      * @param {string} unit - 単位ラベル
+     * @param {boolean} isQtyMetric - 数量指標の場合true
      */
-    renderBoxplotChart(ctx, labels, boxplotData, unit) {
+    renderBoxplotChart(ctx, labels, boxplotData, unit, isQtyMetric = false) {
+      const yAxisTitle = isQtyMetric ? `数量 (${unit})` : `実行単価 (円/${unit})`;
+      const formatValue = (value) =>
+        isQtyMetric ? formatNumber(value) : `¥${formatNumber(value)}`;
+      const tickFormat = (value) =>
+        isQtyMetric ? formatNumber(value) : "¥" + formatNumber(value);
+      const datasetLabel = isQtyMetric ? "数量分布" : "単価分布";
+
       // Check if boxplot plugin is available
       if (typeof Chart.controllers.boxplot === "undefined") {
         console.warn("Boxplot plugin not loaded, falling back to bar chart");
         // Fallback to bar chart showing quartiles
-        const statsData = boxplotData.map((prices) => calcBoxplotStats(prices));
+        const statsData = boxplotData.map((values) => calcBoxplotStats(values));
         this.detailChartInstance = new Chart(ctx, {
           type: "bar",
           data: {
@@ -2036,8 +2127,8 @@ function appData() {
             },
             scales: {
               y: {
-                title: { display: true, text: `実行単価 (円/${unit})` },
-                ticks: { callback: (value) => "¥" + formatNumber(value) },
+                title: { display: true, text: yAxisTitle },
+                ticks: { callback: tickFormat },
               },
             },
           },
@@ -2047,7 +2138,7 @@ function appData() {
 
       // Calculate Y-axis max based on whisker max values (excluding outliers)
       // This ensures all boxes and whiskers are visible while outliers may be off-screen
-      const groupStats = boxplotData.map((prices) => calcBoxplotStats(prices));
+      const groupStats = boxplotData.map((values) => calcBoxplotStats(values));
       const maxWhiskerValue = Math.max(...groupStats.map((stats) => stats.max));
       const yMax = maxWhiskerValue * 1.15; // Add 15% margin above max whisker
 
@@ -2057,7 +2148,7 @@ function appData() {
           labels,
           datasets: [
             {
-              label: "単価分布",
+              label: datasetLabel,
               data: boxplotData,
               backgroundColor: CHART_COLORS.avg.border + "44",
               borderColor: CHART_COLORS.avg.border,
@@ -2090,11 +2181,11 @@ function appData() {
                 label: (context) => {
                   const stats = calcBoxplotStats(context.raw);
                   return [
-                    `最小: ¥${formatNumber(stats.min)}`,
-                    `Q1: ¥${formatNumber(stats.q1)}`,
-                    `中央値: ¥${formatNumber(stats.median)}`,
-                    `Q3: ¥${formatNumber(stats.q3)}`,
-                    `最大: ¥${formatNumber(stats.max)}`,
+                    `最小: ${formatValue(stats.min)}`,
+                    `Q1: ${formatValue(stats.q1)}`,
+                    `中央値: ${formatValue(stats.median)}`,
+                    `Q3: ${formatValue(stats.q3)}`,
+                    `最大: ${formatValue(stats.max)}`,
                   ];
                 },
               },
@@ -2110,8 +2201,8 @@ function appData() {
               },
             },
             y: {
-              title: { display: true, text: `実行単価 (円/${unit})` },
-              ticks: { callback: (value) => "¥" + formatNumber(value) },
+              title: { display: true, text: yAxisTitle },
+              ticks: { callback: tickFormat },
               max: yMax,
             },
           },
