@@ -756,6 +756,16 @@ function appData() {
     // ===== 多角分析モーダル用ドロップダウン関数終了 =====
 
     /**
+     * 小工事項目の表示名を生成（minorCode-item形式）
+     * @param {Object} group - minorCodeとitemを持つオブジェクト
+     * @returns {string} 表示用テキスト（例: "0135-ＤＳ構造用くぎ"）
+     */
+    formatItemName(group) {
+      if (!group) return "";
+      return `${group.minorCode || ""}-${group.item || ""}`;
+    },
+
+    /**
      * rawRecordsに派生フィールドを事前計算して追加
      * 日付フォーマット、業者名クリーニング、金額計算など
      */
@@ -788,9 +798,10 @@ function appData() {
         const key = item.item; // 小工事項目名称のみで集約
         if (!groups[key])
           groups[key] = {
-            item: item.item,
-            spec: item.spec,
-            unit: item.unit,
+            item: item.item, // 小工事項目名称
+            minorCode: item.minorCode, // 小工事項目コード
+            spec: item.spec, // 摘要
+            unit: item.unit, // 単位
             records: [],
           };
         groups[key].records.push(item);
@@ -1188,8 +1199,9 @@ function appData() {
       const weeklyData = prepareWeeklyTableData(records);
 
       this.chartData = {
-        title: `単価推移 - ${group.item}`,
+        title: `単価推移 - ${group.minorCode}-${group.item}`,
         item: group.item,
+        minorCode: group.minorCode,
         unit: group.unit,
         records: records,
         weeklyData: weeklyData,

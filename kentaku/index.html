@@ -838,7 +838,10 @@
                     class="d-flex justify-content-between align-items-start mb-3"
                   >
                     <div>
-                      <h5 class="fw-bold mb-2" x-text="group.item"></h5>
+                      <h5
+                        class="fw-bold mb-2"
+                        x-text="formatItemName(group)"
+                      ></h5>
                       <div class="d-flex flex-wrap gap-1">
                         <span
                           class="badge bg-secondary"
@@ -1241,7 +1244,8 @@
                     <line x1="12" y1="20" x2="12" y2="4" />
                     <line x1="6" y1="20" x2="6" y2="14" />
                   </svg>
-                  単価推移 - <span x-text="chartData.item"></span>
+                  単価推移 -
+                  <span x-text="formatItemName(chartData)"></span>
                   <small
                     class="text-muted ms-2"
                     x-text="`(${chartData.unit})`"
@@ -1562,7 +1566,7 @@
                       <circle cx="11" cy="11" r="8" />
                       <path d="m21 21-4.35-4.35" />
                     </svg>
-                    <span x-text="detailModal.currentGroup?.item"></span>
+                    <span x-text="formatItemName(detailModal.currentGroup)"></span>
                   </h5>
                 </div>
                 <button
