@@ -223,3 +223,57 @@ NEVER:
 
 reference: https://getbootstrap.com/docs/5.3/utilities/api/
 ```
+
+## §10 Cache Version Management
+
+ブラウザキャッシュを適切に制御するため、ファイル更新時にバージョン番号を更新する必要があります。
+
+### §10.1 Data Version (data.json.gz)
+
+```yaml
+location: js/data-loader.js
+variable: CONFIG.DATA_VERSION
+format: "YYYYMMDD"
+example: "20260113"
+
+update_when:
+  - data/data.json.gz を更新した時
+  - TSVコンバーターでデータを再生成した時
+
+procedure: 1. data.json.gz を更新
+  2. data-loader.js の DATA_VERSION を当日の日付に変更
+```
+
+### §10.2 Script Version (JS files)
+
+```yaml
+location: index.html
+parameter: "?d=YYYYMMDDHHMMSS"
+example: "?d=20260113120000"
+
+affected_files:
+  - js/utils.js
+  - js/chart-helpers.js
+  - js/data-loader.js
+  - js/app.js
+
+update_when:
+  - 上記いずれかのJSファイルを修正した時
+
+procedure: 1. JSファイルを修正
+  2. index.html の該当 <script> タグのクエリパラメータを更新
+  3. 全JSファイルのバージョンを同一タイムスタンプに統一
+```
+
+### §10.3 Version Update Checklist
+
+```yaml
+ALWAYS:
+  - データ更新時: DATA_VERSION を更新
+  - JS修正時: index.html のスクリプトバージョンを更新
+  - 両方更新時: 両方のバージョンを更新
+
+NEVER:
+  - バージョン更新を忘れてデプロイしない
+  - 異なるタイムスタンプをJSファイル間で混在させない
+```
