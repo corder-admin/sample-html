@@ -1551,7 +1551,6 @@ function appData() {
         const qtys = groupRecords.map((record) => record.qty);
         const priceStats = calcPriceStats(prices);
         const qtyStats = calcPriceStats(qtys);
-        const sumQty = qtys.reduce((sum, q) => sum + q, 0);
 
         return {
           label: key,
@@ -1560,7 +1559,7 @@ function appData() {
           avgPrice: priceStats.avg,
           maxPrice: priceStats.max,
           medianPrice: calcMedian(prices),
-          sumQty: sumQty,
+          sumQty: qtyStats.sum,
           avgQty: qtyStats.avg,
           medianQty: calcMedian(qtys),
           records: groupRecords,
@@ -1573,7 +1572,8 @@ function appData() {
           if (groupBy === "region") {
             const indexA = REGION_ORDER.indexOf(a.label);
             const indexB = REGION_ORDER.indexOf(b.label);
-            if (indexA === -1 && indexB === -1) return a.label.localeCompare(b.label);
+            if (indexA === -1 && indexB === -1)
+              return a.label.localeCompare(b.label);
             if (indexA === -1) return 1;
             if (indexB === -1) return -1;
             return indexA - indexB;
@@ -1704,30 +1704,37 @@ function appData() {
 
       const grouped = groupRecordsBy(records, keyFn);
 
-      // Calculate metric value for each group
+      // Calculate metric value for each group (only compute what's needed)
+      const isQtyMetric = metric.includes("Qty");
       const calcMetricValue = (groupRecords) => {
-        const prices = groupRecords.map((r) => r.price);
-        const qtys = groupRecords.map((r) => r.qty);
-        const priceStats = calcPriceStats(prices);
-        const qtyStats = calcPriceStats(qtys);
-
-        switch (metric) {
-          case "sumQty":
-            return qtys.reduce((sum, q) => sum + q, 0);
-          case "avgQty":
-            return qtyStats.avg;
-          case "medianQty":
-            return calcMedian(qtys);
-          case "avgPrice":
-            return priceStats.avg;
-          case "medianPrice":
-            return calcMedian(prices);
-          case "minPrice":
-            return priceStats.min;
-          case "maxPrice":
-            return priceStats.max;
-          default:
-            return priceStats.avg;
+        if (isQtyMetric) {
+          const qtys = groupRecords.map((r) => r.qty);
+          const qtyStats = calcPriceStats(qtys);
+          switch (metric) {
+            case "sumQty":
+              return qtyStats.sum;
+            case "avgQty":
+              return qtyStats.avg;
+            case "medianQty":
+              return calcMedian(qtys);
+            default:
+              return qtyStats.avg;
+          }
+        } else {
+          const prices = groupRecords.map((r) => r.price);
+          const priceStats = calcPriceStats(prices);
+          switch (metric) {
+            case "avgPrice":
+              return priceStats.avg;
+            case "medianPrice":
+              return calcMedian(prices);
+            case "minPrice":
+              return priceStats.min;
+            case "maxPrice":
+              return priceStats.max;
+            default:
+              return priceStats.avg;
+          }
         }
       };
 
@@ -1745,7 +1752,8 @@ function appData() {
           if (groupBy === "region") {
             const indexA = REGION_ORDER.indexOf(a.key);
             const indexB = REGION_ORDER.indexOf(b.key);
-            if (indexA === -1 && indexB === -1) return a.key.localeCompare(b.key);
+            if (indexA === -1 && indexB === -1)
+              return a.key.localeCompare(b.key);
             if (indexA === -1) return 1;
             if (indexB === -1) return -1;
             return indexA - indexB;
@@ -1765,9 +1773,8 @@ function appData() {
       const data = entries.map((e) => e.metricValue);
 
       // For boxplot, we need the raw values per group based on metric type
-      const isQtyMetric = metric.includes("Qty");
       const boxplotData = entries.map((e) =>
-        e.records.map((record) => isQtyMetric ? record.qty : record.price)
+        e.records.map((record) => (isQtyMetric ? record.qty : record.price))
       );
 
       return { labels, data, boxplotData };
@@ -2019,7 +2026,9 @@ function appData() {
         maxPrice: "最大単価",
       };
       const isQtyMetric = metric.includes("Qty");
-      const yAxisTitle = isQtyMetric ? `数量 (${unit})` : `実行単価 (円/${unit})`;
+      const yAxisTitle = isQtyMetric
+        ? `数量 (${unit})`
+        : `実行単価 (円/${unit})`;
       const tooltipFormat = (value) =>
         isQtyMetric ? formatNumber(value) : `¥${formatNumber(value)}`;
       const tickFormat = (value) =>
@@ -2077,7 +2086,9 @@ function appData() {
      * @param {boolean} isQtyMetric - 数量指標の場合true
      */
     renderBoxplotChart(ctx, labels, boxplotData, unit, isQtyMetric = false) {
-      const yAxisTitle = isQtyMetric ? `数量 (${unit})` : `実行単価 (円/${unit})`;
+      const yAxisTitle = isQtyMetric
+        ? `数量 (${unit})`
+        : `実行単価 (円/${unit})`;
       const formatValue = (value) =>
         isQtyMetric ? formatNumber(value) : `¥${formatNumber(value)}`;
       const tickFormat = (value) =>

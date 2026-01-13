@@ -187,11 +187,11 @@ function findMinMax(values) {
 /**
  * Calculate price statistics from an array of prices
  * @param {number[]} prices - Array of price values
- * @returns {{min: number, max: number, avg: number}} Statistics object
+ * @returns {{min: number, max: number, avg: number, sum: number}} Statistics object
  */
 function calcPriceStats(prices) {
   if (!prices || prices.length === 0) {
-    return { min: 0, max: 0, avg: 0 };
+    return { min: 0, max: 0, avg: 0, sum: 0 };
   }
 
   // Use extracted findMinMax for DRY compliance
@@ -203,7 +203,7 @@ function calcPriceStats(prices) {
     sum += prices[i];
   }
 
-  return { min, max, avg: Math.round(sum / prices.length) };
+  return { min, max, avg: Math.round(sum / prices.length), sum };
 }
 
 /**
