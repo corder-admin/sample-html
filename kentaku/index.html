@@ -1566,7 +1566,9 @@
                       <circle cx="11" cy="11" r="8" />
                       <path d="m21 21-4.35-4.35" />
                     </svg>
-                    <span x-text="formatItemName(detailModal.currentGroup)"></span>
+                    <span
+                      x-text="formatItemName(detailModal.currentGroup)"
+                    ></span>
                   </h5>
                 </div>
                 <button
@@ -2346,7 +2348,9 @@
                             class="ms-0 ms-md-auto small d-flex flex-wrap gap-2 gap-md-3"
                           >
                             <!-- 単価統計 (単価指標選択時) -->
-                            <template x-if="detailModal.comparison.metric.includes('Price')">
+                            <template
+                              x-if="detailModal.comparison.metric.includes('Price')"
+                            >
                               <div class="d-flex flex-wrap gap-2 gap-md-3">
                                 <span class="text-success"
                                   >最小単価:
@@ -2379,7 +2383,9 @@
                               </div>
                             </template>
                             <!-- 数量統計 (数量指標選択時) -->
-                            <template x-if="detailModal.comparison.metric.includes('Qty')">
+                            <template
+                              x-if="detailModal.comparison.metric.includes('Qty')"
+                            >
                               <div class="d-flex flex-wrap gap-2 gap-md-3">
                                 <span class="text-success"
                                   >合計数量:
@@ -2946,13 +2952,13 @@
     ></script>
     <!-- Application Scripts (load order matters) -->
     <!-- Cache buster: ?d=yyyymmddhhmmss - update when files change -->
-    <script defer src="js/utils.js?d=20260106143000"></script>
-    <script defer src="js/chart-helpers.js?d=20260106143000"></script>
-    <script defer src="js/data-loader.js?d=20260106143000"></script>
-    <script defer src="js/gemini-api.js?d=20260106143000"></script>
-    <script defer src="js/markdown-renderer.js?d=20260106143000"></script>
-    <script defer src="js/ai-report.js?d=20260106143000"></script>
-    <script defer src="js/app.js?d=20260106143000"></script>
+    <script defer src="js/utils.js?d=20260113120000"></script>
+    <script defer src="js/chart-helpers.js?d=20260113120000"></script>
+    <script defer src="js/data-loader.js?d=20260113120000"></script>
+    <script defer src="js/gemini-api.js?d=20260113120000"></script>
+    <script defer src="js/markdown-renderer.js?d=20260113120000"></script>
+    <script defer src="js/ai-report.js?d=20260113120000"></script>
+    <script defer src="js/app.js?d=20260113120000"></script>
 
     <!-- Alpine.js (must be loaded after app scripts) -->
     <script
