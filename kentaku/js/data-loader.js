@@ -21,6 +21,8 @@ const DataLoader = (function () {
   // 設定
   const CONFIG = {
     DATA_GZIP_PATH: "data/data.json.gz",
+    // データバージョン: data.json.gz を更新したらこの値を変更してキャッシュを破棄
+    DATA_VERSION: "20260113",
     DEBUG:
       location.hostname === "localhost" || location.hostname === "127.0.0.1",
   };
@@ -84,7 +86,9 @@ const DataLoader = (function () {
       throw new Error("pako library is required for gzip decompression");
     }
 
-    const response = await fetch(CONFIG.DATA_GZIP_PATH);
+    // キャッシュバスター: バージョン番号を付加してブラウザキャッシュを回避
+    const url = `${CONFIG.DATA_GZIP_PATH}?v=${CONFIG.DATA_VERSION}`;
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.status}`);
     }
