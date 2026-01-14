@@ -2,6 +2,8 @@
  * フィルタリングロジックの純粋関数群
  */
 
+import { workTypes } from "../../data/workTypes.js";
+
 /**
  * 1つのレコードが検索条件に合致するか判定する
  * @param {Object} record - レコードオブジェクト
@@ -92,10 +94,9 @@ export function applyFilterCriteria(groupedItems, criteria) {
 /**
  * アクティブなフィルタ条件をテキスト配列に変換する
  * @param {Object} filterValues - フィルタの値
- * @param {Object} catNames - カテゴリー名のマッピング
  * @returns {Array} フィルタ条件のテキスト配列
  */
-export function buildActiveFilterLabels(filterValues, catNames) {
+export function buildActiveFilterLabels(filterValues) {
   const filters = [];
   const { projectKeyword, usage, structures, itemKeyword, category, company } =
     filterValues;
@@ -104,7 +105,7 @@ export function buildActiveFilterLabels(filterValues, catNames) {
   if (usage) filters.push(`建物用途: ${usage}`);
   if (structures.length) filters.push(`構造: ${structures.join(", ")}`);
   if (itemKeyword) filters.push(`品目: ${itemKeyword}`);
-  if (category) filters.push(`工種: ${catNames[category]}`);
+  if (category) filters.push(`工種: ${workTypes[category]?.name ?? category}`);
   if (company) filters.push(`協力会社: ${company}`);
 
   return filters;

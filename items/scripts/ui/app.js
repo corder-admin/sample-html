@@ -3,7 +3,7 @@
  * UI操作とビジネスロジックを統合
  */
 
-import { catNames, rowTypes } from "../../data/constants.js";
+import { costTypes } from "../../data/costTypes.js";
 import { itemRecords } from "../../data/itemRecords.js";
 import { projects } from "../../data/projects.js";
 import {
@@ -35,7 +35,7 @@ let currentChartRecords = [];
  * データを初期化
  */
 function initializeData() {
-  allItems = flattenData(itemRecords, projects, catNames);
+  allItems = flattenData(itemRecords, projects);
   groupedItems = groupByItem(allItems);
 }
 
@@ -126,7 +126,7 @@ function renderActiveFilters() {
     company: document.getElementById("filterCompany").value,
   };
 
-  const filters = buildActiveFilterLabels(filterValues, catNames);
+  const filters = buildActiveFilterLabels(filterValues);
 
   container.innerHTML = filters.length
     ? '<small class="text-muted me-2">適用中:</small>' +
@@ -184,7 +184,7 @@ function renderGroupCard(g, idx) {
                             ${g.types
                               .map(
                                 (t) =>
-                                  `<span class="badge bg-${rowTypes[t].badge} small">${rowTypes[t].name}</span>`
+                                  `<span class="badge bg-${costTypes[t].badge} small">${costTypes[t].name}</span>`
                               )
                               .join("")}
                             <span class="badge bg-info small">${

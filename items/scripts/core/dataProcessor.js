@@ -4,16 +4,16 @@
  */
 
 import { buildingColors } from "../../data/buildingColors.js";
+import { workTypes } from "../../data/workTypes.js";
 import { calculateArrayStats, normalizeCompanyName } from "../utils/utils.js";
 
 /**
  * 案件データとアイテムレコードを統合してフラット化する
  * @param {Array} itemRecords - アイテムレコードの配列
  * @param {Array} projects - 案件データの配列
- * @param {Object} catNames - カテゴリー名のマッピング
  * @returns {Array} フラット化されたアイテムデータ
  */
-export function flattenData(itemRecords, projects, catNames) {
+export function flattenData(itemRecords, projects) {
   return itemRecords.map((rec) => {
     const proj = projects.find((p) => p.id === rec.projectId);
     return {
@@ -26,7 +26,7 @@ export function flattenData(itemRecords, projects, catNames) {
       projectArea: proj.area,
       projectQuotationPeriodEnd: proj.quotationPeriodEnd,
       projectQuotationPeriodEndDate: proj.quotationPeriodEndDate,
-      categoryName: catNames[rec.workTypeName],
+      categoryName: workTypes[rec.workTypeName]?.name ?? rec.workTypeName,
       amount: rec.quantity * rec.price,
       netAmount: rec.quantity * rec.netPrice,
     };
