@@ -65,7 +65,7 @@ export function matchesGroupCriteria(group, criteria) {
   ) {
     return false;
   }
-  if (category && !group.records.some((r) => r.workTypeName === category)) {
+  if (category && !group.records.some((r) => r.workTypeId === category)) {
     return false;
   }
   return true;

@@ -26,7 +26,7 @@ export function flattenData(itemRecords, projects) {
       projectArea: proj.area,
       projectQuotationPeriodEnd: proj.quotationPeriodEnd,
       projectQuotationPeriodEndDate: proj.quotationPeriodEndDate,
-      categoryName: workTypes[rec.workTypeName]?.name ?? rec.workTypeName,
+      categoryName: workTypes[rec.workTypeId]?.name ?? rec.workTypeId,
       amount: rec.quantity * rec.price,
       netAmount: rec.quantity * rec.netPrice,
     };
@@ -57,7 +57,7 @@ export function groupByItem(items) {
     g.records.sort((a, b) => a.baseDate.localeCompare(b.baseDate));
     const netPrices = g.records.map((r) => r.netPrice);
     const stats = calculateArrayStats(netPrices);
-    const types = [...new Set(g.records.map((r) => r.type))];
+    const types = [...new Set(g.records.map((r) => r.costType))];
     const categories = [...new Set(g.records.map((r) => r.categoryName))];
 
     return {
