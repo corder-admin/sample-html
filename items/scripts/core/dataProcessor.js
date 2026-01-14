@@ -4,6 +4,7 @@
  */
 
 import { buildingColors } from "../../data/buildingColors.js";
+import { suppliers } from "../../data/suppliers.js";
 import { workTypes } from "../../data/workTypes.js";
 import { calculateArrayStats, normalizeCompanyName } from "../utils/utils.js";
 
@@ -18,6 +19,7 @@ export function flattenData(itemRecords, projects) {
     const proj = projects.find((p) => p.id === rec.projectId);
     return {
       ...rec,
+      supplierName: suppliers[rec.supplierId]?.name ?? rec.supplierId,
       projectName: proj.name,
       projectBuilding: proj.building,
       projectBuildingColor: buildingColors[proj.building],
