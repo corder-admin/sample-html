@@ -75,30 +75,6 @@ export function groupByItem(items) {
 }
 
 /**
- * レコードの統計情報を計算する
- * @param {Array} records - レコードの配列
- * @returns {Object} 統計情報（用途カウント、構造カウント、平均面積）
- */
-export function calculateStats(records) {
-  const usageCount = {};
-  const structureCount = {};
-  let totalArea = 0;
-
-  records.forEach((r) => {
-    usageCount[r.projectBuilding] = (usageCount[r.projectBuilding] || 0) + 1;
-    structureCount[r.projectStructureCode] =
-      (structureCount[r.projectStructureCode] || 0) + 1;
-    totalArea += r.projectArea;
-  });
-
-  return {
-    usageCount,
-    structureCount,
-    avgArea: records.length > 0 ? Math.round(totalArea / records.length) : 0,
-  };
-}
-
-/**
  * 協力会社別にレコードをグループ化する
  * @param {Array} records - レコードの配列
  * @returns {Object} 会社名をキーとした価格データのマッピング

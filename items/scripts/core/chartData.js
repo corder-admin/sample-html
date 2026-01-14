@@ -3,15 +3,6 @@
  */
 
 /**
- * レコードから全期間のラベルを生成する
- * @param {Array} records - レコードの配列
- * @returns {Array} ソート済みの期間ラベル配列
- */
-export function buildPeriodLabels(records) {
-  return [...new Set(records.map((r) => r.projectQuotationPeriodEnd))].sort();
-}
-
-/**
  * レスポンシブ設定に基づいてチャートオプションを生成する
  * @param {boolean} isMobile - モバイル判定
  * @param {boolean} isSmallMobile - 小画面モバイル判定
@@ -30,7 +21,7 @@ export function buildChartOptions(isMobile, isSmallMobile, unit, formatNumber) {
     },
     plugins: {
       legend: buildLegendOptions(isMobile),
-      tooltip: buildTooltipOptions(isMobile, isSmallMobile, formatNumber),
+      tooltip: buildTooltipOptions(isSmallMobile, formatNumber),
     },
     scales: {
       x: buildXAxisOptions(isMobile, isSmallMobile),
@@ -59,12 +50,11 @@ function buildLegendOptions(isMobile) {
 
 /**
  * ツールチップオプションを生成
- * @param {boolean} isMobile - モバイル判定
  * @param {boolean} isSmallMobile - 小画面モバイル判定
  * @param {Function} formatNumber - フォーマット関数
  * @returns {Object} ツールチップオプション
  */
-function buildTooltipOptions(isMobile, isSmallMobile, formatNumber) {
+function buildTooltipOptions(isSmallMobile, formatNumber) {
   return {
     enabled: !isSmallMobile,
     callbacks: {
@@ -80,8 +70,8 @@ function buildTooltipOptions(isMobile, isSmallMobile, formatNumber) {
         })`;
       },
     },
-    bodyFont: { size: isMobile ? 10 : 12 },
-    titleFont: { size: isMobile ? 11 : 13 },
+    bodyFont: { size: isSmallMobile ? 10 : 12 },
+    titleFont: { size: isSmallMobile ? 11 : 13 },
   };
 }
 
