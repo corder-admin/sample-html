@@ -5,6 +5,9 @@
 body {
   background: #f8f9fa;
 }
+.header-nav {
+  height: var(--header-height);
+}
 .icon {
   width: 16px;
   height: 16px;
@@ -150,7 +153,6 @@ body {
   min-width: 0;
   word-break: break-all;
 }
-
 
 /* タイムライン表示 */
 .timeline-container {
@@ -322,6 +324,9 @@ body {
 .chart-container {
   height: 350px;
   position: relative;
+}
+.table-section-container {
+  max-height: calc(100vh - 200px);
 }
 
 /* アイコンの垂直調整 */

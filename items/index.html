@@ -11,10 +11,7 @@
     <link href="styles.css" rel="stylesheet" />
   </head>
   <body>
-    <nav
-      class="navbar navbar-dark bg-dark px-3"
-      style="height: var(--header-height)"
-    >
+    <nav class="navbar navbar-dark bg-dark px-3 header-nav">
       <a class="navbar-brand d-flex align-items-center gap-2" href="#">
         <svg
           class="icon-lg"
@@ -22,6 +19,7 @@
           stroke="currentColor"
           stroke-width="2"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
@@ -48,6 +46,7 @@
               stroke="currentColor"
               stroke-width="2"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
@@ -57,9 +56,7 @@
         </div>
         <div class="p-3 flex-grow-1">
           <div class="mb-2">
-            <h6 class="fw-bold text-secondary mb-0" style="font-size: 0.75rem">
-              案件情報
-            </h6>
+            <h6 class="fw-bold text-secondary mb-0 small">案件情報</h6>
           </div>
           <div class="mb-3">
             <label class="form-label form-label-sm text-secondary"
@@ -148,9 +145,7 @@
           </div>
           <hr />
           <div class="mb-2">
-            <h6 class="fw-bold text-secondary mb-0" style="font-size: 0.75rem">
-              見積情報
-            </h6>
+            <h6 class="fw-bold text-secondary mb-0 small">見積情報</h6>
           </div>
           <div class="mb-3">
             <label class="form-label form-label-sm text-secondary"
@@ -186,31 +181,18 @@
         </div>
         <div class="p-3 border-top bg-light">
           <div class="d-grid gap-2">
-            <button class="btn btn-primary" onclick="applyFilters()">
+            <button class="btn btn-primary" data-action="applyFilters">
               検索実行
             </button>
             <button
               class="btn btn-outline-secondary btn-sm"
-              onclick="clearFilters()"
+              data-action="clearFilters"
             >
               条件クリア
             </button>
           </div>
         </div>
       </aside>
-      <script>
-        document
-          .querySelector(".sidebar")
-          .addEventListener("keydown", function (e) {
-            if (
-              e.key === "Enter" &&
-              (e.target.tagName === "INPUT" || e.target.tagName === "SELECT")
-            ) {
-              e.preventDefault();
-              applyFilters();
-            }
-          });
-      </script>
 
       <main class="main-content p-4">
         <div class="mb-4">
@@ -249,6 +231,7 @@
                   stroke="currentColor"
                   stroke-width="2"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                 </svg>
@@ -259,6 +242,7 @@
               type="button"
               class="btn-close"
               data-bs-dismiss="modal"
+              aria-label="閉じる"
             ></button>
           </div>
 
@@ -270,7 +254,7 @@
                 <label class="form-label small mb-0 text-muted fw-semibold"
                   >期間:</label
                 >
-                <div class="input-group input-group-sm" style="width: auto">
+                <div class="input-group input-group-sm w-auto">
                   <input
                     type="date"
                     class="form-control form-control-sm"
@@ -290,8 +274,7 @@
                   >時間軸:</label
                 >
                 <select
-                  class="form-select form-select-sm"
-                  style="width: auto"
+                  class="form-select form-select-sm w-auto"
                   id="chartTimeUnit"
                 >
                   <option value="yearly" selected>年次</option>
@@ -306,8 +289,7 @@
                   >表示:</label
                 >
                 <select
-                  class="form-select form-select-sm"
-                  style="width: auto"
+                  class="form-select form-select-sm w-auto"
                   id="chartDisplayMode"
                 >
                   <option value="line" selected>折れ線</option>
@@ -366,6 +348,7 @@
                     stroke="currentColor"
                     stroke-width="2"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                   </svg>
@@ -385,9 +368,8 @@
 
             <!-- Table Section (Time-grouped) -->
             <div
-              class="bg-body-secondary p-3 overflow-auto"
+              class="bg-body-secondary p-3 overflow-auto table-section-container"
               id="tableSection"
-              style="max-height: calc(100vh - 200px)"
             >
               <div id="groupedTablesContainer"></div>
             </div>
@@ -405,5 +387,33 @@
         </div>
       </div>
     </div>
+
+    <script>
+      // Sidebar keydown handler (moved from inline)
+      document
+        .querySelector(".sidebar")
+        .addEventListener("keydown", function (e) {
+          if (
+            e.key === "Enter" &&
+            (e.target.tagName === "INPUT" || e.target.tagName === "SELECT")
+          ) {
+            e.preventDefault();
+            applyFilters();
+          }
+        });
+
+      // Button click delegation for data-action attributes
+      document.addEventListener("click", function (e) {
+        const action = e.target.closest("[data-action]")?.dataset.action;
+        if (action === "applyFilters" && typeof applyFilters === "function") {
+          applyFilters();
+        } else if (
+          action === "clearFilters" &&
+          typeof clearFilters === "function"
+        ) {
+          clearFilters();
+        }
+      });
+    </script>
   </body>
 </html>
