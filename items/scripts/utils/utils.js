@@ -2,8 +2,6 @@
  * ユーティリティ関数
  */
 
-import { companyColors, DEFAULT_COMPANY_COLOR } from "../../data/constants.js";
-
 // ========================================
 // データフォーマット関数
 // ========================================
@@ -54,16 +52,6 @@ export const normalizeCompanyName = (company) => {
     return "";
   }
   return company.replace(/株式会社\s*/g, "").trim();
-};
-
-/**
- * 協力会社名に対応する色を取得
- * @param {string} company - 協力会社名
- * @returns {string} カラーコード
- */
-export const getCompanyColor = (company) => {
-  const name = normalizeCompanyName(company);
-  return companyColors[name] || DEFAULT_COMPANY_COLOR;
 };
 
 // ========================================

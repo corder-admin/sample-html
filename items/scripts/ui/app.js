@@ -3,7 +3,7 @@
  * UI操作とビジネスロジックを統合
  */
 
-import { catNames, typeBadges, typeNames } from "../../data/constants.js";
+import { catNames, rowTypes } from "../../data/constants.js";
 import { itemRecords } from "../../data/itemRecords.js";
 import { projects } from "../../data/projects.js";
 import {
@@ -184,7 +184,7 @@ function renderGroupCard(g, idx) {
                             ${g.types
                               .map(
                                 (t) =>
-                                  `<span class="badge bg-${typeBadges[t]} small">${typeNames[t]}</span>`
+                                  `<span class="badge bg-${rowTypes[t].badge} small">${rowTypes[t].name}</span>`
                               )
                               .join("")}
                             <span class="badge bg-info small">${

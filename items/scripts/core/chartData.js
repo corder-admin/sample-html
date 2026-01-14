@@ -2,45 +2,6 @@
  * チャートデータ生成の純粋関数群
  */
 
-import { CHART_BACKGROUND_OPACITY } from "../../data/constants.js";
-import { normalizeCompanyName } from "../utils/utils.js";
-
-/**
- * レコードから協力会社別のチャートデータセットを生成する
- * @param {Array} records - レコードの配列
- * @param {Function} getCompanyColor - 会社色を取得する関数
- * @returns {Array} Chart.jsのデータセット配列
- */
-export function buildChartDatasets(records, getCompanyColor) {
-  const companyData = {};
-  records.forEach((r) => {
-    const name = r.company;
-    if (!companyData[name]) {
-      companyData[name] = [];
-    }
-    companyData[name].push({
-      x: r.projectQuotationPeriodEnd,
-      y: r.netPrice,
-      project: r.projectName,
-    });
-  });
-
-  return Object.entries(companyData).map(([company, data]) => {
-    const color = getCompanyColor(company);
-    return {
-      label: normalizeCompanyName(company),
-      data: data,
-      borderColor: color,
-      backgroundColor: color + CHART_BACKGROUND_OPACITY,
-      borderWidth: 2,
-      pointRadius: 6,
-      pointHoverRadius: 8,
-      fill: false,
-      tension: 0.1,
-    };
-  });
-}
-
 /**
  * レコードから全期間のラベルを生成する
  * @param {Array} records - レコードの配列

@@ -9,34 +9,8 @@ export const catNames = {
   painting: "塗装工事",
 };
 
-// 工種タイプ名マッピング
-export const typeNames = {
-  direct: "直接費",
-  indirect: "間接費",
-};
-
-// 工種タイプのバッジカラー
-export const typeBadges = {
-  direct: "primary",
-  indirect: "warning",
-};
-
-// デフォルトの会社カラー（未登録会社用）
-export const DEFAULT_COMPANY_COLOR = "#6c757d";
-
-// チャート設定
-export const CHART_BACKGROUND_OPACITY = "33"; // 20% opacity in hex
-
-// 協力会社カラーマッピング
-export const companyColors = {
-  A社: "#0d6efd",
-  I社: "#198754",
-  C社: "#dc3545",
-  J社: "#fd7e14",
-  K社: "#6f42c1",
-  D社: "#20c997",
-  G社: "#e83e8c",
-  M社: "#6c757d",
-  N社: "#17a2b8",
-  O社: "#ffc107",
+// 行種別の定義（名称とバッジカラー）
+export const rowTypes = {
+  direct: { name: "直接費", badge: "primary" },
+  indirect: { name: "間接費", badge: "warning" },
 };
