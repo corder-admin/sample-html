@@ -37,7 +37,7 @@ export function matchesRecordCriteria(record, criteria) {
   if (record.projectArea < areaMin || record.projectArea > areaMax) {
     return false;
   }
-  if (company && !record.company.toLowerCase().includes(company)) {
+  if (company && !record.supplierName.toLowerCase().includes(company)) {
     return false;
   }
   if (dateFrom && record.projectQuotationPeriodEndDate < dateFrom) {
@@ -60,7 +60,7 @@ export function matchesGroupCriteria(group, criteria) {
 
   if (
     itemKeyword &&
-    !group.itemName.toLowerCase().includes(itemKeyword) &&
+    !group.name.toLowerCase().includes(itemKeyword) &&
     !group.spec.toLowerCase().includes(itemKeyword)
   ) {
     return false;

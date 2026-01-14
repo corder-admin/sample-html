@@ -171,7 +171,7 @@ function renderGroupCard(g, idx) {
             <div class="card-body" onclick="toggleGroup(${idx})">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <h5 class="fw-bold mb-2">${g.itemName}${
+                        <h5 class="fw-bold mb-2">${g.name}${
     g.spec ? ` <span class="text-muted fw-normal">/ ${g.spec}</span>` : ""
   }</h5>
                         <div class="hstack gap-2 flex-wrap">
@@ -312,7 +312,7 @@ function renderGroupCard(g, idx) {
                                         </div>
                                         <div class="price-display">
                                             <div class="price-main tabular-nums">¥${formatNumber(
-                                              r.netPrice
+                                              r.netUnitPrice
                                             )}</div>
                                             <div class="price-sub">NET率 ${r.netRate.toFixed(
                                               3
@@ -323,7 +323,7 @@ function renderGroupCard(g, idx) {
                                         <div class="detail-item">
                                             <div class="detail-label">協力会社</div>
                                             <div class="detail-value">${
-                                              r.company
+                                              r.supplierName
                                             }</div>
                                         </div>
                                         <div class="detail-item">
@@ -335,7 +335,7 @@ function renderGroupCard(g, idx) {
                                         <div class="detail-item">
                                             <div class="detail-label">見積単価</div>
                                             <div class="detail-value tabular-nums">¥${formatNumber(
-                                              r.price
+                                              r.unitPrice
                                             )}</div>
                                         </div>
                                         <div class="detail-item">
@@ -405,7 +405,7 @@ function calculateStats(records) {
   if (!records.length) {
     return { count: 0, min: 0, max: 0, avg: 0, median: 0 };
   }
-  const prices = records.map((r) => r.netPrice).sort((a, b) => a - b);
+  const prices = records.map((r) => r.netUnitPrice).sort((a, b) => a - b);
   const count = prices.length;
   const min = prices[0];
   const max = prices[count - 1];
@@ -538,12 +538,12 @@ function renderGroupedTables(groupedData, timeUnit) {
                       r.projectName
                     }</td>
                     <td>${r.categoryName}</td>
-                    <td class="text-truncate" title="${r.company}">${
-                      r.company
+                    <td class="text-truncate" title="${r.supplierName}">${
+                      r.supplierName
                     }</td>
-                    <td class="text-truncate" title="${r.itemName}${
+                    <td class="text-truncate" title="${r.name}${
                       r.spec ? ` / ${r.spec}` : ""
-                    }">${r.itemName}${r.spec ? ` / ${r.spec}` : ""}</td>
+                    }">${r.name}${r.spec ? ` / ${r.spec}` : ""}</td>
                     <td class="text-end tabular-nums">${formatNumber(
                       r.quantity
                     )}</td>
@@ -552,7 +552,7 @@ function renderGroupedTables(groupedData, timeUnit) {
                       3
                     )}</td>
                     <td class="text-end tabular-nums">¥${formatNumber(
-                      r.netPrice
+                      r.netUnitPrice
                     )}</td>
                     <td class="text-end tabular-nums">¥${formatNumber(
                       Math.round(r.netAmount)
@@ -645,7 +645,7 @@ function updateChartWithFilters() {
   const sortedPeriods = Object.keys(groupedByPeriod).sort();
   const groupedTableData = sortedPeriods.map((period) => {
     const periodRecords = groupedByPeriod[period];
-    const prices = periodRecords.map((r) => r.netPrice);
+    const prices = periodRecords.map((r) => r.netUnitPrice);
     const periodStats = calculateStats(periodRecords);
     return {
       period,
@@ -722,9 +722,9 @@ export function showChart(idx) {
   // タイトル設定
   document.getElementById(
     "chartModalTitle"
-  ).textContent = `NET単価推移 - ${group.itemName}`;
+  ).textContent = `NET単価推移 - ${group.name}`;
   document.getElementById("chartItemName").textContent =
-    group.itemName + (group.spec ? ` / ${group.spec}` : "");
+    group.name + (group.spec ? ` / ${group.spec}` : "");
   document.getElementById("chartUnit").textContent = group.unit;
 
   // フィルタをリセット（日付はデータの範囲を初期値に設定）

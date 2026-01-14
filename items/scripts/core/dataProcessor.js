@@ -27,8 +27,8 @@ export function flattenData(itemRecords, projects) {
       projectQuotationPeriodEnd: proj.quotationPeriodEnd,
       projectQuotationPeriodEndDate: proj.quotationPeriodEndDate,
       categoryName: workTypes[rec.workTypeId]?.name ?? rec.workTypeId,
-      amount: rec.quantity * rec.price,
-      netAmount: rec.quantity * rec.netPrice,
+      amount: rec.quantity * rec.unitPrice,
+      netAmount: rec.quantity * rec.netUnitPrice,
     };
   });
 }
@@ -41,10 +41,10 @@ export function flattenData(itemRecords, projects) {
 export function groupByItem(items) {
   const groups = {};
   items.forEach((item) => {
-    const key = `${item.itemName}|${item.spec}`;
+    const key = `${item.name}|${item.spec}`;
     if (!groups[key]) {
       groups[key] = {
-        itemName: item.itemName,
+        name: item.name,
         spec: item.spec,
         unit: item.unit,
         records: [],
@@ -55,7 +55,7 @@ export function groupByItem(items) {
 
   return Object.values(groups).map((g) => {
     g.records.sort((a, b) => a.baseDate.localeCompare(b.baseDate));
-    const netPrices = g.records.map((r) => r.netPrice);
+    const netPrices = g.records.map((r) => r.netUnitPrice);
     const stats = calculateArrayStats(netPrices);
     const types = [...new Set(g.records.map((r) => r.costType))];
     const categories = [...new Set(g.records.map((r) => r.categoryName))];
@@ -104,11 +104,11 @@ export function calculateStats(records) {
 export function groupByCompany(records) {
   const companyData = {};
   records.forEach((r) => {
-    const name = normalizeCompanyName(r.company);
+    const name = normalizeCompanyName(r.supplierName);
     if (!companyData[name]) {
       companyData[name] = { prices: [], count: 0 };
     }
-    companyData[name].prices.push(r.netPrice);
+    companyData[name].prices.push(r.netUnitPrice);
     companyData[name].count++;
   });
   return companyData;

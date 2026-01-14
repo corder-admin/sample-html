@@ -198,7 +198,7 @@ export function buildPeriodStatistics(groupedByPeriod) {
 
   sortedPeriods.forEach((period) => {
     const periodRecords = groupedByPeriod[period];
-    const prices = periodRecords.map((r) => r.netPrice);
+    const prices = periodRecords.map((r) => r.netUnitPrice);
 
     // 各統計値を計算
     const avg = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
