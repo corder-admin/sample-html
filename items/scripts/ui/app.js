@@ -444,22 +444,9 @@ function formatPeriodByTimeUnit(period, timeUnit) {
 }
 
 /**
- * 時間軸ラベルを日本語で取得
- */
-function getTimeUnitLabel(timeUnit) {
-  const labels = {
-    yearly: "年",
-    monthly: "月",
-    weekly: "週",
-    daily: "日",
-  };
-  return labels[timeUnit] || "";
-}
-
-/**
  * グループ化テーブルをレンダリング
  */
-function renderGroupedTables(groupedData, timeUnit) {
+function renderGroupedTables(groupedData) {
   const container = document.getElementById("groupedTablesContainer");
 
   if (!groupedData.length) {
@@ -645,7 +632,6 @@ function updateChartWithFilters() {
   const sortedPeriods = Object.keys(groupedByPeriod).sort();
   const groupedTableData = sortedPeriods.map((period) => {
     const periodRecords = groupedByPeriod[period];
-    const prices = periodRecords.map((r) => r.netUnitPrice);
     const periodStats = calculateStats(periodRecords);
     return {
       period,
@@ -659,7 +645,7 @@ function updateChartWithFilters() {
   });
 
   // グループ化テーブルをレンダリング
-  renderGroupedTables(groupedTableData, timeUnit);
+  renderGroupedTables(groupedTableData);
 
   // チャート更新
   const ctx = document.getElementById("netPriceChart").getContext("2d");
