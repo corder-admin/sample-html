@@ -26,7 +26,7 @@ export function matchesRecordCriteria(record, criteria) {
   ) {
     return false;
   }
-  if (usage && record.projectType !== usage) {
+  if (usage && record.projectBuilding !== usage) {
     return false;
   }
   if (structures.length && !structures.includes(record.projectStructureCode)) {
@@ -38,10 +38,10 @@ export function matchesRecordCriteria(record, criteria) {
   if (company && !record.company.toLowerCase().includes(company)) {
     return false;
   }
-  if (dateFrom && record.projectDate < dateFrom) {
+  if (dateFrom && record.projectQuotationPeriodEndDate < dateFrom) {
     return false;
   }
-  if (dateTo && record.projectDate > dateTo) {
+  if (dateTo && record.projectQuotationPeriodEndDate > dateTo) {
     return false;
   }
   return true;
@@ -58,12 +58,12 @@ export function matchesGroupCriteria(group, criteria) {
 
   if (
     itemKeyword &&
-    !group.item.toLowerCase().includes(itemKeyword) &&
+    !group.itemName.toLowerCase().includes(itemKeyword) &&
     !group.spec.toLowerCase().includes(itemKeyword)
   ) {
     return false;
   }
-  if (category && !group.records.some((r) => r.categoryKey === category)) {
+  if (category && !group.records.some((r) => r.workTypeName === category)) {
     return false;
   }
   return true;

@@ -171,7 +171,7 @@ function renderGroupCard(g, idx) {
             <div class="card-body" onclick="toggleGroup(${idx})">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <h5 class="fw-bold mb-2">${g.item}${
+                        <h5 class="fw-bold mb-2">${g.itemName}${
     g.spec ? ` <span class="text-muted fw-normal">/ ${g.spec}</span>` : ""
   }</h5>
                         <div class="hstack gap-2 flex-wrap">
@@ -276,13 +276,13 @@ function renderGroupCard(g, idx) {
                     <div class="timeline-container">
                         ${records
                           .sort((a, b) =>
-                            a.projectPeriodStart.localeCompare(
-                              b.projectPeriodStart
+                            a.projectQuotationPeriodEnd.localeCompare(
+                              b.projectQuotationPeriodEnd
                             )
                           )
                           .map((r) => {
                             const [year, month] =
-                              r.projectPeriodStart.split("-");
+                              r.projectQuotationPeriodEnd.split("-");
                             return `
                             <div class="timeline-item">
                                 <div class="timeline-date">
@@ -297,8 +297,8 @@ function renderGroupCard(g, idx) {
                                         <div class="flex-grow-1">
                                             <div class="project-badges">
                                                 <span class="badge bg-${
-                                                  r.projectTypeColor
-                                                }">${r.projectType}</span>
+                                                  r.projectBuildingColor
+                                                }">${r.projectBuilding}</span>
                                                 <span class="badge bg-secondary">${
                                                   r.projectStructure
                                                 }</span>
@@ -329,7 +329,7 @@ function renderGroupCard(g, idx) {
                                         <div class="detail-item">
                                             <div class="detail-label">数量</div>
                                             <div class="detail-value tabular-nums">${formatNumber(
-                                              r.qty
+                                              r.quantity
                                             )} ${r.unit}</div>
                                         </div>
                                         <div class="detail-item">
@@ -530,7 +530,7 @@ function renderGroupedTables(groupedData, timeUnit) {
               </thead>
               <tbody>
                 ${group.records
-                  .sort((a, b) => a.priceDate.localeCompare(b.priceDate))
+                  .sort((a, b) => a.baseDate.localeCompare(b.baseDate))
                   .map(
                     (r) => `
                   <tr>
@@ -541,11 +541,11 @@ function renderGroupedTables(groupedData, timeUnit) {
                     <td class="text-truncate" title="${r.company}">${
                       r.company
                     }</td>
-                    <td class="text-truncate" title="${r.item}${
+                    <td class="text-truncate" title="${r.itemName}${
                       r.spec ? ` / ${r.spec}` : ""
-                    }">${r.item}${r.spec ? ` / ${r.spec}` : ""}</td>
+                    }">${r.itemName}${r.spec ? ` / ${r.spec}` : ""}</td>
                     <td class="text-end tabular-nums">${formatNumber(
-                      r.qty
+                      r.quantity
                     )}</td>
                     <td class="text-center">${r.unit}</td>
                     <td class="text-end tabular-nums">${r.netRate.toFixed(
@@ -558,12 +558,12 @@ function renderGroupedTables(groupedData, timeUnit) {
                       Math.round(r.netAmount)
                     )}</td>
                     <td class="text-center"><span class="badge bg-${
-                      r.projectTypeColor
-                    }">${r.projectType}</span></td>
+                      r.projectBuildingColor
+                    }">${r.projectBuilding}</span></td>
                     <td class="text-end tabular-nums">${formatNumber(
                       r.projectArea
                     )} ㎡</td>
-                    <td class="text-center">${r.priceDate}</td>
+                    <td class="text-center">${r.baseDate}</td>
                   </tr>
                 `
                   )
@@ -610,8 +610,8 @@ function updateChartWithFilters() {
 
   // フィルタリング（単価基準日ベース）
   let records = currentChartRecords.filter((r) => {
-    if (dateFrom && r.priceDate < dateFrom) return false;
-    if (dateTo && r.priceDate > dateTo) return false;
+    if (dateFrom && r.baseDate < dateFrom) return false;
+    if (dateTo && r.baseDate > dateTo) return false;
     return true;
   });
 
@@ -634,7 +634,7 @@ function updateChartWithFilters() {
   // 時間軸でグルーピング（単価基準日ベース）
   const groupedByPeriod = {};
   records.forEach((r) => {
-    const periodKey = formatPeriodByTimeUnit(r.priceDate, timeUnit);
+    const periodKey = formatPeriodByTimeUnit(r.baseDate, timeUnit);
     if (!groupedByPeriod[periodKey]) {
       groupedByPeriod[periodKey] = [];
     }
@@ -698,7 +698,7 @@ function updateChartWithFilters() {
  */
 function clearChartFilters() {
   // 日付はデータの範囲を初期値に設定
-  const dates = currentChartRecords.map((r) => r.priceDate).sort();
+  const dates = currentChartRecords.map((r) => r.baseDate).sort();
   const minDate = dates[0] || "";
   const maxDate = dates[dates.length - 1] || "";
   document.getElementById("chartDateFrom").value = minDate;
@@ -722,13 +722,13 @@ export function showChart(idx) {
   // タイトル設定
   document.getElementById(
     "chartModalTitle"
-  ).textContent = `NET単価推移 - ${group.item}`;
+  ).textContent = `NET単価推移 - ${group.itemName}`;
   document.getElementById("chartItemName").textContent =
-    group.item + (group.spec ? ` / ${group.spec}` : "");
+    group.itemName + (group.spec ? ` / ${group.spec}` : "");
   document.getElementById("chartUnit").textContent = group.unit;
 
   // フィルタをリセット（日付はデータの範囲を初期値に設定）
-  const dates = records.map((r) => r.priceDate).sort();
+  const dates = records.map((r) => r.baseDate).sort();
   const minDate = dates[0] || "";
   const maxDate = dates[dates.length - 1] || "";
   document.getElementById("chartDateFrom").value = minDate;

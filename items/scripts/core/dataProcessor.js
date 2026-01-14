@@ -3,6 +3,7 @@
  * これらの関数は外部状態に依存せず、同じ入力に対して常に同じ出力を返す
  */
 
+import { buildingColors } from "../../data/buildingColors.js";
 import { calculateArrayStats, normalizeCompanyName } from "../utils/utils.js";
 
 /**
@@ -18,16 +19,16 @@ export function flattenData(itemRecords, projects, catNames) {
     return {
       ...rec,
       projectName: proj.name,
-      projectType: proj.type,
-      projectTypeColor: proj.typeColor,
+      projectBuilding: proj.building,
+      projectBuildingColor: buildingColors[proj.building],
       projectStructure: proj.structure,
       projectStructureCode: proj.structureCode,
       projectArea: proj.area,
-      projectPeriodStart: proj.periodStart,
-      projectDate: proj.date,
-      categoryName: catNames[rec.categoryKey],
-      amount: rec.qty * rec.price,
-      netAmount: rec.qty * rec.netPrice,
+      projectQuotationPeriodEnd: proj.quotationPeriodEnd,
+      projectQuotationPeriodEndDate: proj.quotationPeriodEndDate,
+      categoryName: catNames[rec.workTypeName],
+      amount: rec.quantity * rec.price,
+      netAmount: rec.quantity * rec.netPrice,
     };
   });
 }
@@ -40,10 +41,10 @@ export function flattenData(itemRecords, projects, catNames) {
 export function groupByItem(items) {
   const groups = {};
   items.forEach((item) => {
-    const key = `${item.item}|${item.spec}`;
+    const key = `${item.itemName}|${item.spec}`;
     if (!groups[key]) {
       groups[key] = {
-        item: item.item,
+        itemName: item.itemName,
         spec: item.spec,
         unit: item.unit,
         records: [],
@@ -53,7 +54,7 @@ export function groupByItem(items) {
   });
 
   return Object.values(groups).map((g) => {
-    g.records.sort((a, b) => a.priceDate.localeCompare(b.priceDate));
+    g.records.sort((a, b) => a.baseDate.localeCompare(b.baseDate));
     const netPrices = g.records.map((r) => r.netPrice);
     const stats = calculateArrayStats(netPrices);
     const types = [...new Set(g.records.map((r) => r.type))];
@@ -82,7 +83,7 @@ export function calculateStats(records) {
   let totalArea = 0;
 
   records.forEach((r) => {
-    usageCount[r.projectType] = (usageCount[r.projectType] || 0) + 1;
+    usageCount[r.projectBuilding] = (usageCount[r.projectBuilding] || 0) + 1;
     structureCount[r.projectStructureCode] =
       (structureCount[r.projectStructureCode] || 0) + 1;
     totalArea += r.projectArea;

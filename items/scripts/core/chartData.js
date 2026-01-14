@@ -19,7 +19,7 @@ export function buildChartDatasets(records, getCompanyColor) {
       companyData[name] = [];
     }
     companyData[name].push({
-      x: r.projectPeriodStart,
+      x: r.projectQuotationPeriodEnd,
       y: r.netPrice,
       project: r.projectName,
     });
@@ -47,7 +47,7 @@ export function buildChartDatasets(records, getCompanyColor) {
  * @returns {Array} ソート済みの期間ラベル配列
  */
 export function buildPeriodLabels(records) {
-  return [...new Set(records.map((r) => r.projectPeriodStart))].sort();
+  return [...new Set(records.map((r) => r.projectQuotationPeriodEnd))].sort();
 }
 
 /**
