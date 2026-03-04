@@ -142,7 +142,7 @@
         font-size: 18px;
         font-weight: 300;
         color: rgba(255, 255, 255, 0.7);
-        max-width: 600px;
+        max-width: 640px;
         line-height: 1.9;
         position: relative;
         z-index: 1;
@@ -355,12 +355,12 @@
         background: rgba(168, 130, 255, 0.2);
         color: #a882ff;
       }
-      .tag-mcp {
+      .tag-compass {
         background: rgba(255, 200, 50, 0.2);
         color: #e8b930;
       }
 
-      .arch-layer-mcp {
+      .arch-layer-compass {
         border-color: rgba(255, 200, 50, 0.3) !important;
         background: rgba(255, 200, 50, 0.05) !important;
       }
@@ -392,13 +392,6 @@
       .api-desc {
         font-size: 11px;
         color: rgba(255, 255, 255, 0.4);
-      }
-
-      .arch-mcp-desc {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.5);
-        margin-bottom: 16px;
-        line-height: 1.6;
       }
 
       .arch-connector {
@@ -434,10 +427,6 @@
         border-bottom: 1px solid var(--border);
       }
 
-      .comparison-table th:first-child {
-        width: 180px;
-      }
-
       .comparison-table td {
         padding: 16px 20px;
         border-bottom: 1px solid #f0efec;
@@ -469,6 +458,32 @@
         border-radius: 100px;
         letter-spacing: 0.05em;
         margin-left: 8px;
+        vertical-align: middle;
+      }
+
+      .badge-ai {
+        display: inline-block;
+        background: #00d4aa;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 100px;
+        letter-spacing: 0.05em;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+
+      .badge-compass {
+        display: inline-block;
+        background: #e8b930;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 100px;
+        letter-spacing: 0.05em;
+        margin-left: 4px;
         vertical-align: middle;
       }
 
@@ -652,32 +667,6 @@
       }
       .risk-card.mitigation li::before {
         background: #10b981;
-      }
-
-      /* Footer */
-      .doc-footer {
-        margin-top: 80px;
-        padding-top: 32px;
-        border-top: 1px solid var(--border);
-        text-align: center;
-        color: var(--slate);
-        font-size: 13px;
-      }
-
-      /* Print */
-      @media print {
-        .cover {
-          min-height: auto;
-          padding: 60px 40px;
-          break-after: page;
-        }
-        .section {
-          break-inside: avoid;
-        }
-        .card:hover {
-          transform: none;
-          box-shadow: none;
-        }
       }
 
       /* Desktop Features */
@@ -903,6 +892,86 @@
         margin-bottom: 8px;
       }
 
+      /* Positioning Diagram */
+      .positioning-diagram {
+        margin-top: 32px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 36px 32px;
+      }
+
+      .pos-row {
+        display: grid;
+        grid-template-columns: 180px 1fr 80px 1fr;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .pos-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .pos-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .pos-box {
+        padding: 14px 20px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .pos-box.existing {
+        background: #e8faf0;
+        color: #0a7c42;
+        border: 1px solid #c5e8d0;
+      }
+
+      .pos-box.new {
+        background: var(--accent-light);
+        color: var(--accent-dark);
+        border: 1px solid #bdd4ff;
+      }
+
+      .pos-plus {
+        text-align: center;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--accent);
+      }
+
+      /* Footer */
+      .doc-footer {
+        margin-top: 80px;
+        padding-top: 32px;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--slate);
+        font-size: 13px;
+      }
+
+      /* Print */
+      @media print {
+        .cover {
+          min-height: auto;
+          padding: 60px 40px;
+          break-after: page;
+        }
+        .section {
+          break-inside: avoid;
+        }
+        .card:hover {
+          transform: none;
+          box-shadow: none;
+        }
+      }
+
       @media (max-width: 640px) {
         .content {
           padding: 48px 20px 80px;
@@ -920,6 +989,9 @@
         .arch-diagram {
           padding: 28px 20px;
         }
+        .pos-row {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -931,12 +1003,13 @@
         新規プロダクト企画書
       </div>
       <h1>
-        <span class="highlight">AIネイティブ</span>な<br />
-        建設見積書 作成支援アプリ
+        KYOEI COMPASS の全機能を<br />
+        <span class="highlight">AI で超える</span>見積書作成アプリ
       </h1>
       <p class="cover-subtitle">
-        ローカルExcelデータとLLMエージェントを統合し、<br />
-        案件管理から見積書の作成・比較・値入まで一気通貫で支援するデスクトップアプリケーション
+        既存の見積クラウドDBと連携しながら、<br />
+        KYOEI COMPASS 2.0 が持つ見積書作成・編集・比較・値入の実務機能を<br />
+        ローカルデスクトップアプリ ＋ AIエージェントで実現・拡張する
       </p>
       <dl class="cover-meta">
         <div>
@@ -960,60 +1033,203 @@
 
     <!-- ===== CONTENT ===== -->
     <div class="content">
-      <!-- 1. 背景と課題 -->
+      <!-- 1. 背景：KYOEI COMPASS 2.0とは -->
       <div class="section">
         <div class="section-number">Section 01</div>
-        <h2 class="section-title">背景と課題</h2>
+        <h2 class="section-title">背景 — KYOEI COMPASS 2.0 という業界標準</h2>
         <p>
-          建設業界における見積書作成は、過去案件のExcelファイルを参照しながら手作業で単価を調整する属人的な業務であり、担当者の経験と勘に大きく依存しています。
+          KYOEI COMPASS 2.0
+          は、協栄産業が1982年から開発を続け、2,000社以上の建設会社に導入されている建築見積書作成ソフトです。建設業の見積実務に必要な機能を網羅しており、事実上の業界標準として広く利用されています。
         </p>
-        <p>業界が直面している主要課題は以下の通りです。</p>
+        <p>
+          現在、当社は「見積クラウド」Webプラットフォームで案件管理やデータ蓄積を行っていますが、COMPASSが持つ「見積書そのものを作成・編集する」実務機能が不足しています。
+        </p>
+
+        <div class="model-principle" style="margin-top: 32px">
+          <div class="principle-label">COMPASS 2.0 の核心機能</div>
+          <div class="principle-text">
+            COMPASSが2,000社に選ばれている理由は、見積書作成の実務に必要な機能を「Excel感覚の操作性」で提供している点にあります。以下がその核心機能です。
+          </div>
+        </div>
+
+        <table class="comparison-table" style="margin-top: 24px">
+          <thead>
+            <tr>
+              <th style="width: 180px">機能</th>
+              <th>COMPASSの実装</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>多階層見積構造</strong></td>
+              <td>
+                最大16階層の多階層構造で明細は無制限。複合ビル・大規模プロジェクトにも対応
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Excel互換</strong></td>
+              <td>
+                Excel ↔
+                COMPASSの双方向コピペ。計算式付きデータ出力。1段・2段明細の両方に対応
+              </td>
+            </tr>
+            <tr>
+              <td><strong>単価マスター</strong></td>
+              <td>
+                地域・年度別に複数管理。市販単価データ（「積算資料」等）の取込にも対応。他物件からの同一明細検索で単価を自動セット
+              </td>
+            </tr>
+            <tr>
+              <td><strong>計算パターン</strong></td>
+              <td>
+                各明細行ごとにNET/提出の差額・利益率を確認しながら編集。計算式の自由登録
+              </td>
+            </tr>
+            <tr>
+              <td><strong>見積比較</strong></td>
+              <td>
+                最大10社を比較。業者単価・経費込単価・ネット単価・査定掛率単価での比較が可能。経費の振り分け選択にも対応
+              </td>
+            </tr>
+            <tr>
+              <td><strong>見積依頼（下見積）</strong></td>
+              <td>
+                工事科目を選択してExcelの見積依頼書を出力。業者からのExcel回答を取り込んで比較画面で査定。二次明細・法定福利費にも対応
+              </td>
+            </tr>
+            <tr>
+              <td><strong>自動値入</strong></td>
+              <td>
+                採用業者の決定後、採用単価を見積明細書に反映。別階層の同名称明細の一括値入。名称・規格・単位による統一単価の付与
+              </td>
+            </tr>
+            <tr>
+              <td><strong>検索・チェック</strong></td>
+              <td>
+                全明細からの文字検索・置換。付箋情報や条件での絞り込み。金額未入力の警告
+              </td>
+            </tr>
+            <tr>
+              <td><strong>データ連携</strong></td>
+              <td>
+                BCSフォーマット、CSV、テキスト形式での出力。FKS積算システム・RIBC営繕積算との入出力連動。GACCI連携
+              </td>
+            </tr>
+            <tr>
+              <td><strong>同時編集</strong></td>
+              <td>
+                同一物件内の各工種をネットワーク経由で複数担当者が同時編集
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 2. COMPASSの限界とAIで超えるポイント -->
+      <div class="section">
+        <div class="section-number">Section 02</div>
+        <h2 class="section-title">COMPASSの限界 — AIで超えられるポイント</h2>
+        <p>
+          COMPASSは見積書作成ソフトとして高い完成度を持つ一方、2,000社が日々直面している課題は「ルールベースの自動化の限界」に集約されます。AIを活用することで、COMPASSでは不可能だった知的支援が実現できます。
+        </p>
         <div class="card-grid">
           <div class="card">
-            <div class="card-icon warm">⏱</div>
-            <h4>見積作成に時間がかかる</h4>
+            <div class="card-icon warm">🔍</div>
+            <h4>類似案件の検索が「完全一致」止まり</h4>
             <p>
-              過去のExcelファイルから類似案件を手動で検索し、単価を比較・調整する作業に膨大な時間を要している。
+              COMPASSは名称・規格・単位の文字列一致でしか検索できない。「RC造10階建オフィス」と「SRC造12階建事務所ビル」が類似案件であることを認識できない。
             </p>
           </div>
           <div class="card">
-            <div class="card-icon blue">👤</div>
-            <h4>属人化・ナレッジの散逸</h4>
+            <div class="card-icon blue">💰</div>
+            <h4>単価の「妥当性」を判断できない</h4>
             <p>
-              ベテランの暗黙知がExcelファイルに分散しており、体系的な知識として蓄積・共有されていない。
+              過去単価の自動セットは可能だが、それが現在の相場と比べて妥当かどうかの判断は人間任せ。統計的な分析や異常値検出の仕組みがない。
             </p>
           </div>
           <div class="card">
-            <div class="card-icon green">⚠</div>
-            <h4>単価の妥当性検証が困難</h4>
+            <div class="card-icon green">📝</div>
+            <h4>見積項目の「漏れ」に気づけない</h4>
             <p>
-              提示単価が市場相場や過去実績と乖離していないか、客観的に検証する仕組みがない。
+              項目生成は手動。建物種別に応じた「漏れがちな付帯工事」の提案や、類似案件との項目比較による過不足チェックができない。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon purple">🔄</div>
+            <h4>業者回答の「表記ゆれ」を吸収できない</h4>
+            <p>
+              業者ごとに異なる品目名・規格表記を統一するのは人手頼み。「塩ビ管VP100」「硬質塩化ビニル管100A」のような表記ゆれの自動マッチングは不可能。
             </p>
           </div>
         </div>
       </div>
 
-      <!-- 2. プロダクトコンセプト -->
+      <!-- 3. プロダクトコンセプト -->
       <div class="section">
-        <div class="section-number">Section 02</div>
-        <h2 class="section-title">プロダクトコンセプト</h2>
+        <div class="section-number">Section 03</div>
+        <h2 class="section-title">
+          プロダクトコンセプト — 既存見積クラウド ＋ COMPASS機能 ＋ AI
+        </h2>
         <p>
-          本アプリは「AIが隣にいる見積作成環境」をコンセプトとし、Excelライクな操作感を維持しながら、LLMエージェントがリアルタイムで作成を支援するデスクトップアプリケーションです。
+          本アプリは、既存の見積クラウドDBを「唯一の正」として活用しながら、KYOEI
+          COMPASSが持つ見積書作成の実務機能をデスクトップアプリとして実装し、さらにAIエージェントで拡張します。
         </p>
-        <div class="card-grid">
+
+        <div class="positioning-diagram">
+          <div class="pos-row">
+            <div class="pos-label">データ管理・案件管理</div>
+            <div class="pos-box existing">見積クラウド（既存Web）</div>
+            <div class="pos-plus">＋</div>
+            <div class="pos-box new">本アプリからAPI連携</div>
+          </div>
+          <div class="pos-row">
+            <div class="pos-label">見積書 作成・編集</div>
+            <div class="pos-box new" style="grid-column: 2 / 5">
+              COMPASS同等機能をデスクトップアプリで実現<span class="badge-rec"
+                >NEW</span
+              >
+            </div>
+          </div>
+          <div class="pos-row">
+            <div class="pos-label">見積比較・値入</div>
+            <div class="pos-box new" style="grid-column: 2 / 5">
+              COMPASS同等機能 ＋ AI拡張<span class="badge-rec">NEW</span
+              ><span class="badge-ai">AI</span>
+            </div>
+          </div>
+          <div class="pos-row">
+            <div class="pos-label">知的支援</div>
+            <div
+              class="pos-box new"
+              style="
+                grid-column: 2 / 5;
+                background: rgba(0, 212, 170, 0.08);
+                color: #0a7c42;
+                border-color: #a0e8d0;
+              "
+            >
+              類似案件検索・単価提案・項目生成・妥当性チェック<span
+                class="badge-ai"
+                >AI</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="card-grid" style="margin-top: 32px">
           <div class="card">
             <div class="card-icon blue">📊</div>
-            <h4>Excel風見積エディタ</h4>
+            <h4>COMPASS同等の見積エディタ</h4>
             <p>
-              AG Gridベースのスプレッドシート
-              UIで、既存のExcelワークフローを損なわずに編集・入力が可能。
+              AG
+              Gridベースの多階層スプレッドシートUIで、COMPASSが提供する計算パターン・2段単価・利益率確認を再現。Excel互換のコピペも対応。
             </p>
           </div>
           <div class="card">
             <div class="card-icon purple">🤖</div>
             <h4>AIエージェント支援</h4>
             <p>
-              過去見積の類似検索、単価の自動提案、項目の自動生成、妥当性チェック、採用見積からの自動値入れをLLMが実行。
+              COMPASSではルールベースでしかできなかった検索・値入・チェックを、LLMが意味理解で実行。表記ゆれも吸収。
             </p>
           </div>
           <div class="card">
@@ -1021,22 +1237,182 @@
             <h4>エンタープライズAPI + 個人情報保護</h4>
             <p>
               AI推論にはデータが学習に利用されないエンタープライズ契約API（Claude
-              API）を使用。施主名・担当者名などの個人情報はAPI送信前に自動マスキング。
+              API）を使用。施主名・担当者名はAPI送信前に自動マスキング。
             </p>
           </div>
           <div class="card">
-            <div class="card-icon warm">📁</div>
-            <h4>データの正はクラウドに一元化</h4>
+            <div class="card-icon warm">☁️</div>
+            <h4>見積クラウドDBとシームレス連携</h4>
             <p>
-              ローカルのExcelは「取込元」、見積クラウドDBが「唯一の正（マスター）」。新規作成データはすべてクラウドDBに保存し、チーム全体で一元活用。
+              案件・業者・見積データは既存の見積クラウドDBに保存。デスクトップアプリはAPI経由でリアルタイム同期し、チーム全体で一元活用。
             </p>
           </div>
         </div>
       </div>
 
-      <!-- 3. デスクトップアプリだからできること -->
+      <!-- 4. COMPASS同等機能の実現計画 -->
       <div class="section">
-        <div class="section-number">Section 03</div>
+        <div class="section-number">Section 04</div>
+        <h2 class="section-title">COMPASS同等機能の実現計画</h2>
+        <p>
+          COMPASSの核心機能をデスクトップアプリでどう実現するか、機能ごとの実装方針を示します。
+        </p>
+
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th style="width: 150px">COMPASS機能</th>
+              <th>本アプリでの実装方針</th>
+              <th style="width: 120px">AI拡張</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong>多階層見積構造</strong
+                ><span class="badge-compass">基本</span>
+              </td>
+              <td>
+                AG
+                Gridのツリー表示で多階層を表現。階層の追加・移動はドラッグ＆ドロップ対応。明細数は無制限
+              </td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>Excel互換</strong
+                ><span class="badge-compass">基本</span>
+              </td>
+              <td>
+                Rustの calamine / rust_xlsxwriter でExcelファイルの読み書き。AG
+                GridとExcel間の双方向コピペ。1段・2段明細の両方に対応
+              </td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>計算パターン</strong
+                ><span class="badge-compass">基本</span>
+              </td>
+              <td>
+                各明細行にカスタム計算式を登録可能。NET/提出の差額・利益率をリアルタイム表示。電卓機能・ドラッグ合計表示
+              </td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>単価マスター</strong
+                ><span class="badge-compass">基本</span>
+              </td>
+              <td>
+                見積クラウドDBに単価マスターを保存。地域・年度別に複数管理。市販単価データの取込対応
+              </td>
+              <td><span class="badge-ai">AI</span> 相場妥当性の自動判定</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>見積比較</strong><span class="badge-compass">基本</span>
+              </td>
+              <td>
+                最大10社の横並び比較。業者単価・経費込単価・ネット単価・査定掛率での比較。経費振り分け選択
+              </td>
+              <td><span class="badge-ai">AI</span> 異常値検出・コメント生成</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>見積依頼（下見積）</strong
+                ><span class="badge-compass">基本</span>
+              </td>
+              <td>
+                工事科目を選択してExcel見積依頼書を出力。業者からのExcel回答を自動取込。二次明細・法定福利費対応
+              </td>
+              <td><span class="badge-ai">AI</span> 依頼項目の自動生成</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>自動値入</strong><span class="badge-compass">基本</span>
+              </td>
+              <td>
+                採用業者の単価を見積明細書に反映。別階層の同名称明細の一括値入。名称・規格・単位で統一単価を付与
+              </td>
+              <td><span class="badge-ai">AI</span> 表記ゆれ吸収マッピング</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>検索・チェック</strong
+                ><span class="badge-compass">基本</span>
+              </td>
+              <td>
+                全明細の文字検索・置換。付箋情報による絞り込み。金額未入力の警告
+              </td>
+              <td>
+                <span class="badge-ai">AI</span> 項目漏れ・妥当性の自動チェック
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong>データ連携</strong
+                ><span class="badge-compass">基本</span>
+              </td>
+              <td>
+                BCSフォーマット、CSV、テキスト形式での出力。見積クラウドDBとのAPI連携
+              </td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 5. AIで超える5つの差別化 -->
+      <div class="section">
+        <div class="section-number">Section 05</div>
+        <h2 class="section-title">AIで超える — 5つの差別化機能</h2>
+        <p>
+          COMPASSのルールベース自動化では実現できなかった「知的支援」を、Claude
+          SDKのTool Use機能でエージェントとして実装します。
+        </p>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon blue">🔍</div>
+            <h4>類似案件の意味検索</h4>
+            <p>
+              建物種別・規模・工種をキーに、見積クラウドDB上のpgvector（ベクトル検索）と条件検索のハイブリッドで類似案件を発見。文字列一致に頼らない「意味的な」類似度検索を実現。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon warm">💰</div>
+            <h4>単価の統計的妥当性チェック</h4>
+            <p>
+              過去実績の統計値（平均・中央値・分布）に基づき、各項目の推奨単価を提案。相場からの乖離度を可視化し、異常値をハイライト。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon green">📝</div>
+            <h4>見積項目の自動生成・漏れ検出</h4>
+            <p>
+              建物種別と工事概要から必要な見積項目を自動生成。類似案件との比較で「漏れがちな付帯工事」も含めて提案。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon purple">🔄</div>
+            <h4>表記ゆれ吸収の自動値入</h4>
+            <p>
+              採用業者の見積書から品目・単価・数量を読み取り、内訳書フォーマットに自動マッピング。業者ごとの品目名・規格の表記ゆれもAIが吸収し、転記ミスを防止。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon warm">✅</div>
+            <h4>見積書の総合レビュー</h4>
+            <p>
+              完成した見積書に対し、単価の異常値検出・項目の過不足・合計金額の妥当性を総合的に自動レビュー。人間のチェック前にAIが一次確認。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. デスクトップアプリだからできること -->
+      <div class="section">
+        <div class="section-number">Section 06</div>
         <h2 class="section-title">デスクトップアプリだからできる3つの強み</h2>
         <p>
           クラウドやWebアプリでは実現できない、デスクトップアプリならではの価値を3つの観点で整理しました。
@@ -1052,18 +1428,13 @@
             </div>
             <div class="feature-body">
               <p>
-                いちいちファイルをアップロードする手間はありません。アプリ上で案件を作成し、社内の共有フォルダを指定しておけば、中に入っている見積書をAIが自動的に読み込み、「過去にどんな単価で出したか」「似た案件がないか」を即座に答えてくれます。
+                いちいちファイルをアップロードする手間はありません。社内の共有フォルダを指定しておけば、中に入っている見積書をアプリが自動的に読み込み、見積クラウドDBに蓄積します。AIが「過去にどんな単価で出したか」「似た案件がないか」を即座に答えてくれます。
               </p>
               <p>
-                過去のExcelは「取込元」として読み取られ、データは見積クラウドDBに蓄積されます。新しい見積書がフォルダに追加されたら、それも自動で取り込みます。<strong>使えば使うほど、AIが社内の見積ノウハウに詳しくなっていく仕組み</strong>です。
+                新しい見積書がフォルダに追加されたら、それも自動で取り込みます。<strong>使えば使うほど、AIが社内の見積ノウハウに詳しくなっていく仕組み</strong>です。
               </p>
               <div class="feature-visual">
                 <div class="feature-flow">
-                  <div class="flow-step">
-                    <div class="flow-icon">📋</div>
-                    <div class="flow-text">アプリ上で<br />案件を作成</div>
-                  </div>
-                  <div class="flow-arrow">→</div>
                   <div class="flow-step">
                     <div class="flow-icon">📁</div>
                     <div class="flow-text">
@@ -1074,6 +1445,13 @@
                   <div class="flow-step">
                     <div class="flow-icon">☁️</div>
                     <div class="flow-text">見積クラウドDBに<br />自動保存</div>
+                  </div>
+                  <div class="flow-arrow">→</div>
+                  <div class="flow-step">
+                    <div class="flow-icon">🧠</div>
+                    <div class="flow-text">
+                      ベクトル化で<br />意味検索可能に
+                    </div>
                   </div>
                   <div class="flow-arrow">→</div>
                   <div class="flow-step">
@@ -1096,7 +1474,7 @@
                 API）を通じて送信しますが、APIプロバイダーの学習データとして利用されることはありません。
               </p>
               <p>
-                過去の見積データは自社管理の見積クラウドDBに蓄積され、ローカルのExcelファイルは自社PC内に保持されます。
+                過去の見積データは見積クラウドDBに蓄積され、ローカルのExcelファイルは自社PC内に保持されます。
               </p>
               <div class="feature-visual">
                 <div class="security-diagram">
@@ -1153,22 +1531,22 @@
           <div class="feature-block">
             <div class="feature-header">
               <div class="feature-tag advantage">優位性</div>
-              <h3>Excelライクな操作感で、AIが横から助けてくれる</h3>
+              <h3>COMPASSユーザーが違和感なく乗り換えられるUI</h3>
             </div>
             <div class="feature-body">
               <p>
-                新しいシステムを覚え直す必要はありません。このアプリのExcelライクな画面で、いつも通りの感覚で見積書を作成・編集できます。作業中に右クリックひとつで「この単価、妥当？」とAIに聞けます。
+                COMPASSの操作感はExcelに近く、業界のデファクトになっています。本アプリもAG
+                Gridベースのスプレッドシート
+                UIで同様の操作感を再現し、COMPASSユーザーが学習コストなく乗り換えられることを目指します。
               </p>
               <p>
-                セルに数値を入力すれば、AIが自動的に内容を認識して「この項目が抜けていませんか？」と教えてくれます。ブラウザを開いてログインして、ファイルを選んで…といった手間がなく、<strong>使い慣れた操作感のまま、AIが横から助けてくれる感覚</strong>で使えます。
+                作業中に右クリックひとつで「この単価、妥当？」とAIに聞けます。セルに数値を入力すれば、AIが自動的に「この項目が抜けていませんか？」と教えてくれます。<strong>COMPASSの使い慣れた操作感のまま、AIが横から助けてくれる感覚</strong>で使えます。
               </p>
               <div class="feature-visual">
                 <div class="feature-flow">
                   <div class="flow-step">
                     <div class="flow-icon">📋</div>
-                    <div class="flow-text">
-                      Excelライクな<br />画面で見積作成
-                    </div>
+                    <div class="flow-text">COMPASS風の<br />画面で見積作成</div>
                   </div>
                   <div class="flow-arrow">→</div>
                   <div class="flow-step">
@@ -1187,9 +1565,9 @@
         </div>
       </div>
 
-      <!-- 4. 技術選定 -->
+      <!-- 7. 技術スタック選定 -->
       <div class="section">
-        <div class="section-number">Section 04</div>
+        <div class="section-number">Section 07</div>
         <h2 class="section-title">技術スタック選定</h2>
         <p>
           開発速度・パフォーマンス・AI統合の観点から、以下の技術スタックを比較検討しました。
@@ -1236,9 +1614,9 @@
         </p>
       </div>
 
-      <!-- 5. システムアーキテクチャ -->
+      <!-- 8. システムアーキテクチャ -->
       <div class="section">
-        <div class="section-number">Section 05</div>
+        <div class="section-number">Section 08</div>
         <h2 class="section-title">システムアーキテクチャ</h2>
 
         <div class="arch-diagram">
@@ -1248,19 +1626,20 @@
             </div>
             <div class="arch-items">
               <div class="arch-item">
-                <span class="tag tag-ts">React</span> 見積書エディタ（AG Grid）
+                <span class="tag tag-ts">React</span> 見積書エディタ（AG
+                Grid・多階層対応）
               </div>
               <div class="arch-item">
-                <span class="tag tag-ts">UI</span> 案件作成・管理
+                <span class="tag tag-ts">UI</span> 計算パターン・利益率表示
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-ts">UI</span> 見積比較・業者査定ビュー
               </div>
               <div class="arch-item">
                 <span class="tag tag-ts">UI</span> AIチャットパネル
               </div>
               <div class="arch-item">
-                <span class="tag tag-ts">UI</span> 見積比較・業者選定ビュー
-              </div>
-              <div class="arch-item">
-                <span class="tag tag-ts">UI</span> ダッシュボード・分析ビュー
+                <span class="tag tag-ts">UI</span> 案件管理（クラウド連携）
               </div>
             </div>
           </div>
@@ -1273,20 +1652,20 @@
             </div>
             <div class="arch-items">
               <div class="arch-item">
-                <span class="tag tag-ai">Tool</span> 類似案件検索
+                <span class="tag tag-ai">Tool</span> 類似案件 意味検索
               </div>
               <div class="arch-item">
-                <span class="tag tag-ai">Tool</span> 単価マスタ参照
+                <span class="tag tag-ai">Tool</span> 単価マスタ参照・妥当性判定
               </div>
               <div class="arch-item">
                 <span class="tag tag-ai">Tool</span> 見積項目 自動生成
               </div>
               <div class="arch-item">
-                <span class="tag tag-ai">Tool</span> 妥当性チェック
+                <span class="tag tag-ai">Tool</span> 見積書 総合レビュー
               </div>
               <div class="arch-item">
                 <span class="tag tag-ai">Tool</span>
-                自動値入れ（採用見積→内訳書）
+                表記ゆれ吸収の自動値入
               </div>
               <div class="arch-item">
                 <span class="tag tag-ai">保護</span> 個人情報の自動マスキング
@@ -1304,20 +1683,30 @@
             <div class="api-desc">React(TS) → Rustバックエンドを直接呼出</div>
           </div>
 
-          <div class="arch-layer">
-            <div class="arch-layer-label">ローカル処理 — Tauri 2.0 (Rust)</div>
+          <div class="arch-layer arch-layer-compass">
+            <div class="arch-layer-label">
+              COMPASS同等機能 — Tauri 2.0 (Rust) + ローカル処理
+            </div>
             <div class="arch-items">
               <div class="arch-item">
                 <span class="tag tag-rust">Rust</span> Excelパーサ（calamine）
               </div>
               <div class="arch-item">
-                <span class="tag tag-rust">Rust</span> ファイルシステム管理
+                <span class="tag tag-rust">Rust</span>
+                Excel出力（rust_xlsxwriter）
               </div>
               <div class="arch-item">
                 <span class="tag tag-rust">Rust</span> フォルダ監視・自動取込
               </div>
               <div class="arch-item">
                 <span class="tag tag-rust">Local</span> 見積比較の計算処理
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-rust">Local</span> 計算パターン・利益率計算
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-rust">Export</span> BCS / CSV /
+                テキスト出力
               </div>
               <div class="arch-item">
                 <span class="tag tag-rust">Cache</span>
@@ -1334,7 +1723,9 @@
           </div>
 
           <div class="arch-layer arch-layer-cloud">
-            <div class="arch-layer-label">見積クラウドDB + API Server</div>
+            <div class="arch-layer-label">
+              見積クラウドDB + API Server（既存）
+            </div>
             <div class="arch-items">
               <div class="arch-item">
                 <span class="tag tag-db">DB</span> 案件
@@ -1346,25 +1737,25 @@
                 <span class="tag tag-db">DB</span> 業者見積
               </div>
               <div class="arch-item">
+                <span class="tag tag-db">DB</span> 単価マスター
+              </div>
+              <div class="arch-item">
                 <span class="tag tag-db">Vector</span> pgvector（類似案件検索）
               </div>
               <div class="arch-item">
                 <span class="tag tag-ai">Embed</span>
                 Embeddingモデル（ベクトル変換）
               </div>
-              <div class="arch-item">
-                <span class="tag tag-db">API</span> 見積依頼の送受信
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 6. 機能配置モデル -->
+      <!-- 9. 機能配置モデル -->
       <div class="section">
-        <div class="section-number">Section 06</div>
+        <div class="section-number">Section 09</div>
         <h2 class="section-title">
-          機能配置モデル — Claude Code型ハイブリッド
+          機能配置モデル — COMPASS同等機能 ＋ AI拡張の2層構造
         </h2>
         <p>
           各機能をローカルとクラウドAPIのどちらで処理するかは、アプリの使い勝手とセキュリティを左右する重要な設計判断です。Claude
@@ -1385,7 +1776,7 @@
         <table class="comparison-table" style="margin-top: 28px">
           <thead>
             <tr>
-              <th style="width: 120px">機能</th>
+              <th style="width: 140px">機能</th>
               <th>ローカル処理</th>
               <th style="width: 80px; text-align: center">API</th>
               <th>見積クラウドDB（正）</th>
@@ -1394,46 +1785,164 @@
           </thead>
           <tbody>
             <tr>
-              <td><strong>案件作成</strong></td>
-              <td>入力UI・バリデーション</td>
+              <td>
+                <strong>見積書作成・編集</strong
+                ><span
+                  class="badge-compass"
+                  style="
+                    margin-left: 0;
+                    display: block;
+                    margin-top: 4px;
+                    width: fit-content;
+                  "
+                  >COMPASS</span
+                >
+              </td>
+              <td>AG Grid多階層エディタ・計算パターン・利益率表示</td>
               <td style="text-align: center">→</td>
-              <td>案件の永続化</td>
+              <td>見積データの永続化</td>
               <td>—</td>
             </tr>
             <tr>
-              <td><strong>見積書取込</strong></td>
-              <td>Excel解析・データ抽出</td>
+              <td>
+                <strong>Excel取込</strong
+                ><span
+                  class="badge-compass"
+                  style="
+                    margin-left: 0;
+                    display: block;
+                    margin-top: 4px;
+                    width: fit-content;
+                  "
+                  >COMPASS</span
+                >
+              </td>
+              <td>Rust製Excelパーサでデータ抽出</td>
               <td style="text-align: center">→</td>
               <td>見積データ・単価の蓄積・ベクトル化</td>
               <td>項目の自動分類</td>
             </tr>
             <tr>
-              <td><strong>見積依頼</strong></td>
-              <td>依頼書の作成UI</td>
-              <td style="text-align: center">→</td>
-              <td>依頼先・ステータス管理</td>
-              <td>依頼項目の自動生成</td>
+              <td>
+                <strong>単価マスター</strong
+                ><span
+                  class="badge-compass"
+                  style="
+                    margin-left: 0;
+                    display: block;
+                    margin-top: 4px;
+                    width: fit-content;
+                  "
+                  >COMPASS</span
+                >
+              </td>
+              <td>単価の表示・適用UI</td>
+              <td style="text-align: center">↔</td>
+              <td>地域・年度別単価の管理</td>
+              <td>相場妥当性の判定</td>
             </tr>
             <tr>
-              <td><strong>見積比較</strong></td>
-              <td>比較計算・差分表示</td>
+              <td>
+                <strong>見積比較</strong
+                ><span
+                  class="badge-compass"
+                  style="
+                    margin-left: 0;
+                    display: block;
+                    margin-top: 4px;
+                    width: fit-content;
+                  "
+                  >COMPASS</span
+                >
+              </td>
+              <td>比較計算・差分表示・査定掛率</td>
               <td style="text-align: center">↔</td>
               <td>比較結果の保存・過去単価の参照</td>
               <td>異常値検出・コメント生成</td>
             </tr>
             <tr>
-              <td><strong>業者選定</strong></td>
-              <td>選定UI・スコア表示</td>
-              <td style="text-align: center">↔</td>
-              <td>業者・評価履歴・過去単価の比較</td>
-              <td>総合評価・推薦理由の生成</td>
+              <td>
+                <strong>見積依頼</strong
+                ><span
+                  class="badge-compass"
+                  style="
+                    margin-left: 0;
+                    display: block;
+                    margin-top: 4px;
+                    width: fit-content;
+                  "
+                  >COMPASS</span
+                >
+              </td>
+              <td>依頼書Excel出力・回答Excel取込</td>
+              <td style="text-align: center">→</td>
+              <td>依頼先・ステータス管理</td>
+              <td>依頼項目の自動生成</td>
             </tr>
             <tr>
-              <td><strong>自動値入れ</strong></td>
+              <td>
+                <strong>自動値入</strong
+                ><span
+                  class="badge-compass"
+                  style="
+                    margin-left: 0;
+                    display: block;
+                    margin-top: 4px;
+                    width: fit-content;
+                  "
+                  >COMPASS</span
+                ><span
+                  class="badge-ai"
+                  style="
+                    margin-left: 4px;
+                    display: inline-block;
+                    margin-top: 4px;
+                  "
+                  >AI</span
+                >
+              </td>
               <td>採用見積→内訳書への転記UI</td>
               <td style="text-align: center">→</td>
               <td>完成した内訳書の保存</td>
-              <td>品目・単価・数量の自動マッピング</td>
+              <td>表記ゆれ吸収マッピング</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>類似案件検索</strong
+                ><span
+                  class="badge-ai"
+                  style="
+                    margin-left: 0;
+                    display: block;
+                    margin-top: 4px;
+                    width: fit-content;
+                  "
+                  >AI</span
+                >
+              </td>
+              <td>検索UI</td>
+              <td style="text-align: center">↔</td>
+              <td>pgvectorでのベクトル検索</td>
+              <td>意味的な類似度判定</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>妥当性チェック</strong
+                ><span
+                  class="badge-ai"
+                  style="
+                    margin-left: 0;
+                    display: block;
+                    margin-top: 4px;
+                    width: fit-content;
+                  "
+                  >AI</span
+                >
+              </td>
+              <td>チェック結果の表示UI</td>
+              <td style="text-align: center">↔</td>
+              <td>過去実績データの参照</td>
+              <td>単価異常値・項目過不足の検出</td>
             </tr>
           </tbody>
         </table>
@@ -1454,83 +1963,36 @@
           類似案件検索には、見積データをEmbeddingモデルでベクトル化し、クラウドDB上のpgvector（PostgreSQL拡張）で意味的な類似度検索を行います。
         </p>
 
-        <div class="model-benefit" style="margin-top: 24px">
+        <div style="margin-top: 24px">
           <div class="card-grid" style="grid-template-columns: repeat(3, 1fr)">
             <div class="card">
               <div class="card-icon blue">⚡</div>
               <h4>オフラインでも作業可能</h4>
               <p>
-                Excel解析・比較計算はローカル完結。ネットワークが不安定な現場でも見積作業を継続できる。
+                Excel解析・比較計算・計算パターンはローカル完結。ネットワークが不安定な現場でも見積作業を継続できる。
               </p>
             </div>
             <div class="card">
               <div class="card-icon green">🔄</div>
-              <h4>チームでリアルタイム共有</h4>
+              <h4>既存クラウドと即座に同期</h4>
               <p>
-                案件・業者・見積結果はAPI経由で即座に同期。誰かが更新すれば全員に反映。
+                見積クラウドDBとAPI経由で同期。デスクトップアプリで作成したデータもWebプラットフォームからアクセス可能。
               </p>
             </div>
             <div class="card">
               <div class="card-icon purple">🧠</div>
               <h4>AIが賢くなり続ける</h4>
               <p>
-                蓄積データが増えるほどAIの提案精度が向上。自動値入れでの品目マッピングも過去実績から学習。
+                蓄積データが増えるほどAIの提案精度が向上。自動値入れでの表記ゆれパターンも過去実績から学習。
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 7. AI支援機能の詳細 -->
+      <!-- 10. 期待される効果 -->
       <div class="section">
-        <div class="section-number">Section 07</div>
-        <h2 class="section-title">AI支援機能の詳細</h2>
-        <p>
-          Claude SDKのTool
-          Use機能により、以下のAI支援をエージェントとして実装します。
-        </p>
-        <div class="card-grid">
-          <div class="card">
-            <div class="card-icon blue">🔍</div>
-            <h4>類似案件 自動検索</h4>
-            <p>
-              建物種別・規模・工種をキーに、過去見積DBから類似案件を自動検索。見積クラウドDB上のpgvector（ベクトル検索）と条件検索のハイブリッドで精度を確保。
-            </p>
-          </div>
-          <div class="card">
-            <div class="card-icon warm">💰</div>
-            <h4>単価 自動提案</h4>
-            <p>
-              過去実績の統計値（平均・中央値・分布）に基づき、各項目の推奨単価を提案。相場からの乖離度も表示。
-            </p>
-          </div>
-          <div class="card">
-            <div class="card-icon green">📝</div>
-            <h4>項目の自動生成</h4>
-            <p>
-              建物種別と工事概要から、必要な見積項目を自動で生成。漏れがちな付帯工事も含めて提案。
-            </p>
-          </div>
-          <div class="card">
-            <div class="card-icon purple">✅</div>
-            <h4>妥当性チェック</h4>
-            <p>
-              完成した見積書に対し、単価の異常値検出、項目の過不足、合計金額の妥当性を自動レビュー。
-            </p>
-          </div>
-          <div class="card">
-            <div class="card-icon warm">📥</div>
-            <h4>自動値入れ</h4>
-            <p>
-              採用業者の見積書から品目・単価・数量を読み取り、内訳書のフォーマットに自動マッピング。項目名の表記ゆれもAIが吸収し、転記ミスを防止。
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 8. 期待される効果 -->
-      <div class="section">
-        <div class="section-number">Section 08</div>
+        <div class="section-number">Section 10</div>
         <h2 class="section-title">期待される効果</h2>
         <div class="kpi-row">
           <div class="kpi">
@@ -1545,72 +2007,77 @@
             <div class="kpi-value">±5<span class="unit">%</span></div>
             <div class="kpi-label">単価精度の目標偏差</div>
           </div>
+          <div class="kpi">
+            <div class="kpi-value">¥92,400</div>
+            <div class="kpi-label">年額ライセンス費の削減</div>
+          </div>
         </div>
       </div>
 
-      <!-- 9. 開発ロードマップ -->
+      <!-- 11. 開発ロードマップ -->
       <div class="section">
-        <div class="section-number">Section 09</div>
+        <div class="section-number">Section 11</div>
         <h2 class="section-title">開発ロードマップ</h2>
 
         <div class="timeline">
           <div class="timeline-item">
-            <div class="timeline-phase">Phase 1 — 基盤構築</div>
+            <div class="timeline-phase">Phase 1 — COMPASS基本機能の再現</div>
             <div class="timeline-title">
-              Tauri環境 + Excel読み込み + AG Grid表示
+              Tauri環境 + Excel読み書き + AG Grid多階層エディタ
             </div>
             <div class="timeline-desc">
               Tauri
-              2.0プロジェクトのセットアップ、RustによるExcelパーサの実装、AG
-              Gridでの見積書表示UIを構築。基本的なCRUD操作を実装する。
+              2.0プロジェクトのセットアップ、RustによるExcelパーサ/ライタの実装、AG
+              Gridでの多階層見積書表示・編集UIを構築。計算パターン・利益率表示・Excel双方向コピペの基本CRUDを実装する。
             </div>
             <span class="timeline-duration">1ヶ月</span>
           </div>
           <div class="timeline-item">
-            <div class="timeline-phase">Phase 2 — クラウドDB連携</div>
+            <div class="timeline-phase">
+              Phase 2 — 見積クラウドDB連携 + 見積比較・値入
+            </div>
             <div class="timeline-title">
-              案件管理 + 見積クラウドDB連携 + 検索機能
+              クラウドDB連携 + 単価マスター + 見積比較 + 自動値入
             </div>
             <div class="timeline-desc">
-              デスクトップアプリ上での案件作成・管理機能を実装。すべての操作データをAPI経由で見積クラウドDBに自動保存し、過去見積の建物種別・工種フィルタリングと類似案件検索を実現する。
+              既存の見積クラウドDBとのAPI連携を実装。単価マスターの地域・年度別管理、最大10社の見積比較画面（査定掛率・経費振り分け対応）、採用業者の単価反映による自動値入機能を構築する。BCS/CSV出力にも対応。
             </div>
             <span class="timeline-duration">1ヶ月</span>
           </div>
           <div class="timeline-item">
             <div class="timeline-phase">Phase 3 — AIエージェント統合</div>
             <div class="timeline-title">
-              Claude SDK + Tauri invoke連携 + Tool実装
+              Claude SDK + Tool実装 + 意味検索 + 表記ゆれ吸収
             </div>
             <div class="timeline-desc">
               Claude
-              SDKを導入し、類似案件検索・単価提案・項目生成・妥当性チェック・自動値入れの各Toolを実装。Claude
-              SDKからTauriの<code>invoke</code>コマンドでRustバックエンドを呼び出し、ローカルファイルとクラウドDBへアクセスする。
+              SDKを導入し、類似案件の意味検索・単価妥当性チェック・項目自動生成・見積書総合レビュー・表記ゆれ吸収の自動値入の各Toolを実装。pgvectorでのベクトル検索基盤も構築する。
             </div>
             <span class="timeline-duration">2ヶ月</span>
           </div>
           <div class="timeline-item">
             <div class="timeline-phase">Phase 4 — 実証・改善</div>
             <div class="timeline-title">
-              社内パイロット運用 + フィードバック改善
+              社内パイロット運用 + COMPASS機能パリティ検証
             </div>
             <div class="timeline-desc">
-              実業務でのパイロット運用を開始。
-              CSチームのフィードバックに基づきUI/UXとAI提案精度を改善する。
+              実業務でのパイロット運用を開始。COMPASSからの移行テストを実施し、機能パリティを検証。CSチームのフィードバックに基づきUI/UXとAI提案精度を改善する。
             </div>
-            <span class="timeline-duration">1.0ヶ月</span>
+            <span class="timeline-duration">1ヶ月</span>
           </div>
         </div>
       </div>
 
-      <!-- 10. リスクと対策 -->
+      <!-- 12. リスクと対策 -->
       <div class="section">
-        <div class="section-number">Section 10</div>
+        <div class="section-number">Section 12</div>
         <h2 class="section-title">リスクと対策</h2>
         <div class="risk-grid">
           <div class="risk-card risk">
             <h4>⚠ 想定リスク</h4>
             <ul>
               <li>Rustの学習コストによる開発遅延</li>
+              <li>COMPASS機能パリティの達成が想定以上に複雑</li>
               <li>LLM APIのレスポンス遅延がUXを損なう可能性</li>
               <li>過去見積データの品質・フォーマットのばらつき</li>
               <li>AI推論のため単価データが外部APIに送信される点</li>
@@ -1622,6 +2089,9 @@
             <ul>
               <li>
                 フロントエンドはReact/TSで既存知見を活用、Rustは段階的に習得
+              </li>
+              <li>
+                COMPASSの「よく使われる基本機能」から優先実装し、段階的にパリティ達成
               </li>
               <li>ストリーミング応答 + UIの楽観的更新で体感速度を向上</li>
               <li>インポート時のバリデーションと正規化パイプラインを構築</li>
