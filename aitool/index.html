@@ -365,6 +365,35 @@
         background: rgba(255, 200, 50, 0.05) !important;
       }
 
+      .arch-layer-cloud {
+        border-color: rgba(100, 160, 255, 0.3) !important;
+        background: rgba(100, 160, 255, 0.05) !important;
+      }
+
+      .arch-connector-api {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 10px 0;
+        gap: 4px;
+      }
+
+      .api-arrow {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        font-weight: 600;
+        color: #58a6ff;
+        background: rgba(88, 166, 255, 0.1);
+        padding: 6px 20px;
+        border-radius: 8px;
+        letter-spacing: 0.05em;
+      }
+
+      .api-desc {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.4);
+      }
+
       .arch-mcp-desc {
         font-size: 12px;
         color: rgba(255, 255, 255, 0.5);
@@ -378,6 +407,7 @@
         padding: 8px 0;
         color: rgba(255, 255, 255, 0.2);
         font-size: 20px;
+        font-family: "JetBrains Mono", monospace;
       }
 
       /* Comparison Table */
@@ -841,6 +871,38 @@
         line-height: 1.5;
       }
 
+      /* Model Principle */
+      .model-principle {
+        margin-top: 28px;
+        background: linear-gradient(135deg, #0f0f23, #1a1a3e);
+        border-radius: 16px;
+        padding: 28px 32px;
+        color: #fff;
+      }
+
+      .principle-label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #00d4aa;
+        margin-bottom: 12px;
+      }
+
+      .principle-text {
+        font-size: 15px;
+        line-height: 1.9;
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      .principle-text strong {
+        color: #fff;
+        font-size: 17px;
+        display: block;
+        margin-bottom: 8px;
+      }
+
       @media (max-width: 640px) {
         .content {
           padding: 48px 20px 80px;
@@ -874,7 +936,7 @@
       </h1>
       <p class="cover-subtitle">
         ローカルExcelデータとLLMエージェントを統合し、<br />
-        見積書の作成・分析・レビューを革新するデスクトップアプリケーション
+        案件管理から見積書の作成・分析・レビューまで一気通貫で支援するデスクトップアプリケーション
       </p>
       <dl class="cover-meta">
         <div>
@@ -947,21 +1009,22 @@
             <div class="card-icon purple">🤖</div>
             <h4>AIエージェント支援</h4>
             <p>
-              過去見積の類似検索、単価の自動提案、項目の自動生成、妥当性チェックをLLMが実行。
+              過去見積の類似検索、単価の自動提案、項目の自動生成、妥当性チェック、採用見積からの自動値入れをLLMが実行。
             </p>
           </div>
           <div class="card">
             <div class="card-icon green">🔒</div>
-            <h4>ローカルファースト</h4>
+            <h4>エンタープライズAPI + 個人情報保護</h4>
             <p>
-              見積データは社内に留まるセキュアな設計。ファイルアクセスはMCPプロトコルで安全に制御。
+              AI推論にはデータが学習に利用されないエンタープライズ契約API（Claude
+              API）を使用。施主名・担当者名などの個人情報はAPI送信前に自動マスキング。
             </p>
           </div>
           <div class="card">
             <div class="card-icon warm">📁</div>
-            <h4>ナレッジ蓄積</h4>
+            <h4>データの正はクラウドに一元化</h4>
             <p>
-              過去見積をSQLiteに自動蓄積し、建物種別・工種ごとの単価データベースとして活用。
+              ローカルのExcelは「取込元」、見積クラウドDBが「唯一の正（マスター）」。新規作成データはすべてクラウドDBに保存し、チーム全体で一元活用。
             </p>
           </div>
         </div>
@@ -985,28 +1048,33 @@
             </div>
             <div class="feature-body">
               <p>
-                いちいちファイルをアップロードする手間はありません。社内の共有フォルダを指定しておけば、中に入っている見積書をAIが自動的に読み込み、「過去にどんな単価で出したか」「似た案件がないか」を即座に答えてくれます。
+                いちいちファイルをアップロードする手間はありません。アプリ上で案件を作成し、社内の共有フォルダを指定しておけば、中に入っている見積書をAIが自動的に読み込み、「過去にどんな単価で出したか」「似た案件がないか」を即座に答えてくれます。
               </p>
               <p>
-                新しい見積書がフォルダに追加されたら、それも自動で学習します。<strong>使えば使うほど、AIが社内の見積ノウハウに詳しくなっていく仕組み</strong>です。
+                過去のExcelは「取込元」として読み取られ、データは見積クラウドDBに蓄積されます。新しい見積書がフォルダに追加されたら、それも自動で取り込みます。<strong>使えば使うほど、AIが社内の見積ノウハウに詳しくなっていく仕組み</strong>です。
               </p>
               <div class="feature-visual">
                 <div class="feature-flow">
                   <div class="flow-step">
+                    <div class="flow-icon">📋</div>
+                    <div class="flow-text">アプリ上で<br />案件を作成</div>
+                  </div>
+                  <div class="flow-arrow">→</div>
+                  <div class="flow-step">
                     <div class="flow-icon">📁</div>
                     <div class="flow-text">
-                      共有フォルダを<br />指定するだけ
+                      フォルダ指定で<br />Excel自動取込
                     </div>
                   </div>
                   <div class="flow-arrow">→</div>
                   <div class="flow-step">
-                    <div class="flow-icon">🤖</div>
-                    <div class="flow-text">AIが自動で<br />読み込み・学習</div>
+                    <div class="flow-icon">☁️</div>
+                    <div class="flow-text">見積クラウドDBに<br />自動保存</div>
                   </div>
                   <div class="flow-arrow">→</div>
                   <div class="flow-step">
                     <div class="flow-icon">💡</div>
-                    <div class="flow-text">過去実績に基づく<br />即時回答</div>
+                    <div class="flow-text">AIが過去実績<br />から即時提案</div>
                   </div>
                 </div>
               </div>
@@ -1016,35 +1084,64 @@
           <div class="feature-block">
             <div class="feature-header">
               <div class="feature-tag differentiation">差別化</div>
-              <h3>見積データが社外に一切出ない安心設計</h3>
+              <h3>見積データの安全性を確保した設計</h3>
             </div>
             <div class="feature-body">
               <p>
-                見積書には原価や利益率など、絶対に外部に漏らせない情報が含まれています。このアプリでは、蓄積されたデータはすべて自社のパソコンの中だけに保存されます。
+                見積書には原価や利益率など、取り扱いに注意が必要な情報が含まれています。このアプリでは、AI分析に必要な単価データはエンタープライズ契約のAPI（Claude
+                API）を通じて送信しますが、APIプロバイダーの学習データとして利用されることはありません。
               </p>
               <p>
-                AIに質問する際も、見せてはいけない数字は自動的に伏せてから送る仕組みになっているため、<strong>「便利だけどセキュリティが心配」という導入時の最大のハードルをクリア</strong>できます。
+                さらに、施主名・業者の担当者名・連絡先などの個人情報は、API送信前に自動的に伏せる仕組みを備えています。単価や金額はAI推論に必要なためそのまま送信しますが、<strong>「誰の・どの案件か」が特定される情報は外部に出ない設計</strong>です。過去の見積データは自社管理の見積クラウドDBに蓄積され、ローカルのExcelファイルは自社PC内に保持されます。
               </p>
               <div class="feature-visual">
                 <div class="security-diagram">
                   <div class="security-zone safe">
-                    <div class="zone-label">社内（自社PC内）</div>
+                    <div class="zone-label">ローカル（自社PC）</div>
                     <div class="zone-items">
-                      <span>見積データ</span>
+                      <span>Excel見積書</span>
                       <span>原価情報</span>
-                      <span>利益率</span>
+                    </div>
+                  </div>
+                  <div
+                    class="security-wall"
+                    style="
+                      background: linear-gradient(180deg, #c5d8f0, #a8c4e6);
+                    "
+                  >
+                    <div class="wall-label">🔄 REST API</div>
+                  </div>
+                  <div class="security-zone safe" style="background: #eef6ff">
+                    <div class="zone-label">見積クラウドDB</div>
+                    <div class="zone-items">
+                      <span>案件</span>
+                      <span>業者見積</span>
+                      <span>業者</span>
                     </div>
                   </div>
                   <div class="security-wall">
-                    <div class="wall-label">🔒 自動マスキング</div>
+                    <div class="wall-label">🔒 個人情報マスキング</div>
                   </div>
                   <div class="security-zone external">
-                    <div class="zone-label">AI（外部API）</div>
+                    <div class="zone-label">AI（Claude API）</div>
                     <div class="zone-items">
-                      <span>質問内容のみ</span>
+                      <span>単価・金額（匿名化済）</span>
+                      <span>工種・建物種別</span>
                     </div>
                   </div>
                 </div>
+                <p
+                  style="
+                    font-size: 13px;
+                    color: #888;
+                    margin-top: 12px;
+                    line-height: 1.6;
+                  "
+                >
+                  ※
+                  AI推論に必要な単価・金額データはAPI送信しますが、学習データとして利用されないエンタープライズ契約（Claude
+                  API）を前提とします。施主名・担当者名等の個人情報は自動マスキングにより外部に送信されません。
+                </p>
               </div>
             </div>
           </div>
@@ -1052,25 +1149,27 @@
           <div class="feature-block">
             <div class="feature-header">
               <div class="feature-tag advantage">優位性</div>
-              <h3>今のExcelの使い方を変えずに、AIが横から助けてくれる</h3>
+              <h3>Excelライクな操作感で、AIが横から助けてくれる</h3>
             </div>
             <div class="feature-body">
               <p>
-                新しいシステムを覚え直す必要はありません。普段通りExcelで作業しているときに、右クリックひとつで「この単価、妥当？」とAIに聞けます。
+                新しいシステムを覚え直す必要はありません。このアプリのExcelライクな画面で、いつも通りの感覚で見積書を作成・編集できます。作業中に右クリックひとつで「この単価、妥当？」とAIに聞けます。
               </p>
               <p>
-                Excelで表をコピーすれば、AIが自動的に内容を認識して「この項目が抜けていませんか？」と教えてくれます。ブラウザを開いてログインして、ファイルを選んで…といった手間がなく、<strong>いつもの作業の延長線上にAIがいる感覚</strong>で使えます。
+                セルに数値を入力すれば、AIが自動的に内容を認識して「この項目が抜けていませんか？」と教えてくれます。ブラウザを開いてログインして、ファイルを選んで…といった手間がなく、<strong>使い慣れた操作感のまま、AIが横から助けてくれる感覚</strong>で使えます。
               </p>
               <div class="feature-visual">
                 <div class="feature-flow">
                   <div class="flow-step">
                     <div class="flow-icon">📋</div>
-                    <div class="flow-text">Excelで<br />いつも通り作業</div>
+                    <div class="flow-text">
+                      Excelライクな<br />画面で見積作成
+                    </div>
                   </div>
                   <div class="flow-arrow">→</div>
                   <div class="flow-step">
                     <div class="flow-icon">🖱</div>
-                    <div class="flow-text">右クリックや<br />コピーだけで</div>
+                    <div class="flow-text">右クリックや<br />入力だけで</div>
                   </div>
                   <div class="flow-arrow">→</div>
                   <div class="flow-step">
@@ -1107,7 +1206,7 @@
                 軽量（メモリ1/10）、Rustバックエンドの高速Excel解析、TS統一
               </td>
               <td>Rustの学習コスト</td>
-              <td>Claude Agent SDK (TS) + MCP</td>
+              <td>Claude SDK (TS) + Tauri invoke</td>
             </tr>
             <tr>
               <td>.NET 8 + WinUI 3</td>
@@ -1125,31 +1224,36 @@
         </table>
         <p style="margin-top: 20px">
           <strong
-            >推奨構成：Tauri 2.0 + React + AG Grid + Claude Agent SDK</strong
+            >推奨構成：Tauri 2.0 + React + AG Grid + Claude SDK +
+            pgvector</strong
           ><br />
           フロントエンドはReact/TypeScriptで開発し、バックエンドのファイル処理はRustで高速に実行。AIエージェントはClaude
-          Agent
-          SDKでTypeScriptに統一し、MCPプロトコルでローカルデータへ安全にアクセスする構成です。
+          SDKでTypeScriptに統一し、Tauri標準の<code>invoke</code>コマンドでRustバックエンドを直接呼び出すシンプルな構成です。類似案件の意味検索にはクラウドDB側でpgvector（PostgreSQL拡張）を採用します。
         </p>
       </div>
 
-      <!-- 4. システムアーキテクチャ -->
+      <!-- 5. システムアーキテクチャ -->
       <div class="section">
         <div class="section-number">Section 05</div>
         <h2 class="section-title">システムアーキテクチャ</h2>
 
         <div class="arch-diagram">
           <div class="arch-layer">
-            <div class="arch-layer-label">Frontend — React + TypeScript</div>
+            <div class="arch-layer-label">
+              Frontend — React + TypeScript（ローカル実行）
+            </div>
             <div class="arch-items">
               <div class="arch-item">
                 <span class="tag tag-ts">React</span> 見積書エディタ（AG Grid）
               </div>
               <div class="arch-item">
+                <span class="tag tag-ts">UI</span> 案件作成・管理
+              </div>
+              <div class="arch-item">
                 <span class="tag tag-ts">UI</span> AIチャットパネル
               </div>
               <div class="arch-item">
-                <span class="tag tag-ts">UI</span> 単価提案インライン表示
+                <span class="tag tag-ts">UI</span> 見積比較・業者選定ビュー
               </div>
               <div class="arch-item">
                 <span class="tag tag-ts">UI</span> ダッシュボード・分析ビュー
@@ -1161,7 +1265,7 @@
 
           <div class="arch-layer">
             <div class="arch-layer-label">
-              AI Agent Layer — Claude Agent SDK (TypeScript)
+              AI Agent Layer — Claude SDK（ローカル実行 → Claude API呼出）
             </div>
             <div class="arch-items">
               <div class="arch-item">
@@ -1176,37 +1280,28 @@
               <div class="arch-item">
                 <span class="tag tag-ai">Tool</span> 妥当性チェック
               </div>
-            </div>
-          </div>
-
-          <div class="arch-connector">▼</div>
-
-          <div class="arch-layer arch-layer-mcp">
-            <div class="arch-layer-label">
-              MCP Server — ゲートキーパー（アクセス制御層）
-            </div>
-            <div class="arch-mcp-desc">
-              AIエージェントが直接データに触れず、許可された操作だけを中継する安全な橋渡し役
-            </div>
-            <div class="arch-items">
               <div class="arch-item">
-                <span class="tag tag-mcp">制御</span> ファイルアクセス許可管理
+                <span class="tag tag-ai">Tool</span>
+                自動値入れ（採用見積→内訳書）
               </div>
               <div class="arch-item">
-                <span class="tag tag-mcp">制御</span> DBクエリの安全な中継
-              </div>
-              <div class="arch-item">
-                <span class="tag tag-mcp">制御</span> 機密情報の自動マスキング
+                <span class="tag tag-ai">保護</span> 個人情報の自動マスキング
               </div>
             </div>
           </div>
 
-          <div class="arch-connector">▼</div>
+          <div class="arch-connector-api" style="padding: 6px 0">
+            <div
+              class="api-arrow"
+              style="background: rgba(222, 110, 52, 0.15); color: #f0915a"
+            >
+              ▼ Tauri invoke ▼
+            </div>
+            <div class="api-desc">React(TS) → Rustバックエンドを直接呼出</div>
+          </div>
 
           <div class="arch-layer">
-            <div class="arch-layer-label">
-              Backend + Data — Tauri 2.0 (Rust)
-            </div>
+            <div class="arch-layer-label">ローカル処理 — Tauri 2.0 (Rust)</div>
             <div class="arch-items">
               <div class="arch-item">
                 <span class="tag tag-rust">Rust</span> Excelパーサ（calamine）
@@ -1215,22 +1310,182 @@
                 <span class="tag tag-rust">Rust</span> ファイルシステム管理
               </div>
               <div class="arch-item">
-                <span class="tag tag-db">DB</span> SQLite 見積ナレッジDB
+                <span class="tag tag-rust">Rust</span> フォルダ監視・自動取込
               </div>
               <div class="arch-item">
-                <span class="tag tag-rust">Rust</span> フォルダ監視・自動取込
+                <span class="tag tag-rust">Local</span> 見積比較の計算処理
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-rust">Rust</span> 個人情報マスキング処理
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-rust">Cache</span>
+                オフライン用ローカルキャッシュ
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-connector-api">
+            <div class="api-arrow">▼ REST API ▼</div>
+            <div class="api-desc">
+              ローカル操作・Excel取込データ → 見積クラウドDB（正）へ保存
+            </div>
+          </div>
+
+          <div class="arch-layer arch-layer-cloud">
+            <div class="arch-layer-label">見積クラウドDB + API Server</div>
+            <div class="arch-items">
+              <div class="arch-item">
+                <span class="tag tag-db">DB</span> 案件
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-db">DB</span> 業者
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-db">DB</span> 業者見積
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-db">Vector</span> pgvector（類似案件検索）
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-ai">Embed</span>
+                Embeddingモデル（ベクトル変換）
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-db">API</span> 見積依頼の送受信
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 5. AI支援機能の詳細 -->
+      <!-- 6. 機能配置モデル -->
       <div class="section">
         <div class="section-number">Section 06</div>
+        <h2 class="section-title">
+          機能配置モデル — Claude Code型ハイブリッド
+        </h2>
+        <p>
+          各機能をローカルとクラウドAPIのどちらで処理するかは、アプリの使い勝手とセキュリティを左右する重要な設計判断です。Claude
+          Codeの「ファイル操作はローカル、知性と記憶はクラウド」という設計思想を参考に、最適なモデルを採用します。
+        </p>
+
+        <div class="model-principle">
+          <div class="principle-label">設計原則</div>
+          <div class="principle-text">
+            <strong
+              >ローカルExcelは「入口」、見積クラウドDBが「唯一の正」、賢い判断はAI</strong
+            ><br />
+            過去のExcelファイルはローカルで読み取り・解析する「取込元」です。取り込んだデータと新規作成した見積データは、すべて見積クラウドDBに保存され、これがチーム共通のマスターデータとなります。AI推論にはエンタープライズ契約のAPI（Claude
+            API、学習利用なし）を使用し、個人情報はマスキングした上で送信します。
+          </div>
+        </div>
+
+        <table class="comparison-table" style="margin-top: 28px">
+          <thead>
+            <tr>
+              <th style="width: 120px">機能</th>
+              <th>ローカル処理</th>
+              <th style="width: 80px; text-align: center">API</th>
+              <th>見積クラウドDB（正）</th>
+              <th>AI推論（Claude API）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>案件作成</strong></td>
+              <td>入力UI・バリデーション</td>
+              <td style="text-align: center">→</td>
+              <td>案件の永続化</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><strong>見積書取込</strong></td>
+              <td>Excel解析・データ抽出</td>
+              <td style="text-align: center">→</td>
+              <td>見積データ・単価の蓄積・ベクトル化</td>
+              <td>項目の自動分類</td>
+            </tr>
+            <tr>
+              <td><strong>見積依頼</strong></td>
+              <td>依頼書の作成UI</td>
+              <td style="text-align: center">→</td>
+              <td>依頼先・ステータス管理</td>
+              <td>依頼項目の自動生成</td>
+            </tr>
+            <tr>
+              <td><strong>見積比較</strong></td>
+              <td>比較計算・差分表示</td>
+              <td style="text-align: center">↔</td>
+              <td>比較結果の保存・過去単価の参照</td>
+              <td>異常値検出・コメント生成</td>
+            </tr>
+            <tr>
+              <td><strong>業者選定</strong></td>
+              <td>選定UI・スコア表示</td>
+              <td style="text-align: center">↔</td>
+              <td>業者・評価履歴・過去単価の比較</td>
+              <td>総合評価・推薦理由の生成</td>
+            </tr>
+            <tr>
+              <td><strong>自動値入れ</strong></td>
+              <td>採用見積→内訳書への転記UI</td>
+              <td style="text-align: center">→</td>
+              <td>完成した内訳書の保存</td>
+              <td>品目・単価・数量の自動マッピング</td>
+            </tr>
+          </tbody>
+        </table>
+        <p
+          style="
+            font-size: 13px;
+            color: #888;
+            margin-top: 12px;
+            line-height: 1.6;
+          "
+        >
+          ※
+          ローカルExcelは「取込元」としてのみ使用。取込後のデータは見積クラウドDBが唯一の正（Single
+          Source of Truth）となります。<br />
+          ※ AI推論列の機能は、匿名化された単価・金額データをClaude
+          API（エンタープライズ契約・学習利用なし）に送信して実行します。<br />
+          ※
+          類似案件検索には、見積データをEmbeddingモデルでベクトル化し、クラウドDB上のpgvector（PostgreSQL拡張）で意味的な類似度検索を行います。
+        </p>
+
+        <div class="model-benefit" style="margin-top: 24px">
+          <div class="card-grid" style="grid-template-columns: repeat(3, 1fr)">
+            <div class="card">
+              <div class="card-icon blue">⚡</div>
+              <h4>オフラインでも作業可能</h4>
+              <p>
+                Excel解析・比較計算はローカル完結。ネットワークが不安定な現場でも見積作業を継続できる。
+              </p>
+            </div>
+            <div class="card">
+              <div class="card-icon green">🔄</div>
+              <h4>チームでリアルタイム共有</h4>
+              <p>
+                案件・業者・見積結果はAPI経由で即座に同期。誰かが更新すれば全員に反映。
+              </p>
+            </div>
+            <div class="card">
+              <div class="card-icon purple">🧠</div>
+              <h4>AIが賢くなり続ける</h4>
+              <p>
+                蓄積データが増えるほどAIの提案精度が向上。自動値入れでの品目マッピングも過去実績から学習。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. AI支援機能の詳細 -->
+      <div class="section">
+        <div class="section-number">Section 07</div>
         <h2 class="section-title">AI支援機能の詳細</h2>
         <p>
-          Claude Agent SDKのTool
+          Claude SDKのTool
           Use機能により、以下のAI支援をエージェントとして実装します。
         </p>
         <div class="card-grid">
@@ -1238,7 +1493,7 @@
             <div class="card-icon blue">🔍</div>
             <h4>類似案件 自動検索</h4>
             <p>
-              建物種別・規模・工種をキーに、過去見積DBから類似案件を自動検索。ベクトル検索と条件検索のハイブリッドで精度を確保。
+              建物種別・規模・工種をキーに、過去見積DBから類似案件を自動検索。見積クラウドDB上のpgvector（ベクトル検索）と条件検索のハイブリッドで精度を確保。
             </p>
           </div>
           <div class="card">
@@ -1262,12 +1517,19 @@
               完成した見積書に対し、単価の異常値検出、項目の過不足、合計金額の妥当性を自動レビュー。
             </p>
           </div>
+          <div class="card">
+            <div class="card-icon warm">📥</div>
+            <h4>自動値入れ</h4>
+            <p>
+              採用業者の見積書から品目・単価・数量を読み取り、内訳書のフォーマットに自動マッピング。項目名の表記ゆれもAIが吸収し、転記ミスを防止。
+            </p>
+          </div>
         </div>
       </div>
 
-      <!-- 6. 期待される効果 -->
+      <!-- 8. 期待される効果 -->
       <div class="section">
-        <div class="section-number">Section 07</div>
+        <div class="section-number">Section 08</div>
         <h2 class="section-title">期待される効果</h2>
         <div class="kpi-row">
           <div class="kpi">
@@ -1282,16 +1544,12 @@
             <div class="kpi-value">±5<span class="unit">%</span></div>
             <div class="kpi-label">単価精度の目標偏差</div>
           </div>
-          <div class="kpi">
-            <div class="kpi-value">0<span class="unit">件</span></div>
-            <div class="kpi-label">社外へのデータ流出</div>
-          </div>
         </div>
       </div>
 
-      <!-- 7. 開発ロードマップ -->
+      <!-- 9. 開発ロードマップ -->
       <div class="section">
-        <div class="section-number">Section 08</div>
+        <div class="section-number">Section 09</div>
         <h2 class="section-title">開発ロードマップ</h2>
 
         <div class="timeline">
@@ -1308,23 +1566,26 @@
             <span class="timeline-duration">1ヶ月</span>
           </div>
           <div class="timeline-item">
-            <div class="timeline-phase">Phase 2 — ナレッジDB構築</div>
+            <div class="timeline-phase">Phase 2 — クラウドDB連携</div>
             <div class="timeline-title">
-              SQLite + 過去見積の取り込み・検索機能
+              案件管理 + 見積クラウドDB連携 + 検索機能
             </div>
             <div class="timeline-desc">
-              過去見積書をSQLiteに自動インポートする仕組みを構築。建物種別・工種でのフィルタリングと、類似案件の検索機能を実装する。
+              デスクトップアプリ上での案件作成・管理機能を実装。すべての操作データをAPI経由で見積クラウドDBに自動保存し、過去見積の建物種別・工種フィルタリングと類似案件検索を実現する。
             </div>
             <span class="timeline-duration">1ヶ月</span>
           </div>
           <div class="timeline-item">
             <div class="timeline-phase">Phase 3 — AIエージェント統合</div>
-            <div class="timeline-title">Claude Agent SDK + MCP + Tool実装</div>
-            <div class="timeline-desc">
-              Claude Agent
-              SDKを導入し、類似案件検索・単価提案・項目生成・妥当性チェックの各Toolを実装。MCPでローカルデータアクセスを安全に制御する。
+            <div class="timeline-title">
+              Claude SDK + Tauri invoke連携 + Tool実装
             </div>
-            <span class="timeline-duration">1ヶ月</span>
+            <div class="timeline-desc">
+              Claude
+              SDKを導入し、類似案件検索・単価提案・項目生成・妥当性チェック・自動値入れの各Toolを実装。Claude
+              SDKからTauriの<code>invoke</code>コマンドでRustバックエンドを呼び出し、ローカルファイルとクラウドDBへアクセスする。
+            </div>
+            <span class="timeline-duration">2ヶ月</span>
           </div>
           <div class="timeline-item">
             <div class="timeline-phase">Phase 4 — 実証・改善</div>
@@ -1332,16 +1593,17 @@
               社内パイロット運用 + フィードバック改善
             </div>
             <div class="timeline-desc">
-              実業務でのパイロット運用を開始。ユーザーフィードバックに基づきUI/UXとAI提案精度を継続的に改善する。
+              実業務でのパイロット運用を開始。
+              CSチームのフィードバックに基づきUI/UXとAI提案精度を改善する。
             </div>
-            <span class="timeline-duration">1ヶ月</span>
+            <span class="timeline-duration">1.0ヶ月</span>
           </div>
         </div>
       </div>
 
-      <!-- 8. リスクと対策 -->
+      <!-- 10. リスクと対策 -->
       <div class="section">
-        <div class="section-number">Section 09</div>
+        <div class="section-number">Section 10</div>
         <h2 class="section-title">リスクと対策</h2>
         <div class="risk-grid">
           <div class="risk-card risk">
@@ -1350,6 +1612,7 @@
               <li>Rustの学習コストによる開発遅延</li>
               <li>LLM APIのレスポンス遅延がUXを損なう可能性</li>
               <li>過去見積データの品質・フォーマットのばらつき</li>
+              <li>AI推論のため単価データが外部APIに送信される点</li>
               <li>API利用コストの増大</li>
             </ul>
           </div>
@@ -1361,6 +1624,10 @@
               </li>
               <li>ストリーミング応答 + UIの楽観的更新で体感速度を向上</li>
               <li>インポート時のバリデーションと正規化パイプラインを構築</li>
+              <li>
+                学習利用なしのエンタープライズ契約API（Claude
+                API）を使用し、個人情報は自動マスキング
+              </li>
               <li>
                 Prompt Cachingの活用とローカルキャッシュで API呼出しを最適化
               </li>
