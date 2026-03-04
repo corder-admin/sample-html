@@ -1,883 +1,1382 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>企画書 | AI見積書作成支援デスクトップアプリ</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --ink: #1a1a2e;
-    --paper: #f8f7f4;
-    --accent: #0055ff;
-    --accent-light: #e8f0ff;
-    --accent-dark: #003db3;
-    --warm: #ff6b35;
-    --warm-light: #fff4ef;
-    --slate: #64748b;
-    --border: #e2e0dc;
-    --card-bg: #ffffff;
-    --section-gap: 64px;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'Noto Sans JP', 'IBM Plex Sans', sans-serif;
-    background: var(--paper);
-    color: var(--ink);
-    line-height: 1.8;
-    font-size: 15px;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* ===== COVER ===== */
-  .cover {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 80px 10%;
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(160deg, #0a0a1a 0%, #1a1a3e 40%, #0d2847 100%);
-    color: #fff;
-  }
-
-  .cover::before {
-    content: '';
-    position: absolute;
-    top: -20%;
-    right: -10%;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(0,85,255,0.15) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-
-  .cover::after {
-    content: '';
-    position: absolute;
-    bottom: -10%;
-    left: 20%;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(255,107,53,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-
-  .cover-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 100px;
-    padding: 8px 20px;
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    color: rgba(255,255,255,0.8);
-    margin-bottom: 40px;
-    backdrop-filter: blur(10px);
-    width: fit-content;
-  }
-
-  .cover-badge .dot {
-    width: 8px;
-    height: 8px;
-    background: var(--warm);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  .cover h1 {
-    font-size: clamp(36px, 5vw, 56px);
-    font-weight: 900;
-    line-height: 1.3;
-    letter-spacing: -0.02em;
-    margin-bottom: 24px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .cover h1 .highlight {
-    background: linear-gradient(135deg, #4d9fff, #00d4aa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .cover-subtitle {
-    font-size: 18px;
-    font-weight: 300;
-    color: rgba(255,255,255,0.7);
-    max-width: 600px;
-    line-height: 1.9;
-    position: relative;
-    z-index: 1;
-  }
-
-  .cover-meta {
-    margin-top: 60px;
-    display: flex;
-    gap: 48px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .cover-meta dt {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: rgba(255,255,255,0.4);
-    margin-bottom: 4px;
-  }
-
-  .cover-meta dd {
-    font-size: 15px;
-    font-weight: 500;
-    color: rgba(255,255,255,0.9);
-  }
-
-  /* ===== MAIN CONTENT ===== */
-  .content {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 80px 40px 120px;
-  }
-
-  /* Section */
-  .section {
-    margin-bottom: var(--section-gap);
-  }
-
-  .section-number {
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 12px;
-  }
-
-  .section-title {
-    font-size: 28px;
-    font-weight: 900;
-    letter-spacing: -0.01em;
-    margin-bottom: 24px;
-    line-height: 1.4;
-    position: relative;
-    padding-bottom: 16px;
-  }
-
-  .section-title::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 48px;
-    height: 3px;
-    background: var(--accent);
-    border-radius: 2px;
-  }
-
-  .section p {
-    color: #444;
-    margin-bottom: 16px;
-    max-width: 720px;
-  }
-
-  /* Cards */
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
-    margin-top: 32px;
-  }
-
-  .card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px 28px;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-
-  .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.06);
-  }
-
-  .card-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    margin-bottom: 20px;
-  }
-
-  .card-icon.blue { background: var(--accent-light); }
-  .card-icon.warm { background: var(--warm-light); }
-  .card-icon.green { background: #e8faf0; }
-  .card-icon.purple { background: #f3eeff; }
-
-  .card h4 {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 10px;
-    color: var(--ink);
-  }
-
-  .card p {
-    font-size: 14px;
-    color: var(--slate);
-    line-height: 1.7;
-  }
-
-  /* Architecture Diagram */
-  .arch-diagram {
-    background: #0f0f23;
-    border-radius: 20px;
-    padding: 48px 40px;
-    margin-top: 32px;
-    color: #fff;
-    overflow-x: auto;
-  }
-
-  .arch-layer {
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 16px;
-    position: relative;
-    background: rgba(255,255,255,0.03);
-  }
-
-  .arch-layer:last-child { margin-bottom: 0; }
-
-  .arch-layer-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.4);
-    margin-bottom: 16px;
-  }
-
-  .arch-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .arch-item {
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    padding: 10px 16px;
-    font-size: 13px;
-    font-weight: 500;
-    color: rgba(255,255,255,0.85);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .arch-item .tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-weight: 500;
-  }
-
-  .tag-rust { background: rgba(222,110,52,0.2); color: #f0915a; }
-  .tag-ts { background: rgba(0,122,204,0.2); color: #58a6ff; }
-  .tag-ai { background: rgba(0,212,170,0.2); color: #00d4aa; }
-  .tag-db { background: rgba(168,130,255,0.2); color: #a882ff; }
-
-  .arch-connector {
-    display: flex;
-    justify-content: center;
-    padding: 8px 0;
-    color: rgba(255,255,255,0.2);
-    font-size: 20px;
-  }
-
-  /* Comparison Table */
-  .comparison-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin-top: 32px;
-    background: var(--card-bg);
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-
-  .comparison-table th {
-    background: #f8f8f6;
-    padding: 16px 20px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--slate);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .comparison-table th:first-child { width: 180px; }
-
-  .comparison-table td {
-    padding: 16px 20px;
-    border-bottom: 1px solid #f0efec;
-    font-size: 14px;
-    color: #444;
-    vertical-align: top;
-  }
-
-  .comparison-table tr:last-child td { border-bottom: none; }
-
-  .comparison-table .rec {
-    background: rgba(0,85,255,0.03);
-  }
-
-  .comparison-table .rec td:first-child {
-    font-weight: 700;
-    color: var(--accent);
-  }
-
-  .badge-rec {
-    display: inline-block;
-    background: var(--accent);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 100px;
-    letter-spacing: 0.05em;
-    margin-left: 8px;
-    vertical-align: middle;
-  }
-
-  /* Timeline */
-  .timeline {
-    margin-top: 32px;
-    position: relative;
-    padding-left: 32px;
-  }
-
-  .timeline::before {
-    content: '';
-    position: absolute;
-    left: 7px;
-    top: 8px;
-    bottom: 8px;
-    width: 2px;
-    background: linear-gradient(to bottom, var(--accent), var(--warm));
-    border-radius: 2px;
-  }
-
-  .timeline-item {
-    position: relative;
-    margin-bottom: 36px;
-  }
-
-  .timeline-item:last-child { margin-bottom: 0; }
-
-  .timeline-item::before {
-    content: '';
-    position: absolute;
-    left: -29px;
-    top: 8px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--card-bg);
-    border: 3px solid var(--accent);
-  }
-
-  .timeline-item:nth-child(2)::before { border-color: #6366f1; }
-  .timeline-item:nth-child(3)::before { border-color: #10b981; }
-  .timeline-item:nth-child(4)::before { border-color: var(--warm); }
-
-  .timeline-phase {
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent);
-    letter-spacing: 0.05em;
-    margin-bottom: 4px;
-  }
-
-  .timeline-title {
-    font-size: 17px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-
-  .timeline-desc {
-    font-size: 14px;
-    color: var(--slate);
-    line-height: 1.7;
-  }
-
-  .timeline-duration {
-    display: inline-block;
-    margin-top: 8px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--slate);
-    background: #f4f3f0;
-    padding: 4px 12px;
-    border-radius: 6px;
-  }
-
-  /* KPI Row */
-  .kpi-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-top: 32px;
-  }
-
-  .kpi {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px 24px;
-    text-align: center;
-  }
-
-  .kpi-value {
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 40px;
-    font-weight: 700;
-    color: var(--accent);
-    line-height: 1;
-    margin-bottom: 8px;
-  }
-
-  .kpi-value .unit {
-    font-size: 18px;
-    font-weight: 500;
-    color: var(--slate);
-  }
-
-  .kpi-label {
-    font-size: 13px;
-    color: var(--slate);
-    font-weight: 500;
-  }
-
-  /* Risk */
-  .risk-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-top: 32px;
-  }
-
-  .risk-card {
-    border-radius: 16px;
-    padding: 28px 24px;
-    border: 1px solid;
-  }
-
-  .risk-card.risk {
-    background: #fef7f4;
-    border-color: #f5d5c5;
-  }
-
-  .risk-card.mitigation {
-    background: #f4faf6;
-    border-color: #c5e8d0;
-  }
-
-  .risk-card h4 {
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .risk-card ul {
-    list-style: none;
-    font-size: 14px;
-    color: #555;
-  }
-
-  .risk-card li {
-    padding: 6px 0;
-    padding-left: 20px;
-    position: relative;
-    line-height: 1.6;
-  }
-
-  .risk-card li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 14px;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-  }
-
-  .risk-card.risk li::before { background: var(--warm); }
-  .risk-card.mitigation li::before { background: #10b981; }
-
-  /* Footer */
-  .doc-footer {
-    margin-top: 80px;
-    padding-top: 32px;
-    border-top: 1px solid var(--border);
-    text-align: center;
-    color: var(--slate);
-    font-size: 13px;
-  }
-
-  /* Print */
-  @media print {
-    .cover { min-height: auto; padding: 60px 40px; break-after: page; }
-    .section { break-inside: avoid; }
-    .card:hover { transform: none; box-shadow: none; }
-  }
-
-  @media (max-width: 640px) {
-    .content { padding: 48px 20px 80px; }
-    .cover { padding: 60px 6%; }
-    .cover-meta { flex-direction: column; gap: 20px; }
-    .risk-grid { grid-template-columns: 1fr; }
-    .arch-diagram { padding: 28px 20px; }
-  }
-</style>
-</head>
-<body>
-
-<!-- ===== COVER ===== -->
-<div class="cover">
-  <div class="cover-badge">
-    <span class="dot"></span>
-    新規プロダクト企画書
-  </div>
-  <h1>
-    <span class="highlight">AIネイティブ</span>な<br>
-    建設見積書 作成支援アプリ
-  </h1>
-  <p class="cover-subtitle">
-    ローカルExcelデータとLLMエージェントを統合し、<br>
-    見積書の作成・分析・レビューを革新するデスクトップアプリケーション
-  </p>
-  <dl class="cover-meta">
-    <div>
-      <dt>ステータス</dt>
-      <dd>企画提案フェーズ</dd>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>企画書 | AI見積書作成支援デスクトップアプリ</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #1a1a2e;
+        --paper: #f8f7f4;
+        --accent: #0055ff;
+        --accent-light: #e8f0ff;
+        --accent-dark: #003db3;
+        --warm: #ff6b35;
+        --warm-light: #fff4ef;
+        --slate: #64748b;
+        --border: #e2e0dc;
+        --card-bg: #ffffff;
+        --section-gap: 64px;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Noto Sans JP", "IBM Plex Sans", sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+        line-height: 1.8;
+        font-size: 15px;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ===== COVER ===== */
+      .cover {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 80px 10%;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(
+          160deg,
+          #0a0a1a 0%,
+          #1a1a3e 40%,
+          #0d2847 100%
+        );
+        color: #fff;
+      }
+
+      .cover::before {
+        content: "";
+        position: absolute;
+        top: -20%;
+        right: -10%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(
+          circle,
+          rgba(0, 85, 255, 0.15) 0%,
+          transparent 70%
+        );
+        border-radius: 50%;
+      }
+
+      .cover::after {
+        content: "";
+        position: absolute;
+        bottom: -10%;
+        left: 20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(
+          circle,
+          rgba(255, 107, 53, 0.1) 0%,
+          transparent 70%
+        );
+        border-radius: 50%;
+      }
+
+      .cover-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 100px;
+        padding: 8px 20px;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 40px;
+        backdrop-filter: blur(10px);
+        width: fit-content;
+      }
+
+      .cover-badge .dot {
+        width: 8px;
+        height: 8px;
+        background: var(--warm);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      .cover h1 {
+        font-size: clamp(36px, 5vw, 56px);
+        font-weight: 900;
+        line-height: 1.3;
+        letter-spacing: -0.02em;
+        margin-bottom: 24px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .cover h1 .highlight {
+        background: linear-gradient(135deg, #4d9fff, #00d4aa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .cover-subtitle {
+        font-size: 18px;
+        font-weight: 300;
+        color: rgba(255, 255, 255, 0.7);
+        max-width: 600px;
+        line-height: 1.9;
+        position: relative;
+        z-index: 1;
+      }
+
+      .cover-meta {
+        margin-top: 60px;
+        display: flex;
+        gap: 48px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .cover-meta dt {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: rgba(255, 255, 255, 0.4);
+        margin-bottom: 4px;
+      }
+
+      .cover-meta dd {
+        font-size: 15px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      /* ===== MAIN CONTENT ===== */
+      .content {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 80px 40px 120px;
+      }
+
+      /* Section */
+      .section {
+        margin-bottom: var(--section-gap);
+      }
+
+      .section-number {
+        font-family: "IBM Plex Sans", sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 12px;
+      }
+
+      .section-title {
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: -0.01em;
+        margin-bottom: 24px;
+        line-height: 1.4;
+        position: relative;
+        padding-bottom: 16px;
+      }
+
+      .section-title::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 48px;
+        height: 3px;
+        background: var(--accent);
+        border-radius: 2px;
+      }
+
+      .section p {
+        color: #444;
+        margin-bottom: 16px;
+        max-width: 720px;
+      }
+
+      /* Cards */
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+        margin-top: 32px;
+      }
+
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 32px 28px;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+      }
+
+      .card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 20px;
+      }
+
+      .card-icon.blue {
+        background: var(--accent-light);
+      }
+      .card-icon.warm {
+        background: var(--warm-light);
+      }
+      .card-icon.green {
+        background: #e8faf0;
+      }
+      .card-icon.purple {
+        background: #f3eeff;
+      }
+
+      .card h4 {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: var(--ink);
+      }
+
+      .card p {
+        font-size: 14px;
+        color: var(--slate);
+        line-height: 1.7;
+      }
+
+      /* Architecture Diagram */
+      .arch-diagram {
+        background: #0f0f23;
+        border-radius: 20px;
+        padding: 48px 40px;
+        margin-top: 32px;
+        color: #fff;
+        overflow-x: auto;
+      }
+
+      .arch-layer {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 16px;
+        position: relative;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .arch-layer:last-child {
+        margin-bottom: 0;
+      }
+
+      .arch-layer-label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.4);
+        margin-bottom: 16px;
+      }
+
+      .arch-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .arch-item {
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.85);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .arch-item .tag {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+
+      .tag-rust {
+        background: rgba(222, 110, 52, 0.2);
+        color: #f0915a;
+      }
+      .tag-ts {
+        background: rgba(0, 122, 204, 0.2);
+        color: #58a6ff;
+      }
+      .tag-ai {
+        background: rgba(0, 212, 170, 0.2);
+        color: #00d4aa;
+      }
+      .tag-db {
+        background: rgba(168, 130, 255, 0.2);
+        color: #a882ff;
+      }
+      .tag-mcp {
+        background: rgba(255, 200, 50, 0.2);
+        color: #e8b930;
+      }
+
+      .arch-layer-mcp {
+        border-color: rgba(255, 200, 50, 0.3) !important;
+        background: rgba(255, 200, 50, 0.05) !important;
+      }
+
+      .arch-mcp-desc {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 16px;
+        line-height: 1.6;
+      }
+
+      .arch-connector {
+        display: flex;
+        justify-content: center;
+        padding: 8px 0;
+        color: rgba(255, 255, 255, 0.2);
+        font-size: 20px;
+      }
+
+      /* Comparison Table */
+      .comparison-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 32px;
+        background: var(--card-bg);
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+
+      .comparison-table th {
+        background: #f8f8f6;
+        padding: 16px 20px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--slate);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .comparison-table th:first-child {
+        width: 180px;
+      }
+
+      .comparison-table td {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f0efec;
+        font-size: 14px;
+        color: #444;
+        vertical-align: top;
+      }
+
+      .comparison-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .comparison-table .rec {
+        background: rgba(0, 85, 255, 0.03);
+      }
+
+      .comparison-table .rec td:first-child {
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .badge-rec {
+        display: inline-block;
+        background: var(--accent);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 100px;
+        letter-spacing: 0.05em;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+
+      /* Timeline */
+      .timeline {
+        margin-top: 32px;
+        position: relative;
+        padding-left: 32px;
+      }
+
+      .timeline::before {
+        content: "";
+        position: absolute;
+        left: 7px;
+        top: 8px;
+        bottom: 8px;
+        width: 2px;
+        background: linear-gradient(to bottom, var(--accent), var(--warm));
+        border-radius: 2px;
+      }
+
+      .timeline-item {
+        position: relative;
+        margin-bottom: 36px;
+      }
+
+      .timeline-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .timeline-item::before {
+        content: "";
+        position: absolute;
+        left: -29px;
+        top: 8px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--card-bg);
+        border: 3px solid var(--accent);
+      }
+
+      .timeline-item:nth-child(2)::before {
+        border-color: #6366f1;
+      }
+      .timeline-item:nth-child(3)::before {
+        border-color: #10b981;
+      }
+      .timeline-item:nth-child(4)::before {
+        border-color: var(--warm);
+      }
+
+      .timeline-phase {
+        font-family: "IBM Plex Sans", sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--accent);
+        letter-spacing: 0.05em;
+        margin-bottom: 4px;
+      }
+
+      .timeline-title {
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .timeline-desc {
+        font-size: 14px;
+        color: var(--slate);
+        line-height: 1.7;
+      }
+
+      .timeline-duration {
+        display: inline-block;
+        margin-top: 8px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--slate);
+        background: #f4f3f0;
+        padding: 4px 12px;
+        border-radius: 6px;
+      }
+
+      /* KPI Row */
+      .kpi-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-top: 32px;
+      }
+
+      .kpi {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 28px 24px;
+        text-align: center;
+      }
+
+      .kpi-value {
+        font-family: "IBM Plex Sans", sans-serif;
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--accent);
+        line-height: 1;
+        margin-bottom: 8px;
+      }
+
+      .kpi-value .unit {
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--slate);
+      }
+
+      .kpi-label {
+        font-size: 13px;
+        color: var(--slate);
+        font-weight: 500;
+      }
+
+      /* Risk */
+      .risk-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 32px;
+      }
+
+      .risk-card {
+        border-radius: 16px;
+        padding: 28px 24px;
+        border: 1px solid;
+      }
+
+      .risk-card.risk {
+        background: #fef7f4;
+        border-color: #f5d5c5;
+      }
+
+      .risk-card.mitigation {
+        background: #f4faf6;
+        border-color: #c5e8d0;
+      }
+
+      .risk-card h4 {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .risk-card ul {
+        list-style: none;
+        font-size: 14px;
+        color: #555;
+      }
+
+      .risk-card li {
+        padding: 6px 0;
+        padding-left: 20px;
+        position: relative;
+        line-height: 1.6;
+      }
+
+      .risk-card li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 14px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+
+      .risk-card.risk li::before {
+        background: var(--warm);
+      }
+      .risk-card.mitigation li::before {
+        background: #10b981;
+      }
+
+      /* Footer */
+      .doc-footer {
+        margin-top: 80px;
+        padding-top: 32px;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--slate);
+        font-size: 13px;
+      }
+
+      /* Print */
+      @media print {
+        .cover {
+          min-height: auto;
+          padding: 60px 40px;
+          break-after: page;
+        }
+        .section {
+          break-inside: avoid;
+        }
+        .card:hover {
+          transform: none;
+          box-shadow: none;
+        }
+      }
+
+      /* Desktop Features */
+      .desktop-features {
+        margin-top: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+
+      .feature-block {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: box-shadow 0.2s;
+      }
+
+      .feature-block:hover {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+      }
+
+      .feature-header {
+        padding: 28px 32px 0;
+      }
+
+      .feature-tag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 5px 14px;
+        border-radius: 100px;
+        margin-bottom: 14px;
+      }
+
+      .feature-tag.efficiency {
+        background: var(--accent-light);
+        color: var(--accent-dark);
+      }
+
+      .feature-tag.differentiation {
+        background: #fef3ec;
+        color: #c44e00;
+      }
+
+      .feature-tag.advantage {
+        background: #e8faf0;
+        color: #0a7c42;
+      }
+
+      .feature-header h3 {
+        font-size: 20px;
+        font-weight: 800;
+        line-height: 1.5;
+        color: var(--ink);
+      }
+
+      .feature-body {
+        padding: 20px 32px 32px;
+      }
+
+      .feature-body p {
+        font-size: 15px;
+        color: #555;
+        line-height: 1.85;
+        margin-bottom: 12px;
+        max-width: 100%;
+      }
+
+      .feature-visual {
+        margin-top: 24px;
+      }
+
+      .feature-flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: #f9f9f7;
+        border-radius: 14px;
+        padding: 28px 20px;
+      }
+
+      .flow-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 10px;
+        flex: 1;
+        max-width: 160px;
+      }
+
+      .flow-icon {
+        font-size: 32px;
+        width: 64px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--card-bg);
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      }
+
+      .flow-text {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+        line-height: 1.5;
+      }
+
+      .flow-arrow {
+        font-size: 20px;
+        color: var(--accent);
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      /* Security Diagram */
+      .security-diagram {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        background: #f9f9f7;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      .security-zone {
+        flex: 1;
+        padding: 24px 20px;
+        text-align: center;
+      }
+
+      .security-zone.safe {
+        background: #f0faf4;
+      }
+
+      .security-zone.external {
+        background: #f7f7f5;
+      }
+
+      .zone-label {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        margin-bottom: 14px;
+        color: var(--ink);
+      }
+
+      .zone-items {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .zone-items span {
+        font-size: 13px;
+        font-weight: 500;
+        padding: 6px 16px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.8);
+        color: #555;
+      }
+
+      .safe .zone-items span {
+        background: rgba(16, 185, 129, 0.1);
+        color: #0a7c42;
+      }
+
+      .security-wall {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 16px 12px;
+        background: linear-gradient(180deg, #e2e0dc, #d5d3ce);
+        min-width: 80px;
+      }
+
+      .wall-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #666;
+        writing-mode: horizontal-tb;
+        text-align: center;
+        line-height: 1.5;
+      }
+
+      @media (max-width: 640px) {
+        .content {
+          padding: 48px 20px 80px;
+        }
+        .cover {
+          padding: 60px 6%;
+        }
+        .cover-meta {
+          flex-direction: column;
+          gap: 20px;
+        }
+        .risk-grid {
+          grid-template-columns: 1fr;
+        }
+        .arch-diagram {
+          padding: 28px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ===== COVER ===== -->
+    <div class="cover">
+      <div class="cover-badge">
+        <span class="dot"></span>
+        新規プロダクト企画書
+      </div>
+      <h1>
+        <span class="highlight">AIネイティブ</span>な<br />
+        建設見積書 作成支援アプリ
+      </h1>
+      <p class="cover-subtitle">
+        ローカルExcelデータとLLMエージェントを統合し、<br />
+        見積書の作成・分析・レビューを革新するデスクトップアプリケーション
+      </p>
+      <dl class="cover-meta">
+        <div>
+          <dt>ステータス</dt>
+          <dd>企画提案フェーズ</dd>
+        </div>
+        <div>
+          <dt>作成日</dt>
+          <dd>2026年3月</dd>
+        </div>
+        <div>
+          <dt>対象プラットフォーム</dt>
+          <dd>Windows Desktop</dd>
+        </div>
+      </dl>
     </div>
-    <div>
-      <dt>作成日</dt>
-      <dd>2026年3月</dd>
-    </div>
-    <div>
-      <dt>対象プラットフォーム</dt>
-      <dd>Windows Desktop</dd>
-    </div>
-  </dl>
-</div>
 
-<!-- ===== CONTENT ===== -->
-<div class="content">
-
-  <!-- 1. 背景と課題 -->
-  <div class="section">
-    <div class="section-number">Section 01</div>
-    <h2 class="section-title">背景と課題</h2>
-    <p>
-      建設業界における見積書作成は、過去案件のExcelファイルを参照しながら手作業で単価を調整する属人的な業務であり、担当者の経験と勘に大きく依存しています。
-    </p>
-    <p>
-      業界が直面している主要課題は以下の通りです。
-    </p>
-    <div class="card-grid">
-      <div class="card">
-        <div class="card-icon warm">⏱</div>
-        <h4>見積作成に時間がかかる</h4>
-        <p>過去のExcelファイルから類似案件を手動で検索し、単価を比較・調整する作業に膨大な時間を要している。</p>
-      </div>
-      <div class="card">
-        <div class="card-icon blue">👤</div>
-        <h4>属人化・ナレッジの散逸</h4>
-        <p>ベテランの暗黙知がExcelファイルに分散しており、体系的な知識として蓄積・共有されていない。</p>
-      </div>
-      <div class="card">
-        <div class="card-icon green">⚠</div>
-        <h4>単価の妥当性検証が困難</h4>
-        <p>提示単価が市場相場や過去実績と乖離していないか、客観的に検証する仕組みがない。</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2. プロダクトコンセプト -->
-  <div class="section">
-    <div class="section-number">Section 02</div>
-    <h2 class="section-title">プロダクトコンセプト</h2>
-    <p>
-      本アプリは「AIが隣にいる見積作成環境」をコンセプトとし、Excelライクな操作感を維持しながら、LLMエージェントがリアルタイムで作成を支援するデスクトップアプリケーションです。
-    </p>
-    <div class="card-grid">
-      <div class="card">
-        <div class="card-icon blue">📊</div>
-        <h4>Excel風見積エディタ</h4>
-        <p>AG Gridベースのスプレッドシート UIで、既存のExcelワークフローを損なわずに編集・入力が可能。</p>
-      </div>
-      <div class="card">
-        <div class="card-icon purple">🤖</div>
-        <h4>AIエージェント支援</h4>
-        <p>過去見積の類似検索、単価の自動提案、項目の自動生成、妥当性チェックをLLMが実行。</p>
-      </div>
-      <div class="card">
-        <div class="card-icon green">🔒</div>
-        <h4>ローカルファースト</h4>
-        <p>見積データは社内に留まるセキュアな設計。ファイルアクセスはMCPプロトコルで安全に制御。</p>
-      </div>
-      <div class="card">
-        <div class="card-icon warm">📁</div>
-        <h4>ナレッジ蓄積</h4>
-        <p>過去見積をSQLiteに自動蓄積し、建物種別・工種ごとの単価データベースとして活用。</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- 3. 技術選定 -->
-  <div class="section">
-    <div class="section-number">Section 03</div>
-    <h2 class="section-title">技術スタック選定</h2>
-    <p>
-      開発速度・パフォーマンス・AI統合の観点から、以下の技術スタックを比較検討しました。
-    </p>
-    <table class="comparison-table">
-      <thead>
-        <tr>
-          <th>構成</th>
-          <th>メリット</th>
-          <th>課題</th>
-          <th>AI統合</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="rec">
-          <td>Tauri 2.0 + React/TS <span class="badge-rec">推奨</span></td>
-          <td>軽量（メモリ1/10）、Rustバックエンドの高速Excel解析、TS統一</td>
-          <td>Rustの学習コスト</td>
-          <td>Claude Agent SDK (TS) + MCP</td>
-        </tr>
-        <tr>
-          <td>.NET 8 + WinUI 3</td>
-          <td>Windows最適化、Semantic Kernelの成熟度</td>
-          <td>Web UIの柔軟性に劣る</td>
-          <td>Semantic Kernel</td>
-        </tr>
-        <tr>
-          <td>Electron + TS</td>
-          <td>エコシステム最大、開発速度</td>
-          <td>メモリ消費大</td>
-          <td>LangChain.js</td>
-        </tr>
-      </tbody>
-    </table>
-    <p style="margin-top:20px;">
-      <strong>推奨構成：Tauri 2.0 + React + AG Grid + Claude Agent SDK</strong><br>
-      フロントエンドはReact/TypeScriptで開発し、バックエンドのファイル処理はRustで高速に実行。AIエージェントはClaude Agent SDKでTypeScriptに統一し、MCPプロトコルでローカルデータへ安全にアクセスする構成です。
-    </p>
-  </div>
-
-  <!-- 4. システムアーキテクチャ -->
-  <div class="section">
-    <div class="section-number">Section 04</div>
-    <h2 class="section-title">システムアーキテクチャ</h2>
-
-    <div class="arch-diagram">
-      <div class="arch-layer">
-        <div class="arch-layer-label">Frontend — React + TypeScript</div>
-        <div class="arch-items">
-          <div class="arch-item"><span class="tag tag-ts">React</span> 見積書エディタ（AG Grid）</div>
-          <div class="arch-item"><span class="tag tag-ts">UI</span> AIチャットパネル</div>
-          <div class="arch-item"><span class="tag tag-ts">UI</span> 単価提案インライン表示</div>
-          <div class="arch-item"><span class="tag tag-ts">UI</span> ダッシュボード・分析ビュー</div>
+    <!-- ===== CONTENT ===== -->
+    <div class="content">
+      <!-- 1. 背景と課題 -->
+      <div class="section">
+        <div class="section-number">Section 01</div>
+        <h2 class="section-title">背景と課題</h2>
+        <p>
+          建設業界における見積書作成は、過去案件のExcelファイルを参照しながら手作業で単価を調整する属人的な業務であり、担当者の経験と勘に大きく依存しています。
+        </p>
+        <p>業界が直面している主要課題は以下の通りです。</p>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon warm">⏱</div>
+            <h4>見積作成に時間がかかる</h4>
+            <p>
+              過去のExcelファイルから類似案件を手動で検索し、単価を比較・調整する作業に膨大な時間を要している。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon blue">👤</div>
+            <h4>属人化・ナレッジの散逸</h4>
+            <p>
+              ベテランの暗黙知がExcelファイルに分散しており、体系的な知識として蓄積・共有されていない。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon green">⚠</div>
+            <h4>単価の妥当性検証が困難</h4>
+            <p>
+              提示単価が市場相場や過去実績と乖離していないか、客観的に検証する仕組みがない。
+            </p>
+          </div>
         </div>
       </div>
 
-      <div class="arch-connector">▼</div>
-
-      <div class="arch-layer">
-        <div class="arch-layer-label">AI Agent Layer — Claude Agent SDK (TypeScript)</div>
-        <div class="arch-items">
-          <div class="arch-item"><span class="tag tag-ai">Tool</span> 類似案件検索</div>
-          <div class="arch-item"><span class="tag tag-ai">Tool</span> 単価マスタ参照</div>
-          <div class="arch-item"><span class="tag tag-ai">Tool</span> 見積項目 自動生成</div>
-          <div class="arch-item"><span class="tag tag-ai">Tool</span> 妥当性チェック</div>
-          <div class="arch-item"><span class="tag tag-ai">MCP</span> ローカルファイルアクセス</div>
+      <!-- 2. プロダクトコンセプト -->
+      <div class="section">
+        <div class="section-number">Section 02</div>
+        <h2 class="section-title">プロダクトコンセプト</h2>
+        <p>
+          本アプリは「AIが隣にいる見積作成環境」をコンセプトとし、Excelライクな操作感を維持しながら、LLMエージェントがリアルタイムで作成を支援するデスクトップアプリケーションです。
+        </p>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon blue">📊</div>
+            <h4>Excel風見積エディタ</h4>
+            <p>
+              AG Gridベースのスプレッドシート
+              UIで、既存のExcelワークフローを損なわずに編集・入力が可能。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon purple">🤖</div>
+            <h4>AIエージェント支援</h4>
+            <p>
+              過去見積の類似検索、単価の自動提案、項目の自動生成、妥当性チェックをLLMが実行。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon green">🔒</div>
+            <h4>ローカルファースト</h4>
+            <p>
+              見積データは社内に留まるセキュアな設計。ファイルアクセスはMCPプロトコルで安全に制御。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon warm">📁</div>
+            <h4>ナレッジ蓄積</h4>
+            <p>
+              過去見積をSQLiteに自動蓄積し、建物種別・工種ごとの単価データベースとして活用。
+            </p>
+          </div>
         </div>
       </div>
 
-      <div class="arch-connector">▼</div>
+      <!-- 3. デスクトップアプリだからできること -->
+      <div class="section">
+        <div class="section-number">Section 03</div>
+        <h2 class="section-title">デスクトップアプリだからできる3つの強み</h2>
+        <p>
+          クラウドやWebアプリでは実現できない、デスクトップアプリならではの価値を3つの観点で整理しました。
+        </p>
 
-      <div class="arch-layer">
-        <div class="arch-layer-label">Backend — Tauri 2.0 (Rust)</div>
-        <div class="arch-items">
-          <div class="arch-item"><span class="tag tag-rust">Rust</span> Excelパーサ（calamine）</div>
-          <div class="arch-item"><span class="tag tag-rust">Rust</span> ファイルシステム管理</div>
-          <div class="arch-item"><span class="tag tag-db">DB</span> SQLite 見積ナレッジDB</div>
-          <div class="arch-item"><span class="tag tag-rust">Rust</span> MCPサーバー</div>
+        <div class="desktop-features">
+          <div class="feature-block">
+            <div class="feature-header">
+              <div class="feature-tag efficiency">効率化</div>
+              <h3>
+                フォルダを指定するだけで、過去の見積書をAIが全部覚えてくれる
+              </h3>
+            </div>
+            <div class="feature-body">
+              <p>
+                いちいちファイルをアップロードする手間はありません。社内の共有フォルダを指定しておけば、中に入っている見積書をAIが自動的に読み込み、「過去にどんな単価で出したか」「似た案件がないか」を即座に答えてくれます。
+              </p>
+              <p>
+                新しい見積書がフォルダに追加されたら、それも自動で学習します。<strong>使えば使うほど、AIが社内の見積ノウハウに詳しくなっていく仕組み</strong>です。
+              </p>
+              <div class="feature-visual">
+                <div class="feature-flow">
+                  <div class="flow-step">
+                    <div class="flow-icon">📁</div>
+                    <div class="flow-text">
+                      共有フォルダを<br />指定するだけ
+                    </div>
+                  </div>
+                  <div class="flow-arrow">→</div>
+                  <div class="flow-step">
+                    <div class="flow-icon">🤖</div>
+                    <div class="flow-text">AIが自動で<br />読み込み・学習</div>
+                  </div>
+                  <div class="flow-arrow">→</div>
+                  <div class="flow-step">
+                    <div class="flow-icon">💡</div>
+                    <div class="flow-text">過去実績に基づく<br />即時回答</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="feature-block">
+            <div class="feature-header">
+              <div class="feature-tag differentiation">差別化</div>
+              <h3>見積データが社外に一切出ない安心設計</h3>
+            </div>
+            <div class="feature-body">
+              <p>
+                見積書には原価や利益率など、絶対に外部に漏らせない情報が含まれています。このアプリでは、蓄積されたデータはすべて自社のパソコンの中だけに保存されます。
+              </p>
+              <p>
+                AIに質問する際も、見せてはいけない数字は自動的に伏せてから送る仕組みになっているため、<strong>「便利だけどセキュリティが心配」という導入時の最大のハードルをクリア</strong>できます。
+              </p>
+              <div class="feature-visual">
+                <div class="security-diagram">
+                  <div class="security-zone safe">
+                    <div class="zone-label">社内（自社PC内）</div>
+                    <div class="zone-items">
+                      <span>見積データ</span>
+                      <span>原価情報</span>
+                      <span>利益率</span>
+                    </div>
+                  </div>
+                  <div class="security-wall">
+                    <div class="wall-label">🔒 自動マスキング</div>
+                  </div>
+                  <div class="security-zone external">
+                    <div class="zone-label">AI（外部API）</div>
+                    <div class="zone-items">
+                      <span>質問内容のみ</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="feature-block">
+            <div class="feature-header">
+              <div class="feature-tag advantage">優位性</div>
+              <h3>今のExcelの使い方を変えずに、AIが横から助けてくれる</h3>
+            </div>
+            <div class="feature-body">
+              <p>
+                新しいシステムを覚え直す必要はありません。普段通りExcelで作業しているときに、右クリックひとつで「この単価、妥当？」とAIに聞けます。
+              </p>
+              <p>
+                Excelで表をコピーすれば、AIが自動的に内容を認識して「この項目が抜けていませんか？」と教えてくれます。ブラウザを開いてログインして、ファイルを選んで…といった手間がなく、<strong>いつもの作業の延長線上にAIがいる感覚</strong>で使えます。
+              </p>
+              <div class="feature-visual">
+                <div class="feature-flow">
+                  <div class="flow-step">
+                    <div class="flow-icon">📋</div>
+                    <div class="flow-text">Excelで<br />いつも通り作業</div>
+                  </div>
+                  <div class="flow-arrow">→</div>
+                  <div class="flow-step">
+                    <div class="flow-icon">🖱</div>
+                    <div class="flow-text">右クリックや<br />コピーだけで</div>
+                  </div>
+                  <div class="flow-arrow">→</div>
+                  <div class="flow-step">
+                    <div class="flow-icon">✅</div>
+                    <div class="flow-text">AIが即座に<br />チェック・提案</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- 4. 技術選定 -->
+      <div class="section">
+        <div class="section-number">Section 04</div>
+        <h2 class="section-title">技術スタック選定</h2>
+        <p>
+          開発速度・パフォーマンス・AI統合の観点から、以下の技術スタックを比較検討しました。
+        </p>
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>構成</th>
+              <th>メリット</th>
+              <th>課題</th>
+              <th>AI統合</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="rec">
+              <td>Tauri 2.0 + React/TS <span class="badge-rec">推奨</span></td>
+              <td>
+                軽量（メモリ1/10）、Rustバックエンドの高速Excel解析、TS統一
+              </td>
+              <td>Rustの学習コスト</td>
+              <td>Claude Agent SDK (TS) + MCP</td>
+            </tr>
+            <tr>
+              <td>.NET 8 + WinUI 3</td>
+              <td>Windows最適化、Semantic Kernelの成熟度</td>
+              <td>Web UIの柔軟性に劣る</td>
+              <td>Semantic Kernel</td>
+            </tr>
+            <tr>
+              <td>Electron + TS</td>
+              <td>エコシステム最大、開発速度</td>
+              <td>メモリ消費大</td>
+              <td>LangChain.js</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="margin-top: 20px">
+          <strong
+            >推奨構成：Tauri 2.0 + React + AG Grid + Claude Agent SDK</strong
+          ><br />
+          フロントエンドはReact/TypeScriptで開発し、バックエンドのファイル処理はRustで高速に実行。AIエージェントはClaude
+          Agent
+          SDKでTypeScriptに統一し、MCPプロトコルでローカルデータへ安全にアクセスする構成です。
+        </p>
+      </div>
+
+      <!-- 4. システムアーキテクチャ -->
+      <div class="section">
+        <div class="section-number">Section 05</div>
+        <h2 class="section-title">システムアーキテクチャ</h2>
+
+        <div class="arch-diagram">
+          <div class="arch-layer">
+            <div class="arch-layer-label">Frontend — React + TypeScript</div>
+            <div class="arch-items">
+              <div class="arch-item">
+                <span class="tag tag-ts">React</span> 見積書エディタ（AG Grid）
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-ts">UI</span> AIチャットパネル
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-ts">UI</span> 単価提案インライン表示
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-ts">UI</span> ダッシュボード・分析ビュー
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-connector">▼</div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-label">
+              AI Agent Layer — Claude Agent SDK (TypeScript)
+            </div>
+            <div class="arch-items">
+              <div class="arch-item">
+                <span class="tag tag-ai">Tool</span> 類似案件検索
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-ai">Tool</span> 単価マスタ参照
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-ai">Tool</span> 見積項目 自動生成
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-ai">Tool</span> 妥当性チェック
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-connector">▼</div>
+
+          <div class="arch-layer arch-layer-mcp">
+            <div class="arch-layer-label">
+              MCP Server — ゲートキーパー（アクセス制御層）
+            </div>
+            <div class="arch-mcp-desc">
+              AIエージェントが直接データに触れず、許可された操作だけを中継する安全な橋渡し役
+            </div>
+            <div class="arch-items">
+              <div class="arch-item">
+                <span class="tag tag-mcp">制御</span> ファイルアクセス許可管理
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-mcp">制御</span> DBクエリの安全な中継
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-mcp">制御</span> 機密情報の自動マスキング
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-connector">▼</div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-label">
+              Backend + Data — Tauri 2.0 (Rust)
+            </div>
+            <div class="arch-items">
+              <div class="arch-item">
+                <span class="tag tag-rust">Rust</span> Excelパーサ（calamine）
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-rust">Rust</span> ファイルシステム管理
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-db">DB</span> SQLite 見積ナレッジDB
+              </div>
+              <div class="arch-item">
+                <span class="tag tag-rust">Rust</span> フォルダ監視・自動取込
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. AI支援機能の詳細 -->
+      <div class="section">
+        <div class="section-number">Section 06</div>
+        <h2 class="section-title">AI支援機能の詳細</h2>
+        <p>
+          Claude Agent SDKのTool
+          Use機能により、以下のAI支援をエージェントとして実装します。
+        </p>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon blue">🔍</div>
+            <h4>類似案件 自動検索</h4>
+            <p>
+              建物種別・規模・工種をキーに、過去見積DBから類似案件を自動検索。ベクトル検索と条件検索のハイブリッドで精度を確保。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon warm">💰</div>
+            <h4>単価 自動提案</h4>
+            <p>
+              過去実績の統計値（平均・中央値・分布）に基づき、各項目の推奨単価を提案。相場からの乖離度も表示。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon green">📝</div>
+            <h4>項目の自動生成</h4>
+            <p>
+              建物種別と工事概要から、必要な見積項目を自動で生成。漏れがちな付帯工事も含めて提案。
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon purple">✅</div>
+            <h4>妥当性チェック</h4>
+            <p>
+              完成した見積書に対し、単価の異常値検出、項目の過不足、合計金額の妥当性を自動レビュー。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. 期待される効果 -->
+      <div class="section">
+        <div class="section-number">Section 07</div>
+        <h2 class="section-title">期待される効果</h2>
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="kpi-value">60<span class="unit">%</span></div>
+            <div class="kpi-label">見積作成時間の短縮</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-value">95<span class="unit">%↑</span></div>
+            <div class="kpi-label">項目漏れの検出率</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-value">±5<span class="unit">%</span></div>
+            <div class="kpi-label">単価精度の目標偏差</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-value">0<span class="unit">件</span></div>
+            <div class="kpi-label">社外へのデータ流出</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. 開発ロードマップ -->
+      <div class="section">
+        <div class="section-number">Section 08</div>
+        <h2 class="section-title">開発ロードマップ</h2>
+
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-phase">Phase 1 — 基盤構築</div>
+            <div class="timeline-title">
+              Tauri環境 + Excel読み込み + AG Grid表示
+            </div>
+            <div class="timeline-desc">
+              Tauri
+              2.0プロジェクトのセットアップ、RustによるExcelパーサの実装、AG
+              Gridでの見積書表示UIを構築。基本的なCRUD操作を実装する。
+            </div>
+            <span class="timeline-duration">1.5ヶ月</span>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-phase">Phase 2 — ナレッジDB構築</div>
+            <div class="timeline-title">
+              SQLite + 過去見積の取り込み・検索機能
+            </div>
+            <div class="timeline-desc">
+              過去見積書をSQLiteに自動インポートする仕組みを構築。建物種別・工種でのフィルタリングと、類似案件の検索機能を実装する。
+            </div>
+            <span class="timeline-duration">1ヶ月</span>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-phase">Phase 3 — AIエージェント統合</div>
+            <div class="timeline-title">Claude Agent SDK + MCP + Tool実装</div>
+            <div class="timeline-desc">
+              Claude Agent
+              SDKを導入し、類似案件検索・単価提案・項目生成・妥当性チェックの各Toolを実装。MCPでローカルデータアクセスを安全に制御する。
+            </div>
+            <span class="timeline-duration">2ヶ月</span>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-phase">Phase 4 — 実証・改善</div>
+            <div class="timeline-title">
+              社内パイロット運用 + フィードバック改善
+            </div>
+            <div class="timeline-desc">
+              実業務でのパイロット運用を開始。ユーザーフィードバックに基づきUI/UXとAI提案精度を継続的に改善する。
+            </div>
+            <span class="timeline-duration">1.5ヶ月</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. リスクと対策 -->
+      <div class="section">
+        <div class="section-number">Section 09</div>
+        <h2 class="section-title">リスクと対策</h2>
+        <div class="risk-grid">
+          <div class="risk-card risk">
+            <h4>⚠ 想定リスク</h4>
+            <ul>
+              <li>Rustの学習コストによる開発遅延</li>
+              <li>LLM APIのレスポンス遅延がUXを損なう可能性</li>
+              <li>過去見積データの品質・フォーマットのばらつき</li>
+              <li>API利用コストの増大</li>
+            </ul>
+          </div>
+          <div class="risk-card mitigation">
+            <h4>✅ 対策</h4>
+            <ul>
+              <li>
+                フロントエンドはReact/TSで既存知見を活用、Rustは段階的に習得
+              </li>
+              <li>ストリーミング応答 + UIの楽観的更新で体感速度を向上</li>
+              <li>インポート時のバリデーションと正規化パイプラインを構築</li>
+              <li>
+                Prompt Cachingの活用とローカルキャッシュで API呼出しを最適化
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="doc-footer">
+        <p>
+          本企画書に関するご質問・ご意見は企画担当までお問い合わせください。
+        </p>
+        <p style="margin-top: 8px; font-size: 12px; color: #aaa">
+          Confidential — 社内限定資料
+        </p>
       </div>
     </div>
-  </div>
-
-  <!-- 5. AI支援機能の詳細 -->
-  <div class="section">
-    <div class="section-number">Section 05</div>
-    <h2 class="section-title">AI支援機能の詳細</h2>
-    <p>
-      Claude Agent SDKのTool Use機能により、以下のAI支援をエージェントとして実装します。
-    </p>
-    <div class="card-grid">
-      <div class="card">
-        <div class="card-icon blue">🔍</div>
-        <h4>類似案件 自動検索</h4>
-        <p>建物種別・規模・工種をキーに、過去見積DBから類似案件を自動検索。ベクトル検索と条件検索のハイブリッドで精度を確保。</p>
-      </div>
-      <div class="card">
-        <div class="card-icon warm">💰</div>
-        <h4>単価 自動提案</h4>
-        <p>過去実績の統計値（平均・中央値・分布）に基づき、各項目の推奨単価を提案。相場からの乖離度も表示。</p>
-      </div>
-      <div class="card">
-        <div class="card-icon green">📝</div>
-        <h4>項目の自動生成</h4>
-        <p>建物種別と工事概要から、必要な見積項目を自動で生成。漏れがちな付帯工事も含めて提案。</p>
-      </div>
-      <div class="card">
-        <div class="card-icon purple">✅</div>
-        <h4>妥当性チェック</h4>
-        <p>完成した見積書に対し、単価の異常値検出、項目の過不足、合計金額の妥当性を自動レビュー。</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- 6. 期待される効果 -->
-  <div class="section">
-    <div class="section-number">Section 06</div>
-    <h2 class="section-title">期待される効果</h2>
-    <div class="kpi-row">
-      <div class="kpi">
-        <div class="kpi-value">60<span class="unit">%</span></div>
-        <div class="kpi-label">見積作成時間の短縮</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-value">95<span class="unit">%↑</span></div>
-        <div class="kpi-label">項目漏れの検出率</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-value">±5<span class="unit">%</span></div>
-        <div class="kpi-label">単価精度の目標偏差</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-value">0<span class="unit">件</span></div>
-        <div class="kpi-label">社外へのデータ流出</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 7. 開発ロードマップ -->
-  <div class="section">
-    <div class="section-number">Section 07</div>
-    <h2 class="section-title">開発ロードマップ</h2>
-
-    <div class="timeline">
-      <div class="timeline-item">
-        <div class="timeline-phase">Phase 1 — 基盤構築</div>
-        <div class="timeline-title">Tauri環境 + Excel読み込み + AG Grid表示</div>
-        <div class="timeline-desc">
-          Tauri 2.0プロジェクトのセットアップ、RustによるExcelパーサの実装、AG Gridでの見積書表示UIを構築。基本的なCRUD操作を実装する。
-        </div>
-        <span class="timeline-duration">1.5ヶ月</span>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-phase">Phase 2 — ナレッジDB構築</div>
-        <div class="timeline-title">SQLite + 過去見積の取り込み・検索機能</div>
-        <div class="timeline-desc">
-          過去見積書をSQLiteに自動インポートする仕組みを構築。建物種別・工種でのフィルタリングと、類似案件の検索機能を実装する。
-        </div>
-        <span class="timeline-duration">1ヶ月</span>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-phase">Phase 3 — AIエージェント統合</div>
-        <div class="timeline-title">Claude Agent SDK + MCP + Tool実装</div>
-        <div class="timeline-desc">
-          Claude Agent SDKを導入し、類似案件検索・単価提案・項目生成・妥当性チェックの各Toolを実装。MCPでローカルデータアクセスを安全に制御する。
-        </div>
-        <span class="timeline-duration">2ヶ月</span>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-phase">Phase 4 — 実証・改善</div>
-        <div class="timeline-title">社内パイロット運用 + フィードバック改善</div>
-        <div class="timeline-desc">
-          実業務でのパイロット運用を開始。ユーザーフィードバックに基づきUI/UXとAI提案精度を継続的に改善する。
-        </div>
-        <span class="timeline-duration">1.5ヶ月</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 8. リスクと対策 -->
-  <div class="section">
-    <div class="section-number">Section 08</div>
-    <h2 class="section-title">リスクと対策</h2>
-    <div class="risk-grid">
-      <div class="risk-card risk">
-        <h4>⚠ 想定リスク</h4>
-        <ul>
-          <li>Rustの学習コストによる開発遅延</li>
-          <li>LLM APIのレスポンス遅延がUXを損なう可能性</li>
-          <li>過去見積データの品質・フォーマットのばらつき</li>
-          <li>API利用コストの増大</li>
-        </ul>
-      </div>
-      <div class="risk-card mitigation">
-        <h4>✅ 対策</h4>
-        <ul>
-          <li>フロントエンドはReact/TSで既存知見を活用、Rustは段階的に習得</li>
-          <li>ストリーミング応答 + UIの楽観的更新で体感速度を向上</li>
-          <li>インポート時のバリデーションと正規化パイプラインを構築</li>
-          <li>Prompt Cachingの活用とローカルキャッシュで API呼出しを最適化</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <div class="doc-footer">
-    <p>本企画書に関するご質問・ご意見は企画担当までお問い合わせください。</p>
-    <p style="margin-top:8px; font-size:12px; color:#aaa;">Confidential — 社内限定資料</p>
-  </div>
-
-</div>
-
-</body>
+  </body>
 </html>
