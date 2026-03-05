@@ -956,6 +956,121 @@
         font-size: 13px;
       }
 
+      /* Technical Details (collapsible) */
+      .tech-details {
+        margin-top: 28px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--card-bg);
+        overflow: hidden;
+      }
+
+      .tech-details summary {
+        padding: 20px 28px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--ink);
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        user-select: none;
+        transition: background 0.15s;
+      }
+
+      .tech-details summary:hover {
+        background: #f9f9f7;
+      }
+
+      .tech-details summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .tech-details summary::before {
+        content: "▶";
+        font-size: 11px;
+        color: var(--accent);
+        transition: transform 0.2s;
+        flex-shrink: 0;
+      }
+
+      .tech-details[open] summary::before {
+        transform: rotate(90deg);
+      }
+
+      .tech-details-badge {
+        display: inline-block;
+        background: #f0efec;
+        color: var(--slate);
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 100px;
+        letter-spacing: 0.05em;
+      }
+
+      .tech-details-body {
+        padding: 0 28px 28px;
+        border-top: 1px solid var(--border);
+      }
+
+      .tech-details-body h5 {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--ink);
+        margin-top: 24px;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #f0efec;
+      }
+
+      .tech-details-body p {
+        font-size: 13px;
+        color: #555;
+        line-height: 1.8;
+        margin-bottom: 12px;
+      }
+
+      .tech-details-body code {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        background: #f4f3f0;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: var(--ink);
+      }
+
+      .tech-details-body .er-diagram {
+        background: #0f0f23;
+        border-radius: 12px;
+        padding: 24px;
+        margin: 16px 0;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        line-height: 2;
+        color: rgba(255, 255, 255, 0.85);
+        overflow-x: auto;
+      }
+
+      .tech-details-body .er-diagram .er-table {
+        color: #58a6ff;
+        font-weight: 600;
+      }
+
+      .tech-details-body .er-diagram .er-rel {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      .tech-details-body .er-diagram .er-field {
+        color: #00d4aa;
+      }
+
+      .tech-details-body .er-diagram .er-comment {
+        color: rgba(255, 255, 255, 0.35);
+        font-style: italic;
+      }
+
       /* Print */
       @media print {
         .cover {
@@ -1992,16 +2107,16 @@
           大手の元請会社には、見積書の書式や項目の並べ方、金額の計算方法に独自のルールがあります。同じ工事でも、A社向けとB社向けでは見積書の見た目も中身の構成も異なるのが実態です。
         </p>
         <p>
-          本アプリでは、元請ごとの独自ルールを「元請プロファイル」としてあらかじめ登録しておき、ログイン時にユーザーが所属する元請プロファイルを自動で取得し、適用するだけで、書式・構成・計算方法・AIのチェック観点がすべて自動的に切り替わる仕組みを採用します。
+          本アプリでは、元請ごとの独自ルールを「元請プロファイル」としてあらかじめ登録しておきます。ユーザーのアカウントには所属する元請の情報が紐づいているため、ログイン（またはAPIキー認証）するだけで、書式・構成・計算方法・AIのチェック観点がすべて自動的にその元請仕様に切り替わります。
         </p>
 
         <div class="model-principle">
           <div class="principle-label">考え方</div>
           <div class="principle-text">
             <strong
-              >ログイン時に元請プロファイルを取得し、自動適用するだけで、アプリ全体が「その元請仕様」に切り替わる</strong
+              >ログインするだけで、アプリ全体が「その元請仕様」に切り替わる</strong
             ><br />
-            現場で「A社向けはこの書式」「B社向けはこの計算方法」と毎回手動で切り替える必要がなくなります。元請ごとのルールを一度登録すれば、以降のすべての案件に自動で適用されます。新しい元請が増えても、ルールを登録するだけで対応できます。
+            ユーザーのアカウントに元請情報が登録されているため、現場で「A社向けはこの書式」「B社向けはこの計算方法」と毎回手動で切り替える必要がありません。ログインした瞬間に、その人が所属する元請のルールが自動で適用されます。新しい元請が増えても、ルールを登録してユーザーに紐づけるだけで対応できます。
           </div>
         </div>
 
@@ -2062,10 +2177,10 @@
             </p>
           </div>
           <div class="card">
-            <div class="card-icon green">🔌</div>
-            <h4>ログイン時に元請プロファイルを自動で取得するだけ</h4>
+            <div class="card-icon green">🔑</div>
+            <h4>ログインするだけで自動適用</h4>
             <p>
-              見積書を新規作成する時などに、ユーザーが所属する元請プロファイルで、見積書の書式・構成・計算方法・AIのチェック基準がすべて自動で切り替わります。
+              ユーザーのアカウントに元請情報が紐づいているため、ログインまたはAPIキーで認証するだけで、見積書の書式・構成・計算方法・AIのチェック基準がすべて自動で切り替わります。
             </p>
           </div>
           <div class="card">
@@ -2087,16 +2202,16 @@
               <div class="feature-visual" style="margin-top: 0">
                 <div class="feature-flow">
                   <div class="flow-step">
-                    <div class="flow-icon">🏢</div>
+                    <div class="flow-icon">🔑</div>
                     <div class="flow-text">
-                      ログイン時に<br />元請プロファイルを自動で取得
+                      ログインまたは<br />APIキーで認証
                     </div>
                   </div>
                   <div class="flow-arrow">→</div>
                   <div class="flow-step">
                     <div class="flow-icon">📐</div>
                     <div class="flow-text">
-                      その元請専用の<br />書式・構成で起動
+                      元請プロファイルが<br />自動で適用
                     </div>
                   </div>
                   <div class="flow-arrow">→</div>
@@ -2122,13 +2237,506 @@
                 "
               >
                 ※
-                新しい元請が増えた場合も、ルールを登録するだけで対応可能。アプリの更新は必要ありません。<br />
-                ※ 一度登録したルールはチーム全員に共有されるため、「あの人しか
+                新しい元請が増えた場合も、ルールを登録してユーザーに紐づけるだけで対応可能。アプリの更新は必要ありません。<br />
+                ※
+                一度登録したルールはその元請に所属する全ユーザーに共有されるため、「あの人しか
                 A社向けの書式を知らない」という属人化を防ぎます。
               </p>
             </div>
           </div>
         </div>
+
+        <!-- 設計詳細（折り畳み） -->
+        <details class="tech-details">
+          <summary>
+            エンジニア向け：データ構造と設計の詳細
+            <span class="tech-details-badge">開発参考資料</span>
+          </summary>
+          <div class="tech-details-body">
+            <h5>ER構造（テーブル間の関係）</h5>
+            <p>
+              「元請プロファイル」は1つの万能テーブルではなく、<strong>元請マスター（親）に4つの子テーブルがぶら下がる構造</strong>です。ユーザーテーブルが元請マスターへの外部キー（<code>prime_contractor_id</code>）を持つため、ログイン時に自動的に元請プロファイル全体に到達できます。案件テーブルは元請IDを直接持たず、作成者（ユーザー）経由で元請を解決します。
+            </p>
+            <div class="er-diagram">
+              <span class="er-table">ユーザー</span>
+              <span class="er-rel">──FK──▶</span>
+              <span class="er-table">元請マスター</span>
+              <span class="er-comment"
+                >// prime_contractor_id（ユーザーに元請が紐づく）</span
+              ><br />
+              <span class="er-table">ユーザー</span>
+              <span class="er-rel">◀──1:N──</span>
+              <span class="er-table">案件</span>
+              <span class="er-comment">// created_by（作成者）</span><br />
+              <span class="er-table">案件</span>
+              <span class="er-rel">◀──1:N──</span>
+              <span class="er-table">見積書</span>
+              <span class="er-comment">// 1案件に複数版（初回・VE・追加…）</span
+              ><br />
+              <br />
+              <span class="er-table">元請マスター</span>
+              <span class="er-rel">◀──1:N──</span>
+              <span class="er-table">帳票テンプレート設定</span>
+              <span class="er-comment"
+                >// 用途別に複数（表紙・提出用・社内管理表…）</span
+              ><br />
+              <span class="er-table">元請マスター</span>
+              <span class="er-rel">◀──1:1──</span>
+              <span class="er-table">階層構造テンプレート</span>
+              <span class="er-comment"
+                >// 初期ツリーJSON + バリデーションルール</span
+              ><br />
+              <span class="er-table">元請マスター</span>
+              <span class="er-rel">◀──1:1──</span>
+              <span class="er-table">計算ルール設定</span>
+              <span class="er-comment">// パラメータJSON</span><br />
+              <span class="er-table">元請マスター</span>
+              <span class="er-rel">◀──1:1──</span>
+              <span class="er-table">AIコンテキストルール</span>
+              <span class="er-comment">// チェック観点テキスト配列</span>
+            </div>
+
+            <h5>ユーザーテーブルのデータ例</h5>
+            <p>
+              ユーザーテーブルが元請マスターへの外部キーを持つことで、ログインまたはAPIキー認証の時点で元請プロファイル全体が確定します。アプリ起動時にこのユーザー情報を取得し、以降のすべての操作に元請ルールを自動適用します。
+            </p>
+            <div class="er-diagram">
+              <span class="er-comment">// ユーザーテーブル（users）</span><br />
+              {<br />
+              &nbsp;&nbsp;<span class="er-field">"id"</span>:
+              <span style="color: #f0915a">"user_fujisawa"</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"name"</span>:
+              <span style="color: #f0915a">"藤澤勇樹"</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"email"</span>:
+              <span style="color: #f0915a">"fujisawa@example.co.jp"</span
+              >,<br />
+              &nbsp;&nbsp;<span class="er-field">"prime_contractor_id"</span>:
+              <span style="color: #f0915a">"pc_shimizu"</span>,
+              <span class="er-comment">// → 元請マスターへのFK</span><br />
+              &nbsp;&nbsp;<span class="er-field">"api_key"</span>:
+              <span style="color: #f0915a">"sk-xxxxxxxxxxxxxxxx"</span>,
+              <span class="er-comment">// APIキー認証用</span><br />
+              &nbsp;&nbsp;<span class="er-field">"role"</span>:
+              <span style="color: #f0915a">"estimator"</span>
+              <span class="er-comment"
+                >// 権限（estimator / manager / admin）</span
+              ><br />
+              }
+            </div>
+
+            <h5>案件テーブルのデータ例</h5>
+            <p>
+              案件テーブルは物件の基本情報を持ちます。元請IDは直接持たず、作成者のユーザー情報経由で元請プロファイルを解決します。これにより、同じ元請に所属する全ユーザーが同じプロファイルで案件を作成できます。
+            </p>
+            <div class="er-diagram">
+              <span class="er-comment">// 案件テーブル（projects）</span><br />
+              {<br />
+              &nbsp;&nbsp;<span class="er-field">"id"</span>:
+              <span style="color: #f0915a">"proj_20260301_001"</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"name"</span>:
+              <span style="color: #f0915a">"○○ビル新築工事"</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"created_by"</span>:
+              <span style="color: #f0915a">"user_fujisawa"</span>,
+              <span class="er-comment"
+                >// → ユーザーへのFK（ユーザー経由で元請を解決）</span
+              ><br />
+              &nbsp;&nbsp;<span class="er-field">"building_type"</span>:
+              <span style="color: #f0915a">"RC造"</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"floors"</span>:
+              <span style="color: #f0915a">10</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"total_floor_area_m2"</span>:
+              <span style="color: #f0915a">8500.0</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"location"</span>:
+              <span style="color: #f0915a">"東京都中央区"</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"status"</span>:
+              <span style="color: #f0915a">"見積作成中"</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"created_at"</span>:
+              <span style="color: #f0915a">"2026-03-01T09:00:00Z"</span><br />
+              }
+            </div>
+
+            <h5>見積書テーブルのデータ例</h5>
+            <p>
+              1つの案件に対して複数の見積書が紐づきます（初回提出・VE案・追加工事など）。見積書も案件も元請IDを直接持たず、ログインユーザー経由で元請プロファイルを参照します。<code
+                >tree_data</code
+              >
+              には階層構造テンプレートから展開された実際の見積ツリーが格納されます。
+            </p>
+            <div class="er-diagram">
+              <span class="er-comment">// 見積書テーブル（estimates）</span
+              ><br />
+              {<br />
+              &nbsp;&nbsp;<span class="er-field">"id"</span>:
+              <span style="color: #f0915a">"est_20260301_001"</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"project_id"</span>:
+              <span style="color: #f0915a">"proj_20260301_001"</span>,
+              <span class="er-comment">// → 案件へのFK</span><br />
+              &nbsp;&nbsp;<span class="er-field">"version"</span>:
+              <span style="color: #f0915a">1</span>,
+              <span class="er-comment">// 第1版（VE・追加で版が増える）</span
+              ><br />
+              &nbsp;&nbsp;<span class="er-field">"title"</span>:
+              <span style="color: #f0915a"
+                >"○○ビル新築工事 見積書（初回提出）"</span
+              >,<br />
+              &nbsp;&nbsp;<span class="er-field">"total_amount"</span>:
+              <span style="color: #f0915a">185000000</span>,
+              <span class="er-comment">// 合計金額（自動計算）</span><br />
+              &nbsp;&nbsp;<span class="er-field">"status"</span>:
+              <span style="color: #f0915a">"作成中"</span>,
+              <span class="er-comment">// 作成中 / レビュー中 / 提出済</span
+              ><br />
+              &nbsp;&nbsp;<span class="er-field">"tree_data"</span>: [
+              <span class="er-comment"
+                >// 階層構造テンプレートから展開された実データ</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;{<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="er-field"
+                >"label"</span
+              >: <span style="color: #f0915a">"建築工事"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="er-field"
+                >"category_code"</span
+              >: <span style="color: #f0915a">"A"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="er-field"
+                >"subtotal"</span
+              >: <span style="color: #f0915a">120000000</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="er-field"
+                >"children"</span
+              >: [<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"label"</span
+              >: <span style="color: #f0915a">"躯体工事"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"category_code"</span
+              >: <span style="color: #f0915a">"A-01"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"subtotal"</span
+              >: <span style="color: #f0915a">75000000</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"children"</span
+              >: [<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"label"</span
+              >: <span style="color: #f0915a">"コンクリート工事"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"category_code"</span
+              >: <span style="color: #f0915a">"A-01-01"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"items"</span
+              >: [ <span class="er-comment">// 末端の明細行</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"name"</span
+              >:
+              <span style="color: #f0915a">"普通コンクリート打設"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"spec"</span
+              >:
+              <span style="color: #f0915a">"21-18-20 スランプ18cm"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"unit"</span
+              >: <span style="color: #f0915a">"m3"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"quantity"</span
+              >: <span style="color: #f0915a">1200.0</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"unit_price"</span
+              >: <span style="color: #f0915a">15500</span>,
+              <span class="er-comment">// 提出単価</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"net_unit_price"</span
+              >: <span style="color: #f0915a">13200</span>,
+              <span class="er-comment">// NET単価（原価）</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"amount"</span
+              >: <span style="color: #f0915a">18600000</span>,
+              <span class="er-comment">// = quantity × unit_price</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"supplier_id"</span
+              >: <span style="color: #f0915a">"sup_abc_concrete"</span>,
+              <span class="er-comment">// 採用業者</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"memo"</span
+              >: <span style="color: #f0915a">""</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-comment"
+                >// ... 他の明細行</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;}<br />
+              &nbsp;&nbsp;],<br />
+              &nbsp;&nbsp;<span class="er-field">"created_at"</span>:
+              <span style="color: #f0915a">"2026-03-01T09:30:00Z"</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"updated_at"</span>:
+              <span style="color: #f0915a">"2026-03-05T14:20:00Z"</span><br />
+              }
+            </div>
+            <p>
+              <code>tree_data</code>
+              内の階層構造は、見積書の新規作成時にログインユーザーの元請プロファイルから階層構造テンプレートをコピーしたものです。テンプレートの
+              <code>locked</code>
+              属性はコピー時にバリデーションルールとして適用され、見積書データ自体には持ちません（表示時に元請テンプレートと突合してロック状態を判定します）。末端の
+              <code>items</code>
+              配列が実際の明細行で、名称・規格・単位・数量・単価・金額を保持します。<code>net_unit_price</code>（NET単価）と
+              <code>unit_price</code
+              >（提出単価）の2本立てにより、COMPASSと同様に利益率をリアルタイム計算できます。
+            </p>
+
+            <h5>① 帳票テンプレート設定</h5>
+            <p>
+              元請ごとに「見積書表紙のExcelテンプレートファイル」「提出用見積書の列定義（どの列にどのデータを出すか）」「社内管理表のレイアウト定義」を保持します。テンプレートファイルはS3等にバイナリ保存し、DBにはパスと列マッピング定義（JSON）を格納します。用途別に複数レコードを持つ
+              <strong>1:N</strong> の関係です。
+            </p>
+            <p>
+              Excel出力時、Rust側のエクスポート処理はこの定義を読み、テンプレートファイルの該当セルにデータを流し込みます（テンプレート差込方式）。
+            </p>
+
+            <h5>② 階層構造テンプレート</h5>
+            <p>
+              「見積書のツリー構造の雛型」をJSON形式で保持します。例：A社は
+              <code>[建築工事 > 躯体工事 > コンクリート工事]</code>
+              の3階層、B社は
+              <code>[1号棟 > 建築工事 > 躯体工事 > コンクリート工事]</code>
+              の4階層。新規見積作成時に、このJSONからツリーのスケルトンをAG
+              Gridに自動展開します。
+            </p>
+            <p>
+              各ノードには
+              <code>locked: true/false</code>
+              属性を持たせ、<strong>ロックされた階層（変更不可）</strong>と<strong>自由階層（追加・削除可能）</strong>の境界を制御します。「この元請では科目コード必須」「この階層名は変更不可」といったバリデーションルールもここに含めます。
+            </p>
+            <div class="er-diagram">
+              <span class="er-comment"
+                >// 階層構造テンプレートの例（A社：工種→部位→細目
+                の3階層）</span
+              ><br />
+              {<br />
+              &nbsp;&nbsp;<span class="er-field">"name"</span>:
+              <span style="color: #f0915a">"A社 標準テンプレート"</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"max_depth"</span>:
+              <span style="color: #f0915a">3</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"require_category_code"</span>:
+              <span style="color: #f0915a">true</span>,<br />
+              &nbsp;&nbsp;<span class="er-field">"tree"</span>: [<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;{<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="er-field"
+                >"label"</span
+              >: <span style="color: #f0915a">"建築工事"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="er-field"
+                >"category_code"</span
+              >: <span style="color: #f0915a">"A"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="er-field"
+                >"locked"</span
+              >: <span style="color: #f0915a">true</span>,
+              <span class="er-comment">// この階層名は変更不可</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="er-field"
+                >"children"</span
+              >: [<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"label"</span
+              >: <span style="color: #f0915a">"躯体工事"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"category_code"</span
+              >: <span style="color: #f0915a">"A-01"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"locked"</span
+              >: <span style="color: #f0915a">true</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"children"</span
+              >: [<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+              <span class="er-field">"label"</span>:
+              <span style="color: #f0915a">"コンクリート工事"</span>,
+              <span class="er-field">"category_code"</span>:
+              <span style="color: #f0915a">"A-01-01"</span>,
+              <span class="er-field">"locked"</span>:
+              <span style="color: #f0915a">false</span> },<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+              <span class="er-field">"label"</span>:
+              <span style="color: #f0915a">"型枠工事"</span>,
+              <span class="er-field">"category_code"</span>:
+              <span style="color: #f0915a">"A-01-02"</span>,
+              <span class="er-field">"locked"</span>:
+              <span style="color: #f0915a">false</span> },<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+              <span class="er-field">"label"</span>:
+              <span style="color: #f0915a">"鉄筋工事"</span>,
+              <span class="er-field">"category_code"</span>:
+              <span style="color: #f0915a">"A-01-03"</span>,
+              <span class="er-field">"locked"</span>:
+              <span style="color: #f0915a">false</span> }<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"label"</span
+              >: <span style="color: #f0915a">"仕上工事"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"category_code"</span
+              >: <span style="color: #f0915a">"A-02"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"locked"</span
+              >: <span style="color: #f0915a">true</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="er-field"
+                >"children"</span
+              >: [] <span class="er-comment">// 細目はユーザーが自由に追加</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;},<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;{<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="er-field"
+                >"label"</span
+              >: <span style="color: #f0915a">"設備工事"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="er-field"
+                >"category_code"</span
+              >: <span style="color: #f0915a">"B"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="er-field"
+                >"locked"</span
+              >: <span style="color: #f0915a">true</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="er-field"
+                >"children"</span
+              >: []
+              <span class="er-comment">// 部位・細目はユーザーが自由に追加</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;}<br />
+              &nbsp;&nbsp;]<br />
+              }
+            </div>
+            <p>
+              <code>locked: true</code>
+              のノードは名称の変更・削除ができず、元請が定めた科目体系を保護します。<code
+                >locked: false</code
+              >
+              のノードや
+              <code>children: []</code>
+              の配下はユーザーが自由に項目を追加・編集できます。この構造により「元請が決めた骨格は崩さず、中身は現場で柔軟に埋める」という実務の要件を表現できます。
+            </p>
+
+            <h5>③ 計算ルール設定</h5>
+            <p>
+              計算ロジック自体は共通コードで、分岐に使うパラメータだけが元請ごとに異なります。JSON形式でKey-Value的に保持します。
+            </p>
+            <div class="er-diagram">
+              <span class="er-comment">// 計算ルール設定の例</span><br />
+              {<br />
+              &nbsp;&nbsp;<span class="er-field">"rounding"</span>:
+              <span style="color: #f0915a">"floor"</span>,
+              <span class="er-comment">// 端数処理：切捨</span><br />
+              &nbsp;&nbsp;<span class="er-field">"tax_rounding"</span>:
+              <span style="color: #f0915a">"floor"</span>,
+              <span class="er-comment">// 消費税丸め：円未満切捨</span><br />
+              &nbsp;&nbsp;<span class="er-field">"legal_welfare"</span>:
+              <span style="color: #f0915a">"separate_row"</span>,
+              <span class="er-comment">// 法定福利費：別行表示</span><br />
+              &nbsp;&nbsp;<span class="er-field">"expense_allocation"</span>:
+              <span style="color: #f0915a">"proportional"</span>,
+              <span class="er-comment">// 経費按分：工事費比例</span><br />
+              &nbsp;&nbsp;<span class="er-field">"default_assessment_rate"</span
+              >: <span style="color: #f0915a">0.95</span>
+              <span class="er-comment">// デフォルト査定掛率</span><br />
+              }
+            </div>
+            <p>
+              Rustの計算エンジンがこのJSONを受け取り、パラメータに応じた計算を実行します。新しい計算ルールが必要になった場合は、JSONにキーを追加し、計算エンジンに対応する分岐を追加します。
+            </p>
+
+            <h5>④ AIコンテキストルール</h5>
+            <p>
+              自然言語で書かれたチェック観点のテキスト配列です。Claude
+              SDKのTool呼出時に、このテキストをシステムプロンプトに注入するだけなので、AI側のコード変更は不要です。
+            </p>
+            <div class="er-diagram">
+              <span class="er-comment">// AIコンテキストルールの例</span><br />
+              [<br />
+              &nbsp;&nbsp;<span style="color: #f0915a"
+                >"この元請では経費込単価で業者比較を行うこと"</span
+              >,<br />
+              &nbsp;&nbsp;<span style="color: #f0915a"
+                >"二次明細が必須。二次明細がない場合は警告すること"</span
+              >,<br />
+              &nbsp;&nbsp;<span style="color: #f0915a"
+                >"仮設工事・安全対策費の項目漏れを重点的にチェック"</span
+              >,<br />
+              &nbsp;&nbsp;<span style="color: #f0915a"
+                >"法定福利費は別行として表示する前提でチェック"</span
+              ><br />
+              ]
+            </div>
+
+            <h5>データの流れ（ログイン〜見積作成〜出力）</h5>
+            <p>
+              アプリ起動時にログインまたはAPIキーでユーザーを認証し、そのユーザーに紐づく元請プロファイルを自動取得します。以降のすべての操作にこのプロファイルが適用されます。
+            </p>
+            <div class="er-diagram">
+              <span class="er-comment"
+                >// 1. ログインまたはAPIキーでユーザーを認証</span
+              ><br />
+              <span class="er-field">current_user</span> = authenticate(<span
+                style="color: #f0915a"
+                >login</span
+              >
+              or <span style="color: #f0915a">api_key</span>)<br />
+              <span class="er-field">prime_contractor_id</span> =
+              <span class="er-table">current_user</span>.<span class="er-field"
+                >prime_contractor_id</span
+              ><br /><br />
+              <span class="er-comment"
+                >// 2.
+                元請IDで4テーブルからそれぞれ設定を取得（起動時に1回）</span
+              ><br />
+              <span class="er-table">階層構造テンプレート</span> → AG
+              Gridの初期ツリーに適用<br />
+              <span class="er-table">計算ルール設定</span> →
+              Rust計算エンジンのパラメータにセット<br />
+              <span class="er-table">AIコンテキストルール</span> → Claude
+              SDK呼出時のシステムプロンプトに注入<br /><br />
+              <span class="er-comment">// 3. 見積書を新規作成する場合</span
+              ><br />
+              <span class="er-table">階層構造テンプレート</span>.tree →
+              <span class="er-table">見積書</span>.tree_data
+              にコピー（スケルトン展開）<br />
+              → ユーザーが明細行（items）を追加・編集していく<br /><br />
+              <span class="er-comment">// 4. Excel出力時に取得</span><br />
+              <span class="er-table">帳票テンプレート設定</span> →
+              出力用途に応じたテンプレートを選択<br />
+              <span class="er-table">見積書</span>.tree_data →
+              テンプレートの該当セルにデータを流し込み
+            </div>
+          </div>
+        </details>
       </div>
 
       <!-- 11. 期待される効果 -->
@@ -2149,10 +2757,14 @@
             <div class="kpi-label">単価精度の目標偏差</div>
           </div>
           <div class="kpi">
-            <div class="kpi-value">¥92,400</div>
-            <div class="kpi-label">年額ライセンス費の削減</div>
+            <div class="kpi-value">0<span class="unit">円</span></div>
+            <div class="kpi-label">COMPASSライセンス費の削減</div>
           </div>
         </div>
+        <p style="margin-top: 20px; font-size: 13px; color: #888">
+          ※ KYOEI COMPASS 2.0
+          のライセンス費用は1ライセンスあたり年額92,400円。5ライセンスで年額356,400円。本アプリへの移行で削減が見込める。
+        </p>
       </div>
 
       <!-- 12. 開発ロードマップ -->
